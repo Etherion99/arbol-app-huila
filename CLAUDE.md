@@ -199,19 +199,31 @@ el MCP `claude_design` (`https://api.anthropic.com/v1/design/mcp`, autenticació
 
 | Proyecto | Identificador |
 |---|---|
-| Lienzo de pantallas — `Pantallas v1.dc.html` | `b4f2c6e6-b7c0-4ed3-ad11-bc0528be9e56` |
+| Lienzo vigente — `Pantallas v2.dc.html` | `b4f2c6e6-b7c0-4ed3-ad11-bc0528be9e56` |
 | ÁrbolApp Huila Design System | `f2a48455-80b5-4d27-b3ef-9f7282a24b10` |
 
-<https://claude.ai/design/p/b4f2c6e6-b7c0-4ed3-ad11-bc0528be9e56?file=Pantallas+v1.dc.html>
+<https://claude.ai/design/p/b4f2c6e6-b7c0-4ed3-ad11-bc0528be9e56?file=Pantallas+v2.dc.html>
 
-- **Antes de construir cualquier pantalla, consulta el lienzo.** No inventes disposición,
+> ⚠️ **`Pantallas v1.dc.html` es histórico y NO es fuente de verdad.** El rediseño de la
+> guía de branding 2026 invirtió el tema entero. Si abres v1 por error vas a maquetar sobre
+> una paleta oscura que ya no existe. El plan de migración está en
+> [plan-rediseño.md](plan-rediseño.md).
+
+- **Antes de construir cualquier pantalla, consulta el lienzo v2.** No inventes disposición,
   color ni tipografía: ya están decididos.
 - **Los tokens del sistema de diseño son la fuente de verdad del color.** `packages/core`
   los refleja; si divergen, gana el sistema de diseño y `packages/core` se corrige.
-- Los estados del árbol tienen **cinco colores distintos**: al día, por actualizar,
-  vencido, muerto y archivado. `due_soon` y `overdue` **no** comparten color.
-- El esmeralda es el color primario. El magenta y el amarillo heredados de Juventud en
-  línea son **acentos de marca** y no entran en el mapa.
+- **El tema es claro.** Página `#F4FDF4`, texto `#1A1A1A`. El motivo de «puntos de luz sobre
+  bosque nocturno» de la v1 desapareció, y el mapa también es claro.
+- El primario es el **Verde Huilense `#008D46`**, y el secundario el **Naranja Plateño
+  `#F26522`**. La tinta sobre el primario es **blanca**.
+- El magenta y el amarillo de Juventud en línea son **solo filiación**: nunca entran en la
+  interfaz.
+- Los estados del árbol tienen **cinco colores distintos**: al día `#008D46`, por actualizar
+  `#FFD700`, vencido `#F26522`, muerto `#E31B23`, archivado `#757575`. `due_soon` y
+  `overdue` **no** comparten color.
+- Las familias son **Montserrat** (titulares), **Open Sans** (subtítulos), **Roboto**
+  (cuerpo) y **Roboto Mono** (coordenadas y medidas).
 - Ningún componente nuevo sin contrastarlo antes con el catálogo del sistema de diseño.
 
 El detalle completo, incluido el bloque de acceso para agentes, está en [plan.md](plan.md).

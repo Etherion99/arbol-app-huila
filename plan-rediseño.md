@@ -40,19 +40,26 @@ distintos, que es la regla que no se negocia.
 
 ---
 
-## ⚠️ Lo que hay que decidir antes de empezar
+## Punto de partida
 
-**Hay agentes construyendo ahora mismo contra el lienzo muerto.** El árbol de trabajo tiene
-la Fase 4 sin commitear —`plant.tsx`, `tree/`, `log/`, `trees.tsx`, `features/planting/`,
-`features/growth-log/`, `features/photos/`, una migración— y todo eso se está maquetando
-sobre la paleta oscura de v1. Cada hora que pase es trabajo que habrá que rehacer.
+La Fase 4 aterrizó y `ui-fidelidad` se mezcló. El árbol está limpio y **todo lo construido
+está en v1**, es decir, todo hay que reskinearlo. La foto exacta:
 
-Lo mismo con la rama `ui-fidelidad`, que tiene el catálogo portado y el bloque A reconciliado
-contra v1 y está sin mezclar.
+| Bloque | En el código | Falta construir |
+|---|---|---|
+| **A** sin sesión | A1–A10, las doce | — |
+| **B** con sesión | B1 mapa, B2 mis árboles, B4 perfil | B3 actividad, B4b ajustes |
+| **C** modales | C1 registro, C2 detalle, C3 bitácora | C1e éxito, C3m muerto, C4 visor |
+| **D** panel web | — | las siete |
+| **E** mapa público | — | las dos |
+| **F** transversales | parcial, dentro de otras pantallas | las seis como pantalla propia |
 
-**Antes de arrancar R1 hay que:** parar o reorientar a los agentes en vuelo, y decidir si la
-Fase 4 se termina en v1 y se reskinea después, o se rehace directamente en v2. La segunda es
-más barata si la Fase 4 no está cerca de terminar.
+**19 de 44 pantallas existen y se reskinean; 25 se construyen ya en v2.** Eso es una ventaja:
+lo que no existe no hay que migrarlo, se hace bien a la primera.
+
+El catálogo quedó consolidado: los once componentes portados más `ChipGroup`, `DateField` y
+`StepperField` que trajo la Fase 4. **Un solo catálogo, sin duplicados** — el refactor
+`b64ee78` resolvió el choque entre `select-field` y `select`, y entre `state-badge` y `badge`.
 
 ### Qué se salva del trabajo previo
 
@@ -106,16 +113,23 @@ en paralelo. Las olas dentro de una fase sí van en orden.
 | | **2.3** Íconos | Portar `ui_kits/mobile/Icons.jsx`. Desbloquea `IconButton` y las marcas por tono, pendientes desde v1 | **1** |
 | **R3** Mapa | **3.1** Estilo y marcadores | Estilo JSON claro del mapa · regenerar los sprites de marcador para fondo claro con los cinco colores nuevos | **2** |
 | | **3.2** Superficies sobre el mapa | Búsqueda, chips y leyenda · burbuja de clúster y ficha flotante del árbol | **2** |
-| **R4** Móvil | **4.1** Sin sesión | A1–A2 splash y onboarding · A3–A5 acceso y recuperación · A6, A7, A9, A10 verificación, legal y enlaces | **3** |
-| | **4.2** Con sesión | B1 mapa · B2 mis árboles y B3 actividad · B4 y B4b perfil y notificaciones | **3** |
-| | **4.3** Flujos modales | C1 los cuatro pasos y C1e · C2 detalle y C4 visor · C3 y C3m bitácora y árbol muerto | **3** |
-| | **4.4** Estados transversales | F1–F3 vacío, offline y permisos · F4–F6 errores de red, GPS, cámara y perfil | **2** |
-| **R5** Web | **5.1** Panel de administración | D1–D2 acceso y tablero · D3–D4 usuarios y moderación · D5–D7 especies, detalle admin y exportación | **3** |
-| | **5.2** Mapa público | E1 mapa con ficha · E3 variante incrustable | **2** |
-| **R6** Cierre | **6.1** Re-medición | Rehacer `FIDELIDAD-UI.md` contra v2: 44 filas, contraste, catálogo | **1** |
-| | **6.2** Validación | Accesibilidad sobre claro · **render real en dispositivo**, que no se ha hecho ni una vez | **2** |
+| **R4** Móvil · reskin | **4.1** Sin sesión | Reskin de A1–A2 · A3–A5 · A6, A7, A9, A10. Las doce existen | **3** |
+| | **4.2** Con sesión | Reskin de B1 mapa · B2 mis árboles · B4 perfil | **3** |
+| | **4.3** Flujos modales | Reskin de C1 los cuatro pasos · C2 detalle · C3 bitácora | **3** |
+| **R5** Móvil · nuevo | **5.1** Lo que falta con sesión | Construir en v2: B3 actividad · B4b ajustes de notificaciones | **2** |
+| | **5.2** Modales que faltan | Construir en v2: C1e éxito y permiso · C3m árbol muerto · C4 visor | **3** |
+| | **5.3** Estados transversales | Construir en v2: F1–F3 vacío, offline y permisos · F4–F6 red, GPS, cámara y perfil | **2** |
+| **R6** Web | **6.1** Panel de administración | Construir en v2: D1–D2 acceso y tablero · D3–D4 usuarios y moderación · D5–D7 especies, detalle admin y exportación | **3** |
+| | **6.2** Mapa público | Construir en v2: E1 mapa con ficha · E3 variante incrustable | **2** |
+| **R7** Cierre | **7.1** Re-medición | Rehacer `FIDELIDAD-UI.md` contra v2: 44 filas, contraste, catálogo | **1** |
+| | **7.2** Validación | Accesibilidad sobre claro · **render real en dispositivo**, que no se ha hecho ni una vez | **2** |
 
-**Pico de paralelismo: 3 agentes.** Total de olas: 15.
+**Pico de paralelismo: 3 agentes.** Siete fases, **17 olas**, 34 tareas de agente.
+
+**R4 y R5 están separadas a propósito.** Reskinear una pantalla que existe y construir una
+nueva no son el mismo trabajo: en la primera el riesgo es romper algo que funciona y se mide
+contra lo que ya hay; en la segunda el riesgo es inventar. Mezclarlas en una ola obliga a un
+agente a cambiar de modo a media tarea.
 
 ---
 
@@ -223,22 +237,24 @@ negro desaparece sobre blanco**: hay que rehacer el contorno, no solo el relleno
 
 ---
 
-## Fase R4 · Pantallas móviles
+## Fase R4 · Móvil — reskin de lo que existe
 
-Depende de R2. Cuatro olas, cortadas para que ningún agente comparta archivos.
-
-**Antes de cada ola conviene decidir, pantalla por pantalla, si se reskinea o se construye
-de cero en v2.** Las de la Fase 4 del producto —B2, C1, C2, C3— están a medias contra v1: si
-siguen sin terminar, sale más barato rehacerlas ya en v2.
+Depende de R2. **Las 19 pantallas de estas tres olas ya están construidas**, así que el
+trabajo es cambiarles la piel sin romperles el comportamiento. Cortadas para que ningún
+agente comparta archivos.
 
 | Ola | Agente A | Agente B | Agente C |
 |---|---|---|---|
 | **4.1** Sin sesión | A1 splash, A2 onboarding ×3 | A3 acceso, A4 registro, A5 recuperación | A6 verificación, A7 legal, A9 ×3, A10 ×2 |
-| **4.2** Con sesión | B1 mapa | B2 mis árboles, B3 actividad | B4 perfil, B4b notificaciones |
-| **4.3** Modales | C1 pasos 1–4 y C1e | C2 detalle, C4 visor | C3 bitácora, C3m árbol muerto |
-| **4.4** Transversales | F1 vacío, F2 offline, F3 ubicación | F4 red y sesión, F5 GPS y cámara, F6 perfil | — |
+| **4.2** Con sesión | B1 mapa | B2 mis árboles | B4 perfil |
+| **4.3** Modales | C1 pasos 1–4 | C2 detalle del árbol | C3 bitácora |
 
-**Dos topes que el rediseño no levanta**, y que conviene no volver a descubrir tarde:
+**Regla de esta fase: no se toca el comportamiento.** Si al reskinear aparece un defecto
+funcional, se anota y se deja; arreglarlo aquí mezcla dos cambios en un diff que nadie podrá
+revisar. Las correcciones estructurales del bloque A —jerarquía de botones, orden de campos,
+enlaces en el checkbox, sin confirmación de contraseña— **ya están hechas y se conservan**.
+
+**Dos topes que el rediseño no levanta:**
 
 - **A1** necesita el logotipo definitivo. La guía de branding 2026 existe, así que puede que
   ya esté disponible: comprobarlo antes de dar la pantalla por bloqueada.
@@ -246,28 +262,45 @@ siguen sin terminar, sale más barato rehacerlas ya en v2.
 
 ---
 
-## Fase R5 · Web
+## Fase R5 · Móvil — lo que falta, directo en v2
 
-Depende de R1 y R2. **`apps/web` sigue siendo la plantilla de `create-next-app`**: aquí no
-hay reskin, se construye de cero directamente en v2, que es la única ventaja de haber llegado
-tarde.
+Depende de R2, no de R4: son archivos nuevos y no chocan con el reskin. Puede solaparse.
+
+Aquí no hay migración y esa es la ventaja de haber llegado tarde: **se construye ya en la
+paleta buena**, sin pasar por v1.
 
 | Ola | Agente A | Agente B | Agente C |
 |---|---|---|---|
-| **5.1** Panel | D1 acceso, D2 tablero | D3 usuarios, D4 moderación | D5 especies, D6 detalle admin, D7 exportación |
-| **5.2** Mapa público | E1 mapa con ficha | E3 variante incrustable | — |
+| **5.1** Con sesión | B3 actividad | B4b ajustes de notificaciones | — |
+| **5.2** Modales | C1e éxito y permiso | C3m reportar árbol muerto | C4 visor de fotografía |
+| **5.3** Transversales | F1 vacío, F2 offline, F3 ubicación | F4 red y sesión, F5 GPS y cámara, F6 perfil | — |
+
+**F2 sigue con su tope**: la cola de pendientes necesita la cola de sincronización offline,
+que es trabajo de datos y no de pantalla.
 
 ---
 
-## Fase R6 · Cierre
+## Fase R6 · Web
 
-### Ola 6.1 · Re-medición — 1 agente
+Depende de R1 y R2. **`apps/web` sigue siendo la plantilla de `create-next-app`**: aquí
+tampoco hay reskin, se construye de cero directamente en v2.
+
+| Ola | Agente A | Agente B | Agente C |
+|---|---|---|---|
+| **6.1** Panel | D1 acceso, D2 tablero | D3 usuarios, D4 moderación | D5 especies, D6 detalle admin, D7 exportación |
+| **6.2** Mapa público | E1 mapa con ficha | E3 variante incrustable | — |
+
+---
+
+## Fase R7 · Cierre
+
+### Ola 7.1 · Re-medición — 1 agente
 
 Rehacer `FIDELIDAD-UI.md` entero contra v2: las 44 filas, la tabla de contraste nueva, el
 estado del catálogo. El documento actual mide contra un lienzo que ya no existe y **cada
 cifra que contiene es engañosa hasta que se rehaga**.
 
-### Ola 6.2 · Validación — 2 agentes
+### Ola 7.2 · Validación — 2 agentes
 
 | Agente | Alcance |
 |---|---|

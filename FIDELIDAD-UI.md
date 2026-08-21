@@ -1,9 +1,30 @@
 # Fidelidad de la interfaz frente al sistema de diseño
 
-> Última medición: 21 de agosto de 2026 · rama `develop` · último commit `82fcd19`
-> Fuente de verdad: **ÁrbolApp Huila Design System** (`f2a48455-80b5-4d27-b3ef-9f7282a24b10`)
-> Lienzo de pantallas: **Pantallas v1** (`b4f2c6e6-b7c0-4ed3-ad11-bc0528be9e56`)
-> Incluye el árbol de trabajo sin commitear de la Fase 3 (mapa interactivo).
+> # ⛔ DOCUMENTO HISTÓRICO — NO TOMAR NINGUNA CIFRA COMO VÁLIDA
+>
+> **Todo lo que hay aquí se midió contra `Pantallas v1.dc.html`, que dejó de ser fuente de
+> verdad el 21 de agosto de 2026.** El rediseño de la guía de branding 2026 invirtió el tema
+> de oscuro a claro y cambió las cuatro familias tipográficas, los 50 colores y los cinco
+> estados del árbol.
+>
+> Qué queda inválido, en concreto:
+>
+> - **Los scores de las 41 filas.** Miden parecido con un lienzo que ya no existe.
+> - **La tabla de contraste entera.** Se calculó sobre superficies oscuras; con texto oscuro
+>   sobre papel claro, quién pasa AA y quién no cambia por completo.
+> - **La fila «100 % de fidelidad de tokens».** Era cierta contra la paleta anterior.
+>
+> Qué sigue siendo útil, y por eso el documento no se borra:
+>
+> - El **inventario de pantallas** y su correspondencia con los archivos del repo.
+> - Las **divergencias estructurales** que no dependen del color: jerarquías de botones,
+>   órdenes de campo, pantallas que sobran o faltan.
+> - El **registro de decisiones** y por qué se tomaron.
+>
+> La medición nueva se hace en la ola 7.1 de [plan-rediseño.md](plan-rediseño.md).
+
+> Última medición: 21 de agosto de 2026 · rama `develop`
+> Fuente de verdad **en el momento de medir**: `Pantallas v1.dc.html`, hoy histórico
 
 Este documento mide **cuánto del sistema de diseño está realmente en el código**, no cuánto
 se pretende adoptar. Se mide en dos planos:
