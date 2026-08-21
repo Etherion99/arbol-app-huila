@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master, develop]
   pull_request:
 
 jobs:
@@ -12,19 +12,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Debe ir antes de setup-node para que la caché de pnpm exista.
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Instalar dependencias
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Formato
-        run: npm run format:check
+        run: pnpm run format:check
 
       - name: Tipos
-        run: npm run typecheck
+        run: pnpm run typecheck
 
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint

@@ -32,21 +32,30 @@ En este equipo hay varias versiones instaladas con nvm. Para activar la 24:
 nvm use 24.14.1   # requiere terminal como administrador
 ```
 
+**pnpm 11.** El gestor de paquetes del proyecto. Se activa con corepack, incluido en Node:
+
+```powershell
+corepack enable pnpm
+```
+
+Nunca uses `npm` ni `yarn` en este repositorio. Los paquetes del ecosistema Expo van con
+`expo install`, que respeta la matriz de compatibilidad del SDK.
+
 ## Puesta en marcha
 
 ```bash
-npm install                 # instala todo el monorepo
+pnpm install                # instala todo el monorepo
 cp .env.example .env        # y rellenar los valores
-npm run mobile              # app móvil (Expo)
-npm run web                 # panel y mapa público (Next.js)
+pnpm mobile                 # app móvil (Expo)
+pnpm web                    # panel y mapa público (Next.js)
 ```
 
 ## Verificación
 
 ```bash
-npm run typecheck
-npm run lint
-npm run format
+pnpm typecheck
+pnpm lint
+pnpm format
 ```
 
 ## Configuración de la aplicación

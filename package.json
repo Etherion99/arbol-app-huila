@@ -3,23 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "description": "ÁrbolApp Huila — plataforma de geolocalización y seguimiento de árboles frutales del proyecto PRAE \"De la pantalla a la realidad\"",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@11.22.0",
   "engines": {
-    "node": "^20.19.4 || ^22.13.0 || ^24.3.0 || >=25"
+    "node": "^20.19.4 || ^22.13.0 || ^24.3.0 || >=25",
+    "pnpm": ">=11"
   },
   "scripts": {
-    "mobile": "npm run start -w @arbolapp/mobile",
-    "mobile:android": "npm run android -w @arbolapp/mobile",
-    "web": "npm run dev -w @arbolapp/web",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present",
+    "mobile": "pnpm --filter @arbolapp/mobile start",
+    "mobile:android": "pnpm --filter @arbolapp/mobile android",
+    "web": "pnpm --filter @arbolapp/web dev",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml}\""
   },
   "devDependencies": {
-    "prettier": "^3.4.2"
+    "prettier": "3.4.2"
   }
 }
