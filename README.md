@@ -50,12 +50,25 @@ pnpm mobile                 # app móvil (Expo)
 pnpm web                    # panel y mapa público (Next.js)
 ```
 
+## Base de datos local
+
+Requiere Docker en ejecución. Ver [supabase/README.md](supabase/README.md) para el
+detalle del esquema, los usuarios de prueba y la convención de Storage.
+
+```bash
+pnpm db:start               # levanta Supabase local
+pnpm db:reset               # migraciones desde cero + datos de prueba
+pnpm db:stop
+```
+
 ## Verificación
 
 ```bash
 pnpm typecheck
 pnpm lint
-pnpm format
+pnpm format:check
+pnpm test:species           # requiere el stack local levantado
+pnpm test:rls               # requiere el stack local levantado
 ```
 
 ## Configuración de la aplicación
@@ -71,4 +84,4 @@ Después queda fijo de forma permanente.
 
 ## Estado
 
-Fase 0 completada. Siguiente: Fase 1 — modelo de datos y backend.
+Fases 0 y 1 completadas. Siguiente: Fase 2 — autenticación y perfil de Guardián.
