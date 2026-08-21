@@ -1,0 +1,63 @@
+/**
+ * Expo configuration.
+ *
+ * A JavaScript config rather than a static `app.json` so the splash colour and
+ * the adaptive icon background come from the design tokens instead of being
+ * hand copied hex. They are the only two colours that live outside the React
+ * tree, which makes a static file exactly the place where a stale colour
+ * survives a repaint of the whole app unnoticed.
+ *
+ * `design-tokens.json` is generated from packages/core by `pnpm tokens`.
+ */
+
+const { colors } = require('./design-tokens.json');
+
+module.exports = {
+  expo: {
+    name: 'ÁrbolApp Huila',
+    slug: 'arbolapp-huila',
+    version: '0.1.0',
+    orientation: 'portrait',
+    icon: './assets/images/icon.png',
+    scheme: 'arbolapp',
+    userInterfaceStyle: 'dark',
+    ios: {
+      icon: './assets/expo.icon',
+      bundleIdentifier: 'co.edu.iesansebastian.arbolapp',
+      supportsTablet: true,
+    },
+    android: {
+      package: 'co.edu.iesansebastian.arbolapp',
+      adaptiveIcon: {
+        backgroundColor: colors.surfacePage,
+        foregroundImage: './assets/images/android-icon-foreground.png',
+        backgroundImage: './assets/images/android-icon-background.png',
+        monochromeImage: './assets/images/android-icon-monochrome.png',
+      },
+      predictiveBackGestureEnabled: false,
+    },
+    web: {
+      output: 'static',
+      favicon: './assets/images/favicon.png',
+    },
+    plugins: [
+      'expo-router',
+      [
+        'expo-splash-screen',
+        {
+          backgroundColor: colors.surfacePage,
+          image: './assets/images/splash-icon.png',
+          imageWidth: 76,
+        },
+      ],
+      'expo-secure-store',
+    ],
+    experiments: {
+      typedRoutes: true,
+      reactCompiler: true,
+    },
+    extra: {
+      _comentario: 'Las claves reales van en .env, nunca en este archivo versionado.',
+    },
+  },
+};

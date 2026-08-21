@@ -183,3 +183,21 @@ writeFileSync(outputPath, output, 'utf8');
 
 const count = groups.reduce((total, [, entries]) => total + entries.length, 0);
 console.log(`Wrote ${count} custom properties to ${outputPath}`);
+
+/**
+ * The same colours as JSON, for `apps/mobile/app.config.js`.
+ *
+ * The Expo config is evaluated by Node before any bundler exists, so it cannot
+ * import the TypeScript tokens the way a screen does. JSON is the one format
+ * both sides read without a build step, and it keeps the splash colour and the
+ * adaptive icon background on the same source as every other surface.
+ */
+const jsonPath = join(repoRoot, 'apps', 'mobile', 'design-tokens.json');
+
+writeFileSync(
+  jsonPath,
+  `${JSON.stringify({ _generatedBy: 'scripts/generate-design-tokens.mjs', colors }, null, 2)}\n`,
+  'utf8',
+);
+
+console.log(`Wrote ${Object.keys(colors).length} colours to ${jsonPath}`);
