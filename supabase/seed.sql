@@ -110,8 +110,18 @@ values (
   extensions.st_setsrid(extensions.st_makepoint(-75.8916, 2.3936), 4326), 12
 );
 
--- Villages of La Plata. The geometry column stays empty: the outlines do not
--- exist yet, so the map frames a zone from its centroid and suggested zoom.
+-- Villages of La Plata. The names are real ones, taken from the rural
+-- component of the municipal land use plan, where they are listed under the
+-- Belén corregimiento.
+--
+-- The centroids are **approximate**. There are no official village outlines or
+-- centre points to load, so these are plausible positions inside the
+-- municipality, good enough to frame the map and to scatter the test data.
+-- They are meant to be corrected: the coordinator can edit a zone name, slug,
+-- centroid and zoom from the panel, and doing so needs no migration.
+--
+-- The geometry column stays empty for the same reason. When the outlines
+-- appear, loading them is a data load and not a redesign.
 insert into public.zones (parent_id, type, name, slug, centroid, suggested_zoom)
 select
   '22222222-2222-4222-8222-000000000002',
@@ -119,45 +129,60 @@ select
   village.name,
   village.slug,
   extensions.st_setsrid(extensions.st_makepoint(village.lng, village.lat), 4326),
-  14
+  13
 from (values
-  ('Belén', 'belen', -75.9350, 2.4200),
-  ('Getsemaní', 'getsemani', -75.8500, 2.4450),
-  ('Monserrate', 'monserrate', -75.9600, 2.3600),
-  ('San Andrés', 'san-andres', -75.8200, 2.3450),
-  ('Villa Losada', 'villa-losada', -75.9100, 2.4600),
-  ('El Vergel', 'el-vergel', -75.8700, 2.3200),
-  ('Guacamayas', 'guacamayas', -75.9800, 2.4100),
-  ('La Candelaria', 'la-candelaria', -75.8350, 2.4000),
-  ('Buenavista', 'buenavista', -75.9450, 2.3300),
-  ('El Carmen', 'el-carmen', -75.8850, 2.4750)
+  ('San Rafael', 'san-rafael', -76.0350, 2.2650),
+  ('El Madroñal', 'el-madronal', -75.9950, 2.2900),
+  ('Alto Rico', 'alto-rico', -76.0600, 2.3150),
+  ('Bajo Rico', 'bajo-rico', -76.0200, 2.3400),
+  ('Antonio Nariño', 'antonio-narino', -75.9700, 2.2600),
+  ('Los Sauces', 'los-sauces', -75.9400, 2.3050),
+  ('Tesorito', 'tesorito', -75.9100, 2.2750),
+  ('La Unión', 'la-union', -75.8750, 2.3300),
+  ('Las Acacias', 'las-acacias', -75.8450, 2.3650),
+  ('La María', 'la-maria', -75.9250, 2.4100),
+  ('El Arrayán', 'el-arrayan', -75.8850, 2.4400),
+  ('La Aurora', 'la-aurora', -75.8300, 2.4150)
 ) as village(name, slug, lng, lat);
 
 -- ---------------------------------------------------------------------------
 -- Species
 -- ---------------------------------------------------------------------------
 
--- One row per normalized key. Several of these are variants of each other and
--- are left unmerged on purpose: merging them is what the admin panel is for,
--- and a pre-merged catalogue would leave nothing to exercise.
-insert into public.species (normalized_key, canonical_name) values
-  ('mandarino', 'Mandarino'),
-  ('mandarina', 'Mandarina'),
-  ('limon', 'Limón'),
-  ('limon tahiti', 'Limón Tahití'),
-  ('limone', 'Limones'),
-  ('naranjo', 'Naranjo'),
-  ('naranja', 'Naranja'),
-  ('aguacate', 'Aguacate'),
-  ('aguacate has', 'Aguacate Hass'),
-  ('guayabo', 'Guayabo'),
-  ('guayaba', 'Guayaba'),
-  ('mango', 'Mango'),
-  ('lulo', 'Lulo'),
-  ('granadilla', 'Granadilla'),
-  ('chirimoya', 'Chirimoya'),
-  ('papayo', 'Papayo'),
-  ('papaya', 'Papaya');
+-- The species the guardians typed, written the way six different people would
+-- write them. This one array is the source for both the species catalogue and
+-- the raw text on each tree, so the two can never disagree.
+create temporary table seed_variants (position integer, raw_text text);
+
+insert into seed_variants (position, raw_text)
+select ordinality, value
+from unnest(array[
+  'mandarino', 'Mandarina', 'MANDARINOS', 'mandarinos', 'Mandarino',
+  'limón', 'Limón Tahití', 'LIMONES', 'limon', 'Limón',
+  'naranjo', 'Naranja', 'NARANJOS', 'naranjos',
+  'aguacate', 'Aguacates', 'aguacate hass', 'Aguacate Hass',
+  'guayabo', 'Guayaba', 'guayabos',
+  'mango', 'Mangos', 'MANGO',
+  'lulo', 'Lulos', 'granadilla', 'Granadillas',
+  'chirimoya', 'Chirimoyas', 'papayo', 'Papaya', 'Papayos', 'mandarino '
+]) with ordinality as variant(value, ordinality);
+
+-- One row per distinct key, with the first spelling seen as the provisional
+-- display name, which is what happens in production too: whoever registers a
+-- species first names it.
+--
+-- Singulars and plurals stay apart on purpose. `mandarino`, `mandarinos` and
+-- `Mandarina` are three rows here, and nothing collapses them automatically,
+-- because whether they are the same tree is not something a string rule can
+-- decide. The coordinator merges them from the panel and picks the surviving
+-- name, which is exactly what this catalogue is here to exercise.
+insert into public.species (normalized_key, canonical_name)
+select distinct on (public.normalize_species(variant.raw_text))
+  public.normalize_species(variant.raw_text),
+  btrim(variant.raw_text)
+from seed_variants variant
+where public.normalize_species(variant.raw_text) <> ''
+order by public.normalize_species(variant.raw_text), variant.position;
 
 -- ---------------------------------------------------------------------------
 -- Planting plan
@@ -174,17 +199,8 @@ with catalog as (
     (select array_agg(account.id order by account.email)
        from public.users account
       where account.role = 'guardian') as guardians,
-    -- The same species written the way six different people would write it.
-    array[
-      'mandarino', 'Mandarina', 'MANDARINOS', 'mandarinos', 'Mandarino',
-      'limón', 'Limón Tahití', 'LIMONES', 'limon', 'Limón',
-      'naranjo', 'Naranja', 'NARANJOS', 'naranjos',
-      'aguacate', 'Aguacates', 'aguacate hass', 'Aguacate Hass',
-      'guayabo', 'Guayaba', 'guayabos',
-      'mango', 'Mangos', 'MANGO',
-      'lulo', 'Lulos', 'granadilla', 'Granadillas',
-      'chirimoya', 'Chirimoyas', 'papayo', 'Papaya', 'Papayos', 'mandarino '
-    ]::text[] as variants
+    (select array_agg(variant.raw_text order by variant.position)
+       from seed_variants variant) as variants
 )
 select
   serial_number,
