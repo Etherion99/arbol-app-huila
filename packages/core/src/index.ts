@@ -1,2 +1,2 @@
 export * from './theme';
-export * from './dominio';
+export * from './domain';

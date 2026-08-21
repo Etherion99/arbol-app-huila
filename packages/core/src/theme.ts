@@ -1,49 +1,49 @@
 /**
- * Paleta PROVISIONAL de ÁrbolApp Huila.
+ * Provisional palette for ÁrbolApp Huila.
  *
- * Todo el color de la app y de la web sale de este archivo. Cuando llegue la
- * identidad visual definitiva (Fase 9), se cambian estos valores y no hay que
- * tocar ninguna pantalla.
+ * Every color used by the app and the web panel comes from this file, so
+ * adopting the final visual identity means editing one file instead of
+ * revisiting every screen.
  *
- * Los tres estados de seguimiento son los que pintan los marcadores del mapa,
- * de modo que el coordinador vea la salud del proyecto de un vistazo.
+ * The tracking colors are the ones painting the map markers, so the project
+ * coordinator can read the health of the whole effort at a glance.
  */
 
-export const colores = {
-  /** Árbol al día: bitácora actualizada dentro del ciclo de 2 meses. */
-  activo: '#2ECC71',
-  /** Árbol por actualizar: el ciclo venció y aún no llega la foto. */
-  porActualizar: '#F1C40F',
-  /** Árbol archivado o sin guardián asignado. */
-  archivado: '#7F8C8D',
-  /** Árbol reportado como muerto. */
-  muerto: '#C0392B',
+export const colors = {
+  /** Tree up to date: its log was updated within the two-month cycle. */
+  active: '#2ECC71',
+  /** Tree waiting for its photo: the cycle expired. */
+  needsUpdate: '#F1C40F',
+  /** Archived tree, or one left without a guardian. */
+  archived: '#7F8C8D',
+  /** Tree reported as dead. */
+  dead: '#C0392B',
 
-  /** Fondo oscuro del mapa, para que los marcadores se lean como puntos de luz. */
-  fondoMapa: '#0B1F16',
-  fondo: '#0F172A',
-  superficie: '#1E293B',
-  borde: '#334155',
+  /** Dark map background, so markers read as points of light. */
+  mapBackground: '#0B1F16',
+  background: '#0F172A',
+  surface: '#1E293B',
+  border: '#334155',
 
-  texto: '#F8FAFC',
-  textoSecundario: '#94A3B8',
-  textoSobreClaro: '#0F172A',
+  text: '#F8FAFC',
+  textMuted: '#94A3B8',
+  textOnLight: '#0F172A',
 
-  primario: '#2ECC71',
-  primarioOscuro: '#27AE60',
-  peligro: '#E74C3C',
+  primary: '#2ECC71',
+  primaryDark: '#27AE60',
+  danger: '#E74C3C',
 } as const;
 
-/** Color del marcador según el estado de seguimiento del árbol. */
-export const colorPorEstado = {
-  al_dia: colores.activo,
-  por_vencer: colores.porActualizar,
-  vencido: colores.porActualizar,
-  archivado: colores.archivado,
-  muerto: colores.muerto,
+/** Marker color for each tracking status. */
+export const colorByTrackingStatus = {
+  up_to_date: colors.active,
+  due_soon: colors.needsUpdate,
+  overdue: colors.needsUpdate,
+  archived: colors.archived,
+  dead: colors.dead,
 } as const;
 
-export const espaciado = {
+export const spacing = {
   xs: 4,
   sm: 8,
   md: 16,
@@ -51,11 +51,11 @@ export const espaciado = {
   xl: 32,
 } as const;
 
-export const radios = {
+export const radii = {
   sm: 6,
   md: 12,
   lg: 20,
-  completo: 9999,
+  full: 9999,
 } as const;
 
-export type ClaveColor = keyof typeof colores;
+export type ColorKey = keyof typeof colors;
