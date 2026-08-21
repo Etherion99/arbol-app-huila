@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Notice } from '@/components/ui/notice';
 import { TextField } from '@/components/ui/text-field';
 import { texts } from '@/constants/texts';
-import { colors, effects, radii, spacing } from '@/constants/theme';
+import { colors, effects, fontFace, radii, spacing } from '@/constants/theme';
 import { darkMapStyle } from '@/features/map/map-style';
 import type { UserFix } from '@/features/map/use-user-location';
 import { mapMotion } from '@/features/map/map-motion';
@@ -320,15 +320,15 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
   },
   readoutLabel: {
-    fontFamily: 'IBMPlexMono_500Medium',
+    fontFamily: fontFace.monoMedium,
     color: colors.textSecondary,
   },
   accuracyGood: {
-    fontFamily: 'IBMPlexMono_500Medium',
+    fontFamily: fontFace.monoMedium,
     color: colors.accent,
   },
   accuracyPoor: {
-    fontFamily: 'IBMPlexMono_500Medium',
+    fontFamily: fontFace.monoMedium,
     color: colors.stateDue,
   },
   actions: {

@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
 import { texts } from '@/constants/texts';
-import { colors, radii, spacing } from '@/constants/theme';
+import { colors, fontFace, radii, spacing } from '@/constants/theme';
 import { PhotoCapture } from '@/features/photos/components/photo-capture';
 import type { PreparedPhoto } from '@/features/photos/photo-pipeline';
 import { formatCoordinates, formatShortDate } from '@/lib/dates';
@@ -150,11 +150,11 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   rowData: {
-    fontFamily: 'IBMPlexMono_500Medium',
+    fontFamily: fontFace.monoMedium,
     color: colors.textPrimary,
   },
   rowStrong: {
-    fontFamily: 'Archivo_600SemiBold',
+    fontFamily: fontFace.bodyMedium,
   },
   rowMissing: {
     color: colors.stateDue,

@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   text: {
     // Dark ink on amber, which is the readable pairing of the two.
     color: colors.onAccent,
-    fontFamily: fontFace.bodySemibold,
+    fontFamily: fontFace.bodyMedium,
     textAlign: 'center',
   },
 });

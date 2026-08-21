@@ -6,7 +6,7 @@ import { Notice } from '@/components/ui/notice';
 import { StepperField } from '@/components/ui/stepper-field';
 import { TextField } from '@/components/ui/text-field';
 import { texts } from '@/constants/texts';
-import { MIN_TOUCH_TARGET, colors, radii, spacing } from '@/constants/theme';
+import { MIN_TOUCH_TARGET, colors, fontFace, radii, spacing } from '@/constants/theme';
 import { useSpeciesSuggestions } from '@/features/trees/use-species-suggestions';
 
 export type StepSpeciesProps = {
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   suggestionCount: {
-    fontFamily: 'IBMPlexMono_500Medium',
+    fontFamily: fontFace.monoMedium,
     color: colors.textSecondary,
   },
   pressed: {

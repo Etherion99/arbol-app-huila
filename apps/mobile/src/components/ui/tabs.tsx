@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   label: {
-    fontFamily: fontFace.bodySemibold,
+    fontFamily: fontFace.bodyMedium,
     fontSize: fontSize.sm,
     lineHeight: fontSize.sm + 4,
   },

@@ -3,7 +3,7 @@ import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
 import { texts } from '@/constants/texts';
-import { colors, radii, spacing } from '@/constants/theme';
+import { colors, fontFace, radii, spacing } from '@/constants/theme';
 import { formatShortDate } from '@/lib/dates';
 
 export type HeightPoint = {
@@ -174,14 +174,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     top: 0,
-    fontFamily: 'IBMPlexMono_500Medium',
+    fontFamily: fontFace.monoMedium,
     color: colors.emerald300,
   },
   since: {
     position: 'absolute',
     left: 0,
     bottom: 0,
-    fontFamily: 'IBMPlexMono_500Medium',
+    fontFamily: fontFace.monoMedium,
     color: colors.textSecondary,
   },
   empty: {
