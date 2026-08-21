@@ -2,6 +2,36 @@
 -- log. The planting record is not separate from the log -- it is cycle 1.
 
 -- ---------------------------------------------------------------------------
+-- Reminder cadence
+-- ---------------------------------------------------------------------------
+
+-- When a tree falls due after a log entry: two months later, in Colombian
+-- time. The platform operates in one country and one time zone, so the zone is
+-- pinned here, once, and every other place that needs the cadence calls this.
+--
+-- Writing it as `last_entry_at + interval '2 months'` would not work in the
+-- generated column below. Adding months to a timestamptz is stable rather than
+-- immutable, because the answer depends on the session time zone, and a stored
+-- generated column will only accept an immutable expression. Naming the zone
+-- removes that dependency. The instant produced is the same either way, since
+-- Colombia has no daylight saving.
+create or replace function public.next_reminder_after(last_entry_at timestamptz)
+returns timestamptz
+language sql
+immutable
+parallel safe
+set search_path = ''
+as $$
+  select timezone(
+    'America/Bogota',
+    timezone('America/Bogota', last_entry_at) + interval '2 months'
+  );
+$$;
+
+comment on function public.next_reminder_after(timestamptz) is
+  'When a tree falls due after a log entry: two months later in Colombian time. The single place the cadence and the time zone are written down.';
+
+-- ---------------------------------------------------------------------------
 -- trees
 -- ---------------------------------------------------------------------------
 
@@ -16,18 +46,8 @@ create table public.trees (
   planted_at date not null,
   status public.tree_status not null default 'alive',
   last_updated_at timestamptz not null default now(),
-  -- Two months after the last entry, expressed in Colombian time. The literal
-  -- `last_updated_at + interval '2 months'` cannot be used here: adding months
-  -- to a timestamptz is stable rather than immutable, because the result
-  -- depends on the session time zone, and a stored generated column requires
-  -- an immutable expression. Pinning the zone explicitly makes the same
-  -- arithmetic immutable, and Colombia has no daylight saving, so the instant
-  -- produced is identical.
   next_reminder_at timestamptz generated always as (
-    timezone(
-      'America/Bogota',
-      timezone('America/Bogota', last_updated_at) + interval '2 months'
-    )
+    public.next_reminder_after(last_updated_at)
   ) stored,
   replaces_tree_id uuid references public.trees (id),
   created_at timestamptz not null default now(),
