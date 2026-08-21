@@ -23,6 +23,7 @@ import { colors, spacing } from '@/constants/theme';
 import { AuthLinkProvider } from '@/features/auth/auth-link-provider';
 import { SessionProvider, useSession } from '@/features/auth/session-provider';
 import { loadOnboardingState, useOnboardingState } from '@/features/onboarding/onboarding-store';
+import { loadPlantingDraft } from '@/features/planting/planting-draft';
 import { isEnvComplete, missingEnvVars } from '@/lib/env';
 import { queryClient } from '@/lib/query-client';
 
@@ -31,6 +32,10 @@ import { queryClient } from '@/lib/query-client';
 void SplashScreen.preventAutoHideAsync();
 
 void loadOnboardingState();
+
+// Read once, at start up, so the wizard knows on its first frame whether there
+// is a half filled form to offer back rather than flickering into the question.
+loadPlantingDraft();
 
 /**
  * Every face the type scale names, keyed by the family name a style asks for.
@@ -90,6 +95,17 @@ function RootNavigator() {
           guarded. What needs a session is protected inside its tab layout. */}
       <Stack.Screen name="(app)" />
       <Stack.Screen name="auth" />
+
+      {/* Three tasks rather than three places, so they cover the tab bar
+          instead of living inside it. All three need a session: without one
+          there is no guardian to own a tree. */}
+      <Stack.Protected guard={hasSession}>
+        <Stack.Screen name="plant" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="log/[treeId]" options={{ presentation: 'modal' }} />
+      </Stack.Protected>
+
+      {/* The detail is readable without an account, exactly like the map. */}
+      <Stack.Screen name="tree/[id]" />
       <Stack.Screen
         name="legal"
         options={{ presentation: 'modal', headerShown: true, title: texts.legal.title }}

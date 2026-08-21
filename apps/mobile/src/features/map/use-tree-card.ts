@@ -34,8 +34,11 @@ type CardRow = {
   planted_at: string;
   last_updated_at: string;
   next_reminder_at: string;
+  lng: number;
+  lat: number;
   guardian_id: string | null;
   guardian_display_name: string | null;
+  guardian_since: string | null;
   village_name: string | null;
   municipality_name: string | null;
   latest_cycle: number | null;
@@ -112,8 +115,11 @@ export function useTreeCard(treeId: Uuid | null) {
         plantedAt: row.planted_at,
         lastUpdatedAt: row.last_updated_at,
         nextReminderAt: row.next_reminder_at,
+        lng: row.lng,
+        lat: row.lat,
         guardianId: row.guardian_id,
         guardianDisplayName: row.guardian_display_name,
+        guardianSince: row.guardian_since,
         villageName: row.village_name,
         municipalityName: row.municipality_name,
         latestCycle: row.latest_cycle,

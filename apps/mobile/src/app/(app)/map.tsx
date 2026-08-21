@@ -14,6 +14,7 @@ import {
 } from '@arbolapp/core';
 
 import { AppText } from '@/components/ui/app-text';
+import { Button } from '@/components/ui/button';
 import { ConnectionBanner } from '@/components/connection-banner';
 import { Notice } from '@/components/ui/notice';
 import { texts } from '@/constants/texts';
@@ -26,7 +27,7 @@ import { FilterChip } from '@/features/map/components/filter-chip';
 import { GuestBar } from '@/features/map/components/guest-bar';
 import { MapLegend } from '@/features/map/components/map-legend';
 import { MapSearchBar } from '@/features/map/components/map-search-bar';
-import { OptionSheet, type SheetOption } from '@/features/map/components/option-sheet';
+import { OptionSheet, type SheetOption } from '@/components/ui/option-sheet';
 import { SearchSheet } from '@/features/map/components/search-sheet';
 import { SelectedMarker } from '@/features/map/components/selected-marker';
 import { TreeSummarySheet } from '@/features/map/components/tree-summary-sheet';
@@ -416,6 +417,18 @@ export default function MapScreen() {
           <MapLegend />
         </View>
 
+        {/* Only for a guardian: a visitor without an account has nothing to
+            attach a tree to, and the guest bar already offers them the way in. */}
+        {session !== null ? (
+          <View style={styles.plantAction} pointerEvents="box-none">
+            <Button
+              label={texts.planting.start}
+              onPress={() => router.push('/plant')}
+              accessibilityHint={texts.planting.locationHeading}
+            />
+          </View>
+        ) : null}
+
         <View style={styles.statusLayer} pointerEvents="box-none">
           {viewport.error !== null ? (
             <Notice
@@ -454,9 +467,9 @@ export default function MapScreen() {
             error={card.error}
             onRetry={() => void card.refetch()}
             onClose={() => setSelectedTreeId(null)}
-            // The tree detail is the next delivery. Saying so is the honest
-            // option; a button that silently does nothing is not.
-            onOpenDetail={() => setNotice({ body: texts.map.cardComingSoon })}
+            onOpenDetail={() =>
+              router.push({ pathname: '/tree/[id]', params: { id: selectedTreeId } })
+            }
           />
         ) : null}
       </View>
@@ -552,6 +565,12 @@ const styles = StyleSheet.create({
     left: spacing[4],
     // Android draws the Google attribution in this corner, so the legend is
     // lifted clear of it. On iOS the attribution is part of the tile itself.
+    bottom: Platform.OS === 'android' ? spacing[8] : spacing[4],
+  },
+  // Opposite the legend, thumb side, clear of the same Android attribution.
+  plantAction: {
+    position: 'absolute',
+    right: spacing[4],
     bottom: Platform.OS === 'android' ? spacing[8] : spacing[4],
   },
   statusLayer: {

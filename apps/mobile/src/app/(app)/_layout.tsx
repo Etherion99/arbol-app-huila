@@ -47,6 +47,15 @@ export default function AppLayout() {
 
       <Tabs.Protected guard={hasSession}>
         <Tabs.Screen
+          name="trees"
+          options={{
+            title: texts.myTrees.tabLabel,
+            tabBarAccessibilityLabel: texts.myTrees.title,
+            tabBarIcon: tabIcon({ ios: 'leaf.fill', android: 'eco', web: 'eco' }),
+          }}
+        />
+
+        <Tabs.Screen
           name="profile"
           options={{
             title: texts.map.profileTabLabel,

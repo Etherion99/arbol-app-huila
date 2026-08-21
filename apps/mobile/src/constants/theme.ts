@@ -7,6 +7,7 @@ import { StyleSheet } from 'react-native';
 
 import {
   HIT_TARGET,
+  colorByTrackingStatus,
   colors,
   effects,
   fontSize,
@@ -18,7 +19,18 @@ import {
   tracking,
 } from '@arbolapp/core';
 
-export { colors, effects, fontSize, fontWeight, lineHeight, motion, radii, spacing, tracking };
+export {
+  colorByTrackingStatus,
+  colors,
+  effects,
+  fontSize,
+  fontWeight,
+  lineHeight,
+  motion,
+  radii,
+  spacing,
+  tracking,
+};
 
 /**
  * Minimum side of any tappable control. Both platforms recommend it and the

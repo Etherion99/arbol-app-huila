@@ -230,7 +230,280 @@ export const texts = {
     cardClose: 'Cerrar la ficha del árbol',
     cardNoPhoto: 'Todavía sin fotografía',
     cardPhotoOf: (species: string) => `Última fotografía del árbol de ${species}`,
-    cardComingSoon: 'El detalle del árbol llega en la próxima entrega.',
+  },
+
+  /**
+   * The four step planting wizard. The step titles are the ones on the canvas;
+   * the grouping follows the field form, where choosing a vereda is a decision
+   * of its own and never a by-product of where the pin happened to land.
+   */
+  planting: {
+    start: 'Sembrar',
+    startFirst: 'Sembrar mi primer árbol',
+    close: 'Salir del registro',
+    stepLabel: (current: number, total: number) => `PASO ${current} DE ${total}`,
+    progressLabel: (current: number, total: number) =>
+      `Progreso del registro: paso ${current} de ${total}`,
+    next: 'Siguiente',
+    back: 'Atrás',
+
+    draftFound: 'Tienes un registro a medias',
+    draftFoundBody: (when: string) =>
+      `Guardamos lo que llevabas el ${when}. Puedes continuar donde lo dejaste o empezar de nuevo.`,
+    draftResume: 'Continuar',
+    draftDiscard: 'Empezar de nuevo',
+    draftSaved: 'Guardado en este teléfono',
+    exitTitle: '¿Salir del registro?',
+    exitBody:
+      'Lo que llevas se queda guardado en este teléfono. Puedes continuar más tarde desde el mapa.',
+    exitConfirm: 'Salir y guardar',
+    exitCancel: 'Seguir aquí',
+
+    locationTitle: 'Ubicación',
+    locationHeading: '¿Dónde quedó sembrado?',
+    locationHint: 'Arrastra el pin al punto exacto',
+    locationAccuracy: (metres: number) => `±${Math.round(metres)} m`,
+    locationAccuracyLabel: (metres: number) => `Precisión del GPS: ${Math.round(metres)} metros`,
+    locationNoFix: 'Sin lectura del GPS',
+    locationUseGps: 'Usar mi ubicación',
+    locationPoorTitle: 'Señal de GPS débil',
+    locationPoorBody: (metres: number) =>
+      `Bajo los árboles el GPS pierde precisión (±${Math.round(metres)} m). Ajusta el pin al punto exacto de la siembra antes de continuar.`,
+    locationDeniedTitle: 'Tu ubicación pone el árbol en su sitio',
+    locationDeniedBody:
+      'Usamos el GPS solo para ubicar los árboles que siembras y centrar el mapa. Funciona sin señal de datos.',
+    locationAllow: 'Permitir ubicación',
+    locationManualInstead: 'Ahora no — puedo escribir las coordenadas a mano',
+    locationOpenSettings: 'Abrir ajustes del teléfono',
+    manualToggle: 'Escribir coordenadas a mano',
+    manualToggleClose: 'Volver al mapa',
+    manualLatitude: 'Latitud',
+    manualLongitude: 'Longitud',
+    manualHint: 'En grados decimales, como 2.3894 y -75.8919.',
+    manualApply: 'Poner el pin ahí',
+    manualOutOfRange: 'Esa coordenada queda fuera del Huila. Revisa los números.',
+    pinLabel: 'Pin de la siembra. Arrástralo para ajustarlo.',
+
+    zoneTitle: 'Municipio y vereda',
+    zoneHeading: '¿En qué vereda estás?',
+    zoneBody:
+      'Elígela tú. No la deducimos del mapa: todavía no existen los contornos de las veredas, y adivinarla dejaría un dato que nadie podría corregir después.',
+    municipalityLabel: 'Municipio',
+    villageLabel: 'Vereda',
+    municipalityPlaceholder: 'Elige un municipio',
+    villagePlaceholder: 'Elige una vereda',
+    villageNeedsMunicipality: 'Primero elige el municipio.',
+    suggestionTitle: 'Sugerencia',
+    suggestionBody: (village: string, distance: string) =>
+      `La vereda con el centro más cercano al pin es ${village}, a unos ${distance}. Es una estimación: confírmala o elige otra.`,
+    suggestionAccept: (village: string) => `Sí, es ${village}`,
+    zoneRequired: 'Elige el municipio y la vereda para continuar.',
+
+    speciesTitle: 'Especie y siembra',
+    speciesHeading: '¿Qué sembraste?',
+    speciesBody:
+      'Escribe la especie con tus palabras. Te sugerimos lo que otros guardianes ya han escrito.',
+    speciesLabel: 'Especie',
+    speciesPlaceholder: 'mandarino',
+    speciesKeepsRawText:
+      'Se guarda tal como lo escribas. El coordinador puede unificar nombres después.',
+    speciesSearching: 'Buscando…',
+    speciesNoMatches: 'Nadie ha escrito ese nombre todavía. El tuyo será el primero.',
+    speciesSuggestionLabel: (name: string, count: number) =>
+      `${name}, ${count === 1 ? '1 árbol' : `${count} árboles`}`,
+
+    plantedAtLabel: 'Fecha de siembra',
+    plantedAtToday: 'Hoy, por defecto',
+    plantedAtDay: 'Día',
+    plantedAtMonth: 'Mes',
+    plantedAtYear: 'Año',
+    plantedAtSetToday: 'Hoy',
+    plantedAtInvalid: 'Esa fecha no existe. Revisa el día y el mes.',
+    plantedAtFuture: 'La siembra no puede ser en el futuro.',
+    heightLabel: 'Altura',
+    heightUnit: 'cm',
+    heightHint: 'Mide desde el suelo hasta la punta más alta',
+    heightRequired: 'Escribe la altura en centímetros.',
+    branchesLabel: 'Ramas visibles',
+    branchesDecrease: 'Quitar una rama',
+    branchesIncrease: 'Sumar una rama',
+
+    photoTitle: 'Fotografía',
+    photoHeading: 'La foto de la siembra',
+    summaryHeading: 'RESUMEN',
+    summarySpecies: 'Especie',
+    summaryPlanting: 'Siembra',
+    summaryLocation: 'Ubicación',
+    summaryPhoto: 'Foto',
+    summaryPhotoPending: 'Falta la fotografía',
+    summaryPlantingValue: (date: string, height: number, branches: number) =>
+      `${date} · ${height} cm · ${branches === 1 ? '1 rama' : `${branches} ramas`}`,
+    submit: 'Sembrar árbol',
+    submitting: 'Registrando…',
+
+    successTitle: 'Tu árbol ya está en el mapa',
+    successBody: (species: string, village: string) => `${species} · vereda ${village}`,
+    successNextPhoto: (date: string) => `Próxima foto: ${date}`,
+    successOpenTree: 'Ver el árbol',
+    successPlantAnother: 'Sembrar otro',
+    successDone: 'Listo',
+  },
+
+  /** The growth log: a new cycle, and the variant that reports a tree dead. */
+  growthLog: {
+    update: 'Actualizar bitácora',
+    updateShort: 'Actualizar',
+    newEntryTitle: (cycle: number) => `Nueva entrada — ciclo ${cycle}`,
+    ghostHint: 'Alinea con la foto anterior',
+    ghostBadge: 'FANTASMA',
+    ghostToggleOn: 'Mostrar la foto anterior superpuesta',
+    ghostToggleOff: 'Ocultar la foto anterior superpuesta',
+    ghostUnavailable: 'La foto anterior no está disponible sin conexión.',
+
+    healthLabel: 'Estado de salud',
+    health: {
+      healthy: 'Sano',
+      at_risk: 'Débil',
+      sick: 'Con plagas',
+      dead: 'Muerto',
+    },
+    notesLabel: 'Notas (opcional)',
+    notesPlaceholder: 'Le salieron flores nuevas',
+    captureLocation: (coordinates: string) => `Coordenada de captura: ${coordinates}`,
+    captureLocationMissing: 'Sin coordenada de captura',
+    save: 'Guardar entrada',
+    saving: 'Guardando…',
+
+    reportDead: 'Reportar árbol muerto',
+    deadWarning:
+      'El árbol quedará marcado como muerto en el mapa y dejarán de llegar recordatorios. Su bitácora se conserva completa.',
+    deadPhotoTitle: 'Fotografía de evidencia',
+    deadPhotoHint: 'Obligatoria',
+    deadCauseLabel: 'Causa',
+    deadCauses: ['Sequía', 'Ganado', 'Quema', 'Plaga', 'Otra'],
+    deadStoryLabel: '¿Qué pasó? (opcional)',
+    deadStoryPlaceholder: 'El verano fue muy fuerte y no…',
+    deadNoMeasures: 'No se piden medidas. El coordinador validará el reporte.',
+    deadSubmit: 'Reportar como muerto',
+    deadCauseRequired: 'Elige la causa para poder reportarlo.',
+
+    savedTitle: 'Bitácora actualizada',
+    savedBody: (date: string) => `Próxima foto: ${date}.`,
+    duplicateTitle: 'Ese ciclo ya estaba guardado',
+    duplicateBody:
+      'La entrada había llegado al servidor en un intento anterior. Terminamos de subir la fotografía y no se duplicó nada.',
+  },
+
+  /** Taking, compressing and sending a photograph. */
+  photo: {
+    take: 'Tomar fotografía',
+    retake: 'Repetir la foto',
+    shutter: 'Tomar la fotografía',
+    preview: 'Fotografía tomada',
+    compressNote: 'Se comprime a ~200 KB antes de subir',
+    preparing: 'Preparando la fotografía…',
+    ready: (kilobytes: number) => `Lista · ${kilobytes} KB`,
+    permissionTitle: 'La cámara está desactivada',
+    permissionBody:
+      'La fotografía es la evidencia del árbol, y por eso la pedimos desde la cámara. Actívala en los ajustes del teléfono para poder tomarla.',
+    permissionAllow: 'Permitir la cámara',
+    permissionSettings: 'Abrir ajustes del teléfono',
+    required: 'Falta la fotografía.',
+    tooHeavyTitle: 'La fotografía pesa demasiado',
+    tooHeavyBody:
+      'No pudimos reducirla por debajo del límite del almacenamiento. Toma otra con menos detalle e inténtalo de nuevo.',
+    prepareFailedTitle: 'No pudimos preparar la fotografía',
+    prepareFailedBody: 'Vuelve a tomarla. Los datos que ya escribiste se conservan.',
+
+    uploadFailedTitle: 'No pudimos subir la fotografía',
+    uploadFailedBody:
+      'El registro ya quedó guardado en el servidor y la fotografía sigue en este teléfono, así que no se ha perdido nada. Revisa tu conexión y reintenta el envío.',
+    uploadRetry: 'Reintentar el envío',
+    uploading: 'Subiendo la fotografía…',
+    uploadOffline: 'Sin conexión. Reintenta el envío cuando vuelva la señal.',
+    uploadPending: 'Foto pendiente de enviar',
+  },
+
+  /** The "Mis árboles" tab. */
+  myTrees: {
+    tabLabel: 'Mis árboles',
+    title: 'Mis árboles',
+    summary: (total: number, pending: number) =>
+      pending === 0
+        ? `${total === 1 ? '1 árbol' : `${total} árboles`} · todos al día`
+        : `${total === 1 ? '1 árbol' : `${total} árboles`} · ${pending} por actualizar`,
+    tabAll: (count: number) => `Todos (${count})`,
+    tabPending: (count: number) => `Pendientes (${count})`,
+    cardLabel: (species: string, state: string) => `Árbol de ${species}, ${state}`,
+    cycle: (cycle: number) => `CICLO ${cycle}`,
+    noCycle: 'SIN BITÁCORA',
+    overdueBy: (days: number) =>
+      days === 1 ? 'Foto pendiente desde hace 1 día' : `Foto pendiente desde hace ${days} días`,
+    dueToday: 'La foto del ciclo vence hoy',
+    dueIn: (date: string) => `Próxima foto: ${date}`,
+    dead: 'Reportado como muerto',
+
+    emptyTitle: 'Todavía no has sembrado ningún árbol',
+    emptyBody: 'Tu primer árbol aparecerá aquí y en el mapa de todo el Huila.',
+    emptyPending: 'No tienes ningún árbol esperando fotografía. Todos están al día.',
+    loading: 'Cargando tus árboles…',
+    errorTitle: 'No pudimos cargar tus árboles',
+    errorBody: 'Revisa tu conexión. Tus datos guardados no se pierden.',
+    offlineCached: 'Sin conexión. Estás viendo la última lista guardada.',
+    signedOutTitle: 'Entra para ver tus árboles',
+    signedOutBody: 'Los árboles que siembras quedan asociados a tu cuenta de Guardián.',
+  },
+
+  /** The tree detail: timeline, before and after, height curve and guardian. */
+  treeDetail: {
+    title: 'Detalle del árbol',
+    coverLabel: (species: string) => `Fotografía más reciente del árbol de ${species}`,
+    noCover: 'Todavía sin fotografía',
+    header: (cycle: string, village: string, coordinates: string) =>
+      `${cycle} · VEREDA ${village} · ${coordinates}`,
+
+    compareHeading: 'ANTES / DESPUÉS',
+    compareEmpty: 'Con dos entradas podrás comparar el antes y el después.',
+    compareBefore: 'Antes',
+    compareAfter: 'Después',
+    compareSlider: 'Deslizador de comparación entre las dos fotografías',
+    compareLess: 'Mostrar más de la fotografía anterior',
+    compareMore: 'Mostrar más de la fotografía posterior',
+    comparePickBefore: 'Entrada de la izquierda',
+    comparePickAfter: 'Entrada de la derecha',
+
+    heightHeading: 'ALTURA · CM',
+    heightEmpty: 'La gráfica aparece con la segunda medida.',
+    heightChartLabel: (points: number, first: number, last: number) =>
+      `Gráfica de altura con ${points} medidas, de ${first} a ${last} centímetros`,
+
+    logHeading: (count: number) =>
+      count === 1 ? 'BITÁCORA · 1 ENTRADA' : `BITÁCORA · ${count} ENTRADAS`,
+    logPlanting: 'Siembra · ciclo 1',
+    logCycle: (cycle: number) => `Ciclo ${cycle}`,
+    logOnTime: 'a tiempo',
+    logLate: 'tarde',
+    logMeasures: (date: string, height: number, branches: number | null) =>
+      branches === null
+        ? `${date} · ${height} cm`
+        : `${date} · ${height} cm · ${branches === 1 ? '1 rama' : `${branches} ramas`}`,
+    logNoMeasures: (date: string) => `${date} · sin medidas`,
+    logOpenPhoto: (cycle: number) => `Ver la fotografía del ciclo ${cycle}`,
+    logEmpty: 'Esta bitácora todavía no tiene entradas.',
+
+    guardianLine: (name: string, since: string) =>
+      `Este árbol pertenece a ${name}, guardián desde ${since}.`,
+    guardianUnknown: 'Este árbol no tiene guardián asignado.',
+    miniMapLabel: 'Ubicación del árbol en el mapa',
+
+    viewerClose: 'Cerrar la fotografía',
+    viewerCaption: (code: string, cycle: number) => `${code} · Ciclo ${cycle}`,
+
+    loading: 'Cargando el árbol…',
+    errorTitle: 'No pudimos cargar este árbol',
+    errorBody: 'Revisa tu conexión y vuelve a intentarlo.',
+    notFoundTitle: 'Este árbol ya no está disponible',
+    notFoundBody: 'Puede que la coordinación del PRAE lo haya archivado.',
   },
 
   legal: {
@@ -315,5 +588,27 @@ export const texts = {
     closeNotice: 'Descartar el aviso',
     onboardingProgress: (current: number, total: number) =>
       `Progreso del recorrido: paso ${current} de ${total}`,
+    /** Announced with the state name, so a state is never told by hue alone. */
+    treeState: (state: string) => `Estado: ${state}`,
+    photoPreview: 'Vista previa de la fotografía tomada',
+  },
+
+  /**
+   * One message per failure the tree calls know how to name. A generic "ocurrió
+   * un error" after a guardian has walked to a tree and filled in a form is the
+   * kind of dead end that makes somebody stop using the app.
+   */
+  treeErrors: {
+    /** Heading over whichever of the messages below applies. */
+    title: 'No pudimos guardar',
+    offline: 'No hay conexión. Conéctate a datos o wifi e inténtalo de nuevo.',
+    network: 'No pudimos comunicarnos con el servidor. Revisa tu conexión y reintenta.',
+    notSignedIn: 'Tu sesión venció. Entra de nuevo; lo que llevas queda guardado en el teléfono.',
+    notOwner: 'Este árbol es de otro guardián, así que no puedes escribir en su bitácora.',
+    zoneUnknown: 'Esa vereda ya no está en el catálogo. Elige otra.',
+    speciesBlank: 'Escribe la especie que sembraste.',
+    codeExhausted: 'Se agotaron los códigos de este municipio. Avisa a la coordinación del PRAE.',
+    duplicateCycle: 'Ese ciclo ya estaba guardado.',
+    unknown: 'No pudimos completar el registro. Inténtalo de nuevo en un momento.',
   },
 } as const;
