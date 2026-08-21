@@ -62,6 +62,20 @@ module.exports = () => {
       ],
       'expo-secure-store',
       [
+        'expo-camera',
+        {
+          // The growth log is a photographic record, so the camera is the one
+          // permission the app genuinely cannot work around. The wording says
+          // what the photograph is for rather than asking for trust.
+          cameraPermission: 'Usamos la cámara para las fotografías de la bitácora de tus árboles.',
+          // Neither is used: the log is photographs, and nothing is ever read
+          // from the library. Declared false so the config plugin leaves the
+          // entries out of the manifest instead of requesting them silently.
+          microphonePermission: false,
+          recordAudioAndroidPermission: false,
+        },
+      ],
+      [
         'react-native-maps',
         {
           ...(usable(androidGoogleMapsApiKey) ? { androidGoogleMapsApiKey } : {}),
