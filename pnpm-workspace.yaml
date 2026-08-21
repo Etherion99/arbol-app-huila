@@ -1,6 +1,16 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+
+# pnpm 11 ya no lee su configuración de .npmrc: las dos reglas que el proyecto
+# necesita viven aquí o no se aplican en absoluto.
+#
+# Metro y React Native no resuelven el árbol de enlaces simbólicos de pnpm:
+# necesitan un node_modules plano. Sin esto, la app móvil no compila.
+nodeLinker: hoisted
+
+# Versiones fijas: pnpm add no debe escribir rangos con ^ ni ~.
+savePrefix: ''
 # unrs-resolver compila el resolvedor nativo que usa ESLint; sin su build, el lint falla.
 allowBuilds:
   unrs-resolver: true
