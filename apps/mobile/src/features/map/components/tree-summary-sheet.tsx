@@ -108,7 +108,7 @@ export function TreeSummarySheet({
               {card.speciesName}
             </AppText>
 
-            <AppText variant="caption" style={styles.meta} numberOfLines={1}>
+            <AppText variant="data" style={styles.meta} numberOfLines={1}>
               {[
                 card.code,
                 card.latestCycle === null
@@ -118,7 +118,7 @@ export function TreeSummarySheet({
               ].join(' · ')}
             </AppText>
 
-            <AppText variant="caption" style={styles.meta} numberOfLines={1}>
+            <AppText variant="data" style={styles.meta} numberOfLines={1}>
               {texts.map.cardUpdated(formatDate(card.lastUpdatedAt))}
             </AppText>
           </View>
@@ -210,7 +210,13 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     fontWeight: '700',
   },
+  // The canvas sets this line in mono at 12, which is what the `data` variant
+  // is for, but at the size a caption runs rather than the size a coordinate
+  // does. The colour stays secondary: the canvas uses muted here and muted
+  // reaches 3.44:1 on a card, which is under what 12px needs.
   meta: {
+    fontSize: fontSize.xs,
+    lineHeight: fontSize.xs + 4,
     color: colors.textSecondary,
   },
   badge: {

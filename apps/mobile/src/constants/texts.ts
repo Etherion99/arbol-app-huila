@@ -6,7 +6,33 @@
  * Written in Spanish, addressing the reader as "tú" or impersonally. Never
  * voseo: the project is in Huila, where nobody says "ingresá".
  */
+
+/**
+ * What each tracking state is called. Named once and shared, because the map
+ * legend, the state badge and the tree list all have to say the same word: a
+ * tree that reads "Vencido" on the map and "Atrasado" in the list looks like
+ * two different states to the guardian reading them.
+ */
+const treeStateLabels = {
+  up_to_date: 'Al día',
+  due_soon: 'Por actualizar',
+  overdue: 'Vencido',
+  dead: 'Muerto',
+  archived: 'Archivado',
+} as const;
+
 export const texts = {
+  /** The five tracking states, for any surface that names one. */
+  treeState: treeStateLabels,
+
+  /** Copy belonging to the interface catalogue rather than to a screen. */
+  ui: {
+    selectPlaceholder: 'Selecciona…',
+    selectOpen: (label: string) => `Abrir la lista de ${label}`,
+    removeTag: (label: string) => `Quitar ${label}`,
+    dialogClose: 'Cerrar el diálogo',
+  },
+
   common: {
     appName: 'ÁrbolApp Huila',
     continue: 'Continuar',
@@ -19,6 +45,8 @@ export const texts = {
     saving: 'Guardando…',
     offlineBanner: 'Sin conexión. Revisa tus datos o el wifi para continuar.',
     offlineHint: 'Sin conexión. Necesitas señal para continuar.',
+    /** Reachable from every screen a reader can land on, with or without an account. */
+    legalLink: 'Política de privacidad y términos',
   },
 
   config: {
@@ -37,15 +65,19 @@ export const texts = {
     steps: [
       {
         title: 'Siembra un árbol y ponlo en el mapa',
-        body: 'Cada árbol que siembras queda ubicado en el mapa de La Plata y se convierte en un punto de luz que cualquiera puede ver.',
+        body: 'Cada árbol frutal del Huila se vuelve un punto de luz que toda la comunidad puede ver.',
+        /** Caption of the field photograph. Placeholder until the PRAE supplies it. */
+        photoCaption: 'Foto real de campo · vereda San Andrés',
       },
       {
         title: 'Cada dos meses, una foto y sus medidas',
-        body: 'Este proyecto nace del PRAE de la I.E. San Sebastián y de Juventud en línea. Tu bitácora es la evidencia que sostiene el informe ambiental del colegio.',
+        body: 'La bitácora guarda la altura y las ramas de tu árbol. Te avisaremos cuando toque.',
+        photoCaption: 'Foto real de campo · guardiana y su mandarino',
       },
       {
         title: 'El Huila ve crecer el bosque',
-        body: 'Ser Guardián es cuidar tus árboles y contar su historia. Con esas fotos se sabe cuántos siguen vivos y cuánto han crecido.',
+        body: 'El mapa es público: tu colegio, tu vereda y tu municipio pueden seguir cada siembra.',
+        photoCaption: 'Foto real de campo · el bosque del Huila',
       },
     ],
   },
@@ -61,10 +93,11 @@ export const texts = {
     institutionPlaceholder: 'I.E. San Sebastián',
     passwordLabel: 'Contraseña',
     passwordPlaceholder: 'Mínimo 8 caracteres',
-    passwordConfirmationLabel: 'Repite la contraseña',
     adultLabel: 'Declaro que soy mayor de 18 años',
     termsLabel: 'Acepto la política de privacidad y los términos de uso',
-    termsLink: 'Leer la política de privacidad y los términos',
+    /** Fragments of `termsLabel` rendered as links. Must match it literally. */
+    privacyPolicyLink: 'política de privacidad',
+    termsOfUseLink: 'términos de uso',
     consentHelper:
       'Para crear la cuenta debes confirmar tu mayoría de edad y aceptar los términos.',
     passwordRequirement: 'Mínimo 8 caracteres.',
@@ -85,6 +118,8 @@ export const texts = {
     submitting: 'Entrando…',
     forgotPassword: '¿Olvidaste tu contraseña?',
     noAccount: 'Crear cuenta de guardián',
+    /** Separates having an account from not needing one. */
+    or: 'O',
     exploreAsGuest: 'Explorar el mapa sin cuenta',
     sessionExpired: 'Tu sesión se cerró por seguridad. Vuelve a entrar para continuar.',
     passwordUpdated: 'Contraseña actualizada. Entra con la nueva.',
@@ -107,7 +142,7 @@ export const texts = {
   },
 
   forgotPassword: {
-    title: 'Recuperar la contraseña',
+    title: 'Recuperar contraseña',
     subtitle: 'Escribe el correo con el que te registraste.',
     emailLabel: 'Correo electrónico',
     submit: 'Enviar enlace',
@@ -124,7 +159,6 @@ export const texts = {
     title: 'Nueva contraseña',
     subtitle: 'Elige una contraseña que no uses en otro lado.',
     passwordLabel: 'Contraseña nueva',
-    passwordConfirmationLabel: 'Repite la contraseña nueva',
     submit: 'Guardar contraseña',
     submitting: 'Guardando…',
     cancel: 'Cancelar y volver a iniciar sesión',
@@ -164,21 +198,13 @@ export const texts = {
     loadErrorTitle: 'No pudimos cargar tu perfil',
   },
 
-  account: {
-    title: 'Tu cuenta',
-    body: 'Estás explorando el mapa sin cuenta. Regístrate como Guardián para sembrar árboles y llevar su bitácora.',
-    signUp: 'Crear cuenta de Guardián',
-    signIn: 'Ya tengo cuenta',
-    legalLink: 'Política de privacidad y términos',
-  },
-
   map: {
     tabLabel: 'Mapa',
-    accountTabLabel: 'Cuenta',
     profileTabLabel: 'Perfil',
     guestNotice: 'Estás explorando sin cuenta. Puedes mirar el mapa, pero no registrar árboles.',
     guestAction: 'Crear cuenta de Guardián',
     guestSignIn: 'Entrar',
+    guestLegal: 'Privacidad y términos',
 
     searchPlaceholder: 'Buscar árbol o vereda…',
     searchLabel: 'Buscar un árbol o una vereda',
@@ -194,13 +220,7 @@ export const texts = {
     treeCount: (count: number) => (count === 1 ? '1 árbol' : `${count} árboles`),
 
     legendTitle: 'Estados',
-    legend: {
-      up_to_date: 'Al día',
-      due_soon: 'Por actualizar',
-      overdue: 'Vencido',
-      dead: 'Muerto',
-      archived: 'Archivado',
-    },
+    legend: treeStateLabels,
 
     clusterLabel: (count: number, zone: string) => `${count} árboles en ${zone}`,
     clusterLabelPlain: (count: number) => `Grupo de ${count} árboles`,
@@ -231,7 +251,7 @@ export const texts = {
 
   legal: {
     title: 'Privacidad y términos',
-    provisionalBadge: 'Borrador — texto provisional',
+    version: 'Versión del 21 ago 2026',
     provisionalNotice:
       'Este contenido es un borrador de trabajo. El texto legal definitivo se publica antes de que la aplicación salga a las tiendas y reemplazará por completo lo que aparece aquí.',
     sections: [

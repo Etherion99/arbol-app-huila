@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { CheckboxField } from '@/components/ui/checkbox-field';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
+import { ScreenHeader } from '@/components/ui/screen-header';
 import { TextField } from '@/components/ui/text-field';
 import { texts } from '@/constants/texts';
 import { colors, spacing } from '@/constants/theme';
@@ -20,7 +21,7 @@ const INITIAL_VALUES: SignUpInput = {
   email: '',
   institution: '',
   password: '',
-  passwordConfirmation: '',
+
   isAdultConfirmed: false,
   termsAccepted: false,
 };
@@ -54,11 +55,8 @@ export default function SignUpScreen() {
   const hasBothConsents = form.values.isAdultConfirmed && form.values.termsAccepted;
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <AppText variant="display">{texts.signUp.title}</AppText>
-        <AppText variant="bodyMuted">{texts.signUp.subtitle}</AppText>
-      </View>
+    <Screen header={<ScreenHeader title={texts.signUp.title} />}>
+      <AppText variant="bodyMuted">{texts.signUp.subtitle}</AppText>
 
       {failure !== null ? (
         <Notice
@@ -100,17 +98,8 @@ export default function SignUpScreen() {
           returnKeyType="next"
         />
 
-        <TextField
-          label={texts.signUp.institutionLabel}
-          placeholder={texts.signUp.institutionPlaceholder}
-          value={form.values.institution}
-          onChangeText={(value) => form.setValue('institution', value)}
-          onBlur={() => form.reveal('institution')}
-          error={form.errorFor('institution')}
-          autoCapitalize="words"
-          returnKeyType="next"
-        />
-
+        {/* Password before role, which is the order the canvas draws: the two
+            credentials stay together and the affiliation comes after them. */}
         <TextField
           label={texts.signUp.passwordLabel}
           placeholder={texts.signUp.passwordPlaceholder}
@@ -126,20 +115,22 @@ export default function SignUpScreen() {
           autoComplete="new-password"
           autoCapitalize="none"
           autoCorrect={false}
-          returnKeyType="next"
+          returnKeyType="done"
         />
 
+        {/* The canvas draws a select here and this is still a text field, on
+            purpose. It never enumerates the options, and `users.institution` is
+            free text in the database: turning it into a closed list decides
+            what a guardian is allowed to answer, which is a product call and
+            not a layout one. Raised as PD-06. */}
         <TextField
-          label={texts.signUp.passwordConfirmationLabel}
-          value={form.values.passwordConfirmation}
-          onChangeText={(value) => form.setValue('passwordConfirmation', value)}
-          onBlur={() => form.reveal('passwordConfirmation')}
-          error={form.errorFor('passwordConfirmation')}
-          isPassword
-          textContentType="newPassword"
-          autoComplete="new-password"
-          autoCapitalize="none"
-          autoCorrect={false}
+          label={texts.signUp.institutionLabel}
+          placeholder={texts.signUp.institutionPlaceholder}
+          value={form.values.institution}
+          onChangeText={(value) => form.setValue('institution', value)}
+          onBlur={() => form.reveal('institution')}
+          error={form.errorFor('institution')}
+          autoCapitalize="words"
           returnKeyType="done"
         />
       </View>
@@ -157,6 +148,9 @@ export default function SignUpScreen() {
           error={form.errorFor('isAdultConfirmed')}
         />
 
+        {/* The two links live inside the sentence, as the canvas draws them,
+            so the consent reads as one statement instead of a checkbox with a
+            button hanging off it. */}
         <CheckboxField
           label={texts.signUp.termsLabel}
           isChecked={form.values.termsAccepted}
@@ -164,13 +158,11 @@ export default function SignUpScreen() {
             form.setValue('termsAccepted', checked);
             form.reveal('termsAccepted');
           }}
+          links={[
+            { text: texts.signUp.privacyPolicyLink, onPress: () => router.push('/legal') },
+            { text: texts.signUp.termsOfUseLink, onPress: () => router.push('/legal') },
+          ]}
           error={form.errorFor('termsAccepted')}
-        />
-
-        <Button
-          label={texts.signUp.termsLink}
-          onPress={() => router.push('/legal')}
-          variant="ghost"
         />
 
         <AppText variant="caption" style={hasBothConsents ? undefined : styles.consentPending}>
@@ -202,9 +194,6 @@ export default function SignUpScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    gap: spacing[1],
-  },
   form: {
     gap: spacing[4],
   },

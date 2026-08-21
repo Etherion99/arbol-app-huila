@@ -54,46 +54,34 @@ const institution = z
   .transform((value) => (value === '' ? null : value));
 
 /**
- * The confirmation is checked on the whole object rather than on the field,
- * because a field can only see itself. The issue is attached to the
- * confirmation input so the message appears under the box the guardian has to
- * fix.
+ * No password is typed twice anywhere in this application.
+ *
+ * The design system settled it on 21 August 2026 and it is written down in
+ * `Especificación de Pantallas.dc.html`: every field that creates a password
+ * carries a reveal toggle instead, which lets the guardian check what they
+ * wrote without a second box. One field fewer matters on a form filled in
+ * standing up, in direct sun, and a mistyped password is recovered through the
+ * same flow that produced this screen.
  */
-function matchingPasswords<T extends { password: string; passwordConfirmation: string }>(
-  value: T,
-  context: z.RefinementCtx,
-) {
-  if (value.password !== value.passwordConfirmation) {
-    context.addIssue({
-      code: 'custom',
-      path: ['passwordConfirmation'],
-      message: validation.passwordMismatch,
-    });
-  }
-}
-
-export const signUpSchema = z
-  .object({
-    fullName,
-    email,
-    institution,
-    password,
-    passwordConfirmation: z.string(),
-    /**
-     * Legal age is not a preference, it is the condition that lets the profile
-     * exist at all: the database constrains the column to true. Refining the
-     * boolean rather than declaring a literal keeps the field a boolean the
-     * checkbox can toggle, while an unchecked box fails validation here
-     * instead of travelling to a server that would reject it anyway.
-     */
-    isAdultConfirmed: z.boolean().refine((value) => value, {
-      error: validation.adultRequired,
-    }),
-    termsAccepted: z.boolean().refine((value) => value, {
-      error: validation.termsRequired,
-    }),
-  })
-  .superRefine(matchingPasswords);
+export const signUpSchema = z.object({
+  fullName,
+  email,
+  institution,
+  password,
+  /**
+   * Legal age is not a preference, it is the condition that lets the profile
+   * exist at all: the database constrains the column to true. Refining the
+   * boolean rather than declaring a literal keeps the field a boolean the
+   * checkbox can toggle, while an unchecked box fails validation here
+   * instead of travelling to a server that would reject it anyway.
+   */
+  isAdultConfirmed: z.boolean().refine((value) => value, {
+    error: validation.adultRequired,
+  }),
+  termsAccepted: z.boolean().refine((value) => value, {
+    error: validation.termsRequired,
+  }),
+});
 
 export type SignUpInput = z.input<typeof signUpSchema>;
 export type SignUpValues = z.output<typeof signUpSchema>;
@@ -112,12 +100,7 @@ export const passwordResetRequestSchema = z.object({ email });
 
 export type PasswordResetRequestValues = z.output<typeof passwordResetRequestSchema>;
 
-export const newPasswordSchema = z
-  .object({
-    password,
-    passwordConfirmation: z.string(),
-  })
-  .superRefine(matchingPasswords);
+export const newPasswordSchema = z.object({ password });
 
 export type NewPasswordValues = z.output<typeof newPasswordSchema>;
 

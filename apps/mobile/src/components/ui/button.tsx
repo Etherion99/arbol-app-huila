@@ -1,14 +1,29 @@
+import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
 import { MIN_TOUCH_TARGET, colors, radii, spacing } from '@/constants/theme';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type Size = 'sm' | 'md' | 'lg';
+
+/**
+ * The heights of the catalogue. Only `lg` reaches the minimum target on its
+ * own, so the two smaller ones are padded with `hitSlop` rather than grown:
+ * the drawn size survives and the finger still lands.
+ */
+const HEIGHT: Record<Size, number> = { sm: 32, md: 40, lg: 48 };
 
 export type ButtonProps = {
   label: string;
   onPress: () => void;
   variant?: Variant;
+  size?: Size;
+  /**
+   * Drawn before the label. The canvas uses it for the actions that name a
+   * gesture rather than a place: «⌖ Sembrar», «↻ Actualizar».
+   */
+  icon?: ReactNode;
   /** Shows a spinner and blocks the press, so a slow call cannot be sent twice. */
   isLoading?: boolean;
   /** Text shown while `isLoading`, so the wait says what it is waiting for. */
@@ -24,6 +39,8 @@ export function Button({
   label,
   onPress,
   variant = 'primary',
+  size = 'lg',
+  icon,
   isLoading = false,
   loadingLabel,
   isDisabled = false,
@@ -45,8 +62,10 @@ export function Button({
       accessibilityLabel={accessibilityLabel ?? shown}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: isBlocked, busy: isLoading }}
+      hitSlop={Math.max(0, (MIN_TOUCH_TARGET - HEIGHT[size]) / 2)}
       style={({ pressed }) => [
         styles.base,
+        { height: HEIGHT[size] },
         styles[variant],
         pressed && !isBlocked && styles.pressed,
         isBlocked && styles.blocked,
@@ -59,7 +78,9 @@ export function Button({
             size="small"
             color={variant === 'primary' ? colors.onAccent : colors.textPrimary}
           />
-        ) : null}
+        ) : (
+          icon
+        )}
         <AppText variant="label" style={[styles.label, textStyles[variant]]}>
           {shown}
         </AppText>
@@ -70,10 +91,8 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: MIN_TOUCH_TARGET,
     justifyContent: 'center',
     paddingHorizontal: spacing[4],
-    paddingVertical: spacing[2],
     borderRadius: radii.md,
     borderWidth: 1,
   },
@@ -91,15 +110,15 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
   },
   secondary: {
-    backgroundColor: colors.surfaceCard,
-    borderColor: colors.borderSubtle,
+    backgroundColor: colors.surfaceOverlay,
+    borderColor: colors.borderStrong,
   },
   ghost: {
     backgroundColor: 'transparent',
     borderColor: 'transparent',
   },
   danger: {
-    backgroundColor: 'transparent',
+    backgroundColor: colors.dangerSoft,
     borderColor: colors.danger,
   },
   pressed: {
@@ -115,6 +134,8 @@ const textStyles = StyleSheet.create({
   // the same green does not.
   primary: { color: colors.onAccent },
   secondary: { color: colors.textPrimary },
-  ghost: { color: colors.accent },
+  // The catalogue's ghost label is emerald 400, one step brighter than the
+  // accent fill, which is what keeps it legible without a background.
+  ghost: { color: colors.emerald400 },
   danger: { color: colors.danger },
 });

@@ -27,7 +27,7 @@ import { FilterChip } from '@/features/map/components/filter-chip';
 import { GuestBar } from '@/features/map/components/guest-bar';
 import { MapLegend } from '@/features/map/components/map-legend';
 import { MapSearchBar } from '@/features/map/components/map-search-bar';
-import { OptionSheet, type SheetOption } from '@/features/map/components/option-sheet';
+import { OptionSheet, type SheetOption } from '@/components/ui/option-sheet';
 import { TreeSummarySheet } from '@/features/map/components/tree-summary-sheet';
 import { clusterMarkers } from '@/features/map/clustering';
 import { darkMapStyle } from '@/features/map/map-style';
@@ -421,6 +421,7 @@ export default function MapScreen() {
         <GuestBar
           onSignUp={() => router.push('/sign-up')}
           onSignIn={() => router.push('/sign-in')}
+          onLegal={() => router.push('/legal')}
         />
       ) : null}
 

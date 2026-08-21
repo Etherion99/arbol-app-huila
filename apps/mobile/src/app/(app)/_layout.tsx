@@ -16,9 +16,13 @@ function tabIcon(name: SymbolViewProps['name']) {
  * The shell of the application.
  *
  * It is not behind a session guard on purpose: a visitor without an account
- * reaches the map and reads it. What needs a session is the profile, and the
- * two tabs below swap according to whether there is one, so a guest is offered
- * a way in rather than a tab that would bounce them out.
+ * reaches the map and reads it.
+ *
+ * The tab bar belongs to the session, which is what the canvas draws: A8, the
+ * guest map, has no bar at all and offers the account from the strip under the
+ * map; B1 has the bar, with the four places a guardian moves between. A visitor
+ * is exploring one screen, not navigating an application, and a bar with a
+ * single tab in it says the opposite.
  */
 export default function AppLayout() {
   const { session } = useSession();
@@ -30,10 +34,12 @@ export default function AppLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: colors.surfaceCard,
-          borderTopColor: colors.borderSubtle,
-        },
+        tabBarStyle: hasSession
+          ? {
+              backgroundColor: colors.surfaceCard,
+              borderTopColor: colors.borderSubtle,
+            }
+          : { display: 'none' },
       }}
     >
       <Tabs.Screen
@@ -55,21 +61,6 @@ export default function AppLayout() {
               ios: 'person.crop.circle',
               android: 'account_circle',
               web: 'account_circle',
-            }),
-          }}
-        />
-      </Tabs.Protected>
-
-      <Tabs.Protected guard={!hasSession}>
-        <Tabs.Screen
-          name="account"
-          options={{
-            title: texts.map.accountTabLabel,
-            tabBarAccessibilityLabel: texts.account.title,
-            tabBarIcon: tabIcon({
-              ios: 'person.crop.circle.badge.plus',
-              android: 'person_add',
-              web: 'person_add',
             }),
           }}
         />

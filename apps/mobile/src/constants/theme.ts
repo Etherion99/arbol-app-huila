@@ -79,6 +79,18 @@ export const typography = StyleSheet.create({
     lineHeight: leading(fontSize.xl, lineHeight.snug),
     color: colors.textPrimary,
   },
+  /**
+   * The title of a modal bar. Display at 20, which is the one place the canvas
+   * puts the display family below the size the guidelines illustrate it at —
+   * and it is deliberate there: the bar has to read as a title in 44 points of
+   * height, and the body face at 20 reads as a paragraph.
+   */
+  headerTitle: {
+    fontFamily: fontFace.displayBold,
+    fontSize: fontSize.lg,
+    lineHeight: leading(fontSize.lg, lineHeight.snug),
+    color: colors.textPrimary,
+  },
   subtitle: {
     fontFamily: fontFace.bodySemibold,
     fontSize: fontSize.lg,

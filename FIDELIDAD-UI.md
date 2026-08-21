@@ -17,7 +17,7 @@ se pretende adoptar. Se mide en dos planos:
 
 ## Tabla general — pantalla por pantalla
 
-Las 38 pantallas del lienzo más las que existen en el código sin diseño que las respalde.
+Las 41 pantallas del lienzo más las que existen en el código sin diseño que las respalde.
 
 **Score de fidelidad (1–100).** 90+ coincide y solo falta pulir · 70–89 la pantalla es
 reconocible pero divergen jerarquía o copys · 40–69 hay una versión funcional con otra
@@ -30,15 +30,17 @@ puede funcionar perfecto y puntuar bajo.
 | ID | Pantalla | Diseño | Código | Score | Qué falta para la fidelidad completa |
 |---|---|---|---|---|---|
 | **A1** | Splash | ✅ | 🟡 `app.config.js` | **25** | Solo coincide el fondo `#0B1512`. `splash-icon.png` sigue siendo byte a byte el logo de Expo (mismo MD5 que `expo-logo.png`). Faltan el logotipo «ÁrbolApp Huila» en display 38 px, la micro-etiqueta magenta «UN PROYECTO DE JUVENTUD EN LÍNEA» y el punto esmeralda con `--glow-accent`. |
-| **A2.1** | Onboarding 1/3 | ✅ | ✅ `onboarding/index.tsx` | **65** | Falta el bloque superior de fotografía de campo (460 px) con degradado y pie «FOTO REAL DE CAMPO · VEREDA SAN ANDRÉS». El cuerpo no es el del diseño. Sobra el encabezado «Paso 1 de 3 / Omitir», que el lienzo no tiene. |
-| **A2.2** | Onboarding 2/3 | ✅ | ✅ `onboarding/prae.tsx` | **60** | Igual que A2.1. El cuerpo habla del PRAE; el diseño dice «La bitácora guarda la altura y las ramas de tu árbol. Te avisaremos cuando toque». |
-| **A2.3** | Onboarding 3/3 | ✅ | ✅ `onboarding/guardian.tsx` | **60** | Igual que A2.1. Sobra el botón «Ya tengo cuenta»: el diseño cierra con «Empezar» + «Explorar sin cuenta». |
-| **A3** | Inicio de sesión | ✅ | ✅ `(auth)/sign-in.tsx` | **80** | Faltan el logotipo sobre el título y el separador «O» antes de «Explorar sin cuenta». «¿Olvidaste tu contraseña?» va como enlace a la derecha **encima** de «Entrar», no como botón fantasma debajo. Sobran el subtítulo y el enlace legal al pie. |
-| **A4** | Registro de Guardián | ✅ | ✅ `(auth)/sign-up.tsx` | **82** | Falta la barra modal con flecha atrás y título «Crear cuenta». El orden de campos difiere (el diseño pone la contraseña antes del rol). «Rol o institución» es un **select** en el diseño y aquí texto libre. Sobran «Repite la contraseña» y el botón «Leer la política…»: el diseño lleva los enlaces dentro de la etiqueta del checkbox. Los copys de las dos declaraciones coinciden literalmente. |
-| **A5** | Recuperación de contraseña | ✅ | ✅ `(auth)/forgot-password.tsx` | **78** | Falta la barra modal. El diseño deja «Si existe una cuenta con ese correo…» como caja informativa **bajo el formulario**; el código reemplaza la pantalla entera. Título «Recuperar contraseña» vs «Recuperar la contraseña». |
-| **A6** | Verificación de correo | ✅ | ✅ `(auth)/verify-email.tsx` | **82** | Falta el ícono de sobre. **La jerarquía de botones está invertida**: el diseño hace primario «Ya verifiqué mi correo» y deja «Reenviar en 0:42» como texto secundario. Sobra el botón «Entrar». |
-| **A7** | Privacidad y términos | ✅ | ✅ `app/legal.tsx` | **65** | Faltan las **pestañas Privacidad / Términos** (componente `Tabs`) y el pie «Versión del 21 ago 2026». Los encabezados de sección no son los del diseño. El badge «Borrador» duplica el aviso que ya dice lo mismo. |
+| **A2.1** | Onboarding 1/3 | ✅ | ✅ `onboarding/index.tsx` | **78** | Reconstruida en U3. Están el bloque superior de fotografía con su pie y los copys del lienzo, y se retiró el encabezado «Paso 1 de 3 / Omitir» que el lienzo no tiene. **Falta la fotografía**: el lienzo pide foto real de campo y eso es contenido del PRAE, no código. El marco queda listo para recibirla. |
+| **A2.2** | Onboarding 2/3 | ✅ | ✅ `onboarding/prae.tsx` | **78** | Igual que A2.1, con el cuerpo del lienzo. Falta la fotografía. |
+| **A2.3** | Onboarding 3/3 | ✅ | ✅ `onboarding/guardian.tsx` | **78** | Igual que A2.1. Se retiró además el botón «Ya tengo cuenta», que el lienzo no dibuja. Falta la fotografía. |
+| **A3** | Inicio de sesión | ✅ | ✅ `(auth)/sign-in.tsx` | **92** | Reconstruida en U3: logotipo sobre el título, separador «O» antes de «Explorar sin cuenta», y «¿Olvidaste tu contraseña?» como enlace alineado a la derecha encima del botón. Sobraba el subtítulo y se quitó. **El logotipo es tipográfico**, no la marca definitiva: esa es Fase 9. |
+| **A4** | Registro de Guardián | ✅ | ✅ `(auth)/sign-up.tsx` | **90** | Reconstruida en U3: barra modal, orden de campos del lienzo, enlaces dentro de la etiqueta del checkbox, y fuera el campo de confirmación y el botón «Leer la política…». **Falta el `Select` de rol o institución** — ver PD-06: el lienzo dibuja una lista cerrada pero no enumera sus opciones, y la columna es texto libre. |
+| **A5** | Recuperación de contraseña | ✅ | ✅ `(auth)/forgot-password.tsx` | **92** | Reconstruida en U3: barra modal y el aviso «Si existe una cuenta con ese correo…» como caja informativa persistente bajo el formulario, en vez de reemplazar la pantalla. |
+| **A6** | Verificación de correo | ✅ | ✅ `(auth)/verify-email.tsx` | **92** | Reconstruida en U3: «Ya verifiqué mi correo» pasa a primario y el contador de reenvío a secundario, como el lienzo. Se retiró el botón «Entrar». Falta el ícono de sobre, que necesita el kit de íconos. |
+| **A7** | Privacidad y términos | ✅ | ✅ `app/legal.tsx` | **80** | Barra modal y pie «Versión del 21 ago 2026». Cayó el badge «Borrador», que duplicaba el aviso. **Faltan las pestañas Privacidad / Términos**: el componente `Tabs` existe desde U1, pero repartir el articulado entre las dos es una decisión de contenido legal y el texto es todavía un borrador. |
 | **A8** | Mapa · exploración sin cuenta | ✅ | ✅ `(app)/map.tsx` | **85** | Construida en la Fase 3. Están el mapa oscuro, el pill de búsqueda, los chips de filtro, los clústeres, la leyenda de 4 estados y la `GuestBar` con «Crear cuenta de guardián» / «Entrar». Falta que el buscador acepte texto: el placeholder promete «Buscar árbol o vereda…» y hoy solo abre la hoja de veredas, no busca árboles. Tres desviaciones del lienzo son **deliberadas y están razonadas en el código**: la búsqueda es botón y no campo (el teclado taparía el mapa), la leyenda usa 12 px en vez de 11 (el suelo legible a pleno sol) y los controles 44 px en vez de 42 (área táctil mínima). |
+| **A9** | Nueva contraseña · 3 estados | ✅ | ✅ `(auth)/reset-password.tsx` | **92** | Reconstruida en U3: barra modal en los tres estados y la ayuda «Mínimo 8 caracteres». **Fuera el campo de confirmación**, según la decisión de PD-04. Faltan los íconos del encabezado. |
+| **A10** | Retorno del enlace de correo · 2 estados | ✅ | ✅ `auth/callback.tsx` | **80** | Dibujada el 21 ago 2026 a petición de U0. Ambos estados existen con los copys correctos. Faltan la barra modal y el ícono del encabezado. |
 | **B1** | Mapa con ficha flotante | ✅ | 🟡 `(app)/map.tsx` | **65** | Lo mismo que A8, más la `TreeSummarySheet` con especie, ciclo, guardián y chip de estado. Faltan el **FAB «⌖ Sembrar»** (llega con la Fase 4), el botón de capas junto a la búsqueda, y la **barra de 4 pestañas**: hoy siguen siendo 2 y el control de ubicación vive dentro de la fila de búsqueda en vez de ser un FAB propio. |
 | **B2** | Mis árboles | ✅ | ⛔ | **1** | **Solo en diseño.** No existe ruta. Faltan encabezado con conteo, tarjetas con miniatura, chip de estado, línea `VEREDA · CICLO`, texto de urgencia, botón «Actualizar» por tarjeta y badge «PENDIENTE DE ENVIAR». |
 | **B3** | Actividad | ✅ | ⛔ | **1** | **Solo en diseño.** Faltan la caja de «notificaciones desactivadas» con su botón «Activar» y las secciones PENDIENTES / ANTERIORES con filas fechadas, incluidos los avisos del coordinador. |
@@ -67,29 +69,32 @@ puede funcionar perfecto y puntuar bajo.
 | **F3** | Permiso de ubicación | ✅ | 🟡 `use-user-location.ts` | **30** | `useUserLocation` pide el permiso y, si lo niegan, el mapa muestra un `Notice` con el motivo. Falta la **pantalla previa** del diseño: el permiso se pide en frío, sin explicar antes para qué se usa el GPS, y no existe la salida «Ahora no — puedo escribir las coordenadas a mano». |
 | **F4** | Error de red y sesión expirada | ✅ | 🟡 `map.tsx` + `Notice` + `sign-in` | **45** | El mapa ya tiene su estado de error con título, cuerpo y reintento, y el aviso de caché sin conexión. Falta que sean estados **a pantalla completa** como los dibuja el lienzo, y «Tu sesión venció» sigue siendo un `Notice` dentro de `sign-in` en vez de una pantalla con el texto que tranquiliza sobre los registros pendientes. |
 | **F5** | GPS impreciso y cámara denegada | ✅ | ⛔ | **1** | **Solo en diseño.** Franja de GPS débil con la precisión (`±45 m`) sobre el mapa y pantalla de cámara desactivada con «Abrir ajustes del teléfono». |
-| — | Nueva contraseña | ⛔ | ✅ `(auth)/reset-password.tsx` | **n/a** | **Solo en código.** El lienzo cubre A5 (pedir el enlace) pero no la pantalla donde se escribe la contraseña nueva, ni sus estados «El enlace ya no sirve» y el spinner de canje. **Falta diseñarla** para poder medirla. |
-| — | Retorno del enlace de correo | ⛔ | ✅ `auth/callback.tsx` | **n/a** | **Solo en código.** Pantalla de espera mientras se canjea el enlace. Sin diseño contra el cual medir. |
-| — | Tu cuenta (pestaña de invitado) | ⛔ | ✅ `(app)/account.tsx` | **n/a** | **Solo en código.** Existe porque la barra tiene 2 pestañas. En el diseño el invitado no tiene pestaña propia: las llamadas a registrarse viven en la barra inferior de A8. **Probablemente sobra.** |
-| — | No encontramos tu perfil · error de carga | ⛔ | ✅ `(app)/profile.tsx` | **n/a** | **Solo en código.** Estados de error del perfil. Encajarían en el patrón de F4 una vez exista. |
+| **F6** | Errores de perfil · 2 estados | ✅ | 🟡 `(app)/profile.tsx` | **55** | Dibujada el 21 ago 2026 a petición de U0. El código muestra los dos casos con los copys correctos, pero **dentro de la pantalla de perfil**, no como los estados a pantalla completa que dibuja el lienzo. Faltan los íconos del encabezado. |
 | — | Falta configurar la aplicación | ⛔ | ✅ `app/_layout.tsx` | **n/a** | **Solo en código.** Pantalla de desarrollo; no necesita diseño. |
 
 ### Recuento de inconsistencias
 
 | | Cantidad |
 |---|---|
-| Pantallas del lienzo con algo construido | **16** de 38 |
+| Pantallas del lienzo con algo construido | **19** de 41 |
 | **Pantallas en Claude Design que no existen en el código** | **22** — todas de las Fases 4 a 7 |
-| **Pantallas en el código que no existen en Claude Design** | **5** — una de ellas, «Nueva contraseña», sí necesita diseño |
+| **Pantallas en el código que no existen en Claude Design** | **2**, y ninguna necesita diseño: una sobra y la otra es de desarrollo |
 
-| Bloque | Pantallas | Score medio | Tras las fuentes | Antes de las fuentes |
-|---|---|---|---|---|
-| A · Móvil sin sesión | 10 | **68,5** | 60,9 | 52,7 |
-| B · Móvil con sesión | 5 | **30,0** | 18,8 | 15,0 |
-| C · Flujos modales | 9 | **1,0** | 1,0 | 1,0 |
-| D · Web administración | 7 | **1,0** | 1,0 | 1,0 |
-| E · Web mapa público | 2 | **1,0** | 1,0 | 1,0 |
-| F · Estados transversales | 5 | **19,4** | 12,2 | 9,6 |
-| **Total del lienzo** | **38** | **≈ 25** | ≈ 21 | ≈ 18 |
+El lienzo creció de 38 a 41 filas el 21 de agosto de 2026: A9, A10 y F6 se dibujaron a
+petición de la fase U0 y dejaron de ser pantallas huérfanas del código.
+
+| Bloque | Pantallas | Tras U3 | Tras U0 | Antes de U0 | Tras las fuentes | Antes |
+|---|---|---|---|---|---|---|
+| A · Móvil sin sesión | 12 | **80,2** | 69,5 | 68,2 | 60,9 | 52,7 |
+| B · Móvil con sesión | 5 | **30,0** | 30,0 | 30,0 | 18,8 | 15,0 |
+| C · Flujos modales | 9 | **1,0** | 1,0 | 1,0 | 1,0 | 1,0 |
+| D · Web administración | 7 | **1,0** | 1,0 | 1,0 | 1,0 | 1,0 |
+| E · Web mapa público | 2 | **1,0** | 1,0 | 1,0 | 1,0 | 1,0 |
+| F · Estados transversales | 6 | **25,3** | 25,3 | 19,4 | 12,2 | 9,6 |
+| **Total del lienzo** | **41** | **≈ 31** | ≈ 28 | ≈ 25 | ≈ 21 | ≈ 18 |
+
+**Fidelidad de lo construido** — la media de las 19 filas que tienen código, que es la
+métrica que el plan de fidelidad mueve: **66,3**. Venía de 59,6 tras U0 y de 57,8 al empezar.
 
 **Cómo se recalculó, dos veces.**
 
@@ -104,7 +109,7 @@ puede funcionar perfecto y puntuar bajo.
 
 **Veredicto de pantallas.** El promedio bajo sigue reflejando que las Fases 4 a 7 no han
 empezado: 22 de las 38 pantallas no tienen una sola línea. La lectura útil es la de lo
-construido — **68,5** en el bloque A. Ni los tokens ni las fuentes ponen ya el techo. Lo que
+construido — **68,2** en el bloque A. Ni los tokens ni las fuentes ponen ya el techo. Lo que
 queda es maquetación y catálogo: sin `Card`, `Badge`/`StatusDot` y `Dialog`, y sin barra de
 encabezado modal, el bloque A no pasa de ~85 por más que se retoque.
 
@@ -135,7 +140,7 @@ que se resolvió aparte.
 | Consumo en web | `design-tokens.css` + `globals.css` + utilidades Tailwind (`bg-state-overdue`, `text-surface-card`…) | — | **100 %** | ✅ |
 | Splash e ícono adaptativo | 2 valores, desde `app.config.js` | — | **100 %** | ✅ |
 | Variantes de tipografía | 9 variantes | **100 %** (9/9) | **7 de 9 en uso** | 🔸 `data` y `overline` sin consumir |
-| Componentes de interfaz vs. catálogo | 7 componentes | — | *no evaluado* | 🔧 pendiente |
+| Componentes de interfaz vs. catálogo | 13 del catálogo | — | **12 / 13 portados** | ✅ falta `IconButton` |
 | Pantallas vs. lienzo | 38 pantallas | — | **≈ 25 / 100** | 🔧 ver tabla de pantallas |
 
 **Veredicto.** La capa de tokens está completa y verificada, y las tres familias
@@ -315,12 +320,33 @@ onboarding **consumen los tokens correctos**, pero su disposición diverge del l
 esa reconciliación con la corrección de tokens habría hecho imposible revisar ninguna de las
 dos.
 
-- Pantallas contra `Pantallas v1.dc.html`: ya medidas, **68,5 / 100** en el bloque A. El
+- Pantallas contra `Pantallas v1.dc.html`: ya medidas, **68,2 / 100** en el bloque A. El
   detalle está en la tabla de pantallas al inicio de este documento.
-- Componentes contra el catálogo: `Button`, `Input`, `Checkbox`, `Card`, `Badge`, `Toast`,
-  `Dialog`. **Sin medir todavía.** Tres de ellos —`Card`, `Badge`/`StatusDot` y `Dialog`— no
-  existen en el código, y son la pieza más repetida del lienzo: mientras falten, B2, B3, C2
-  y E1 no se pueden construir con fidelidad.
+- Componentes contra el catálogo: **portados en la fase U1**, 12 de los 13. Ver abajo.
+
+### Catálogo de componentes — estado tras U1
+
+| Catálogo | En el código | Nota |
+|---|---|---|
+| `Button` | `ui/button.tsx` | ✅ variantes, escala `sm`/`md`/`lg` (32/40/48) e ícono a la izquierda |
+| `Input` | `ui/text-field.tsx` | ✅ con anillo de foco. **Corregido: el `TextInput` no declaraba `fontFamily`** |
+| `Checkbox` | `ui/checkbox-field.tsx` | ✅ con enlaces dentro de la etiqueta, como pide A4 |
+| `Select` | `ui/select.tsx` | ✅ campo del lienzo + `OptionSheet` en vez de un `<select>` nativo |
+| `Switch` | RN nativo en `profile.tsx` | 🔸 sin portar; se aborda en U4 |
+| `Radio` | — | ➖ ninguna pantalla de la v1 lo usa; se porta cuando aparezca |
+| `IconButton` | — | ⛔ **pendiente**: necesita el kit de íconos, que sigue sin portar |
+| `Card` | `ui/card.tsx` | ✅ |
+| `Badge` | `ui/badge.tsx` | ✅ cinco estados + acento de marca |
+| `Tag` | `ui/tag.tsx` | ✅ |
+| `StatusDot` | `ui/status-dot.tsx` | ✅ archivado nunca brilla, halo de selección |
+| `Tooltip` | — | ➖ no aplica en móvil |
+| `Toast` | `ui/notice.tsx` | ✅ relleno suave y marca por tono |
+| `Dialog` | `ui/dialog.tsx` | ✅ sustituye a `Alert.alert`, pendiente de cablear en U4 |
+| `Tabs` | `ui/tabs.tsx` | ✅ |
+
+Lo que sigue bloqueado es el **kit de íconos** (`ui_kits/mobile/Icons.jsx`): sin él, `Notice`
+marca el tono con un glifo de texto y no existe `IconButton`. La app usa hoy símbolos del
+sistema (`expo-symbols`) en la barra de pestañas.
 
 ### 🔸 Un literal de color que sigue fuera de `packages/core`
 

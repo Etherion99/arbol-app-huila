@@ -7,6 +7,13 @@ import { colors, radii, spacing } from '@/constants/theme';
 
 type Tone = 'error' | 'warning' | 'info' | 'success';
 
+const GLYPH: Record<Tone, string> = {
+  error: '✕',
+  warning: '!',
+  info: 'i',
+  success: '✓',
+};
+
 export type NoticeProps = {
   tone: Tone;
   message: string;
@@ -30,11 +37,20 @@ export function Notice({ tone, message, title, onRetry, retryLabel }: NoticeProp
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
     >
-      {title !== undefined ? (
-        <AppText variant="label" style={toneText[tone]}>
-          {title}
+      <View style={styles.heading}>
+        {/* A glyph until the design system's icon kit is ported. The canvas
+            never shows a notice without a mark: colour alone does not reach a
+            guardian who cannot separate red from green. */}
+        <AppText variant="label" style={toneText[tone]} accessibilityElementsHidden>
+          {GLYPH[tone]}
         </AppText>
-      ) : null}
+
+        {title !== undefined ? (
+          <AppText variant="label" style={[styles.title, toneText[tone]]}>
+            {title}
+          </AppText>
+        ) : null}
+      </View>
 
       <AppText variant="body">{message}</AppText>
 
@@ -56,18 +72,28 @@ const styles = StyleSheet.create({
     padding: spacing[4],
     borderRadius: radii.md,
     borderWidth: 1,
-    backgroundColor: colors.surfaceCard,
+  },
+  heading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+  },
+  title: {
+    flex: 1,
   },
   retry: {
     marginTop: spacing[2],
   },
 });
 
+// Soft fill plus coloured border, which is how the catalogue builds every
+// pill and callout. The fills composite over whatever surface is behind, so a
+// notice on a card and one on the page both keep their ground.
 const toneStyles = StyleSheet.create({
-  error: { borderColor: colors.danger },
-  warning: { borderColor: colors.warning },
-  info: { borderColor: colors.borderSubtle },
-  success: { borderColor: colors.accent },
+  error: { borderColor: colors.danger, backgroundColor: colors.dangerSoft },
+  warning: { borderColor: colors.warning, backgroundColor: colors.brandYellowSoft },
+  info: { borderColor: colors.info, backgroundColor: colors.infoSoft },
+  success: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
 });
 
 const toneText = StyleSheet.create({

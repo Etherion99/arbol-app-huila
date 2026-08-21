@@ -108,6 +108,17 @@ export default function VerifyEmailScreen() {
       {!isOnline ? <Notice tone="warning" message={texts.common.offlineHint} /> : null}
 
       <View style={styles.actions}>
+        {/* The primary action is confirming, not resending. What the guardian
+            came back to do is tell the app they already opened the link; asking
+            for another message is the fallback, and the canvas ranks them that
+            way round. */}
+        <Button
+          label={texts.verifyEmail.alreadyConfirmed}
+          loadingLabel={texts.verifyEmail.confirming}
+          onPress={() => void recheckConfirmation()}
+          isLoading={isRechecking}
+        />
+
         {/* The counter is not decoration: the bundled email service allows few
             messages an hour, and a guardian tapping resend four times burns the
             quota of the whole group registering that afternoon. */}
@@ -121,19 +132,6 @@ export default function VerifyEmailScreen() {
           isDisabled={!canResend || email === undefined}
           accessibilityLabel={texts.verifyEmail.resend}
           accessibilityHint={canResend ? undefined : texts.verifyEmail.resendCountdown(secondsLeft)}
-        />
-
-        <Button
-          label={texts.verifyEmail.alreadyConfirmed}
-          loadingLabel={texts.verifyEmail.confirming}
-          onPress={() => void recheckConfirmation()}
-          isLoading={isRechecking}
-          variant="secondary"
-        />
-
-        <Button
-          label={texts.signIn.submit}
-          onPress={() => router.replace('/sign-in')}
           variant="ghost"
         />
 

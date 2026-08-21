@@ -38,20 +38,14 @@ export function OnboardingStep({ step, nextHref }: OnboardingStepProps) {
 
   return (
     <Screen hasConnectionBanner={false}>
-      <View style={styles.header}>
-        <AppText
-          variant="caption"
-          accessibilityLabel={texts.a11y.onboardingProgress(step, TOTAL_STEPS)}
-        >
-          {texts.onboarding.stepLabel(step, TOTAL_STEPS)}
+      {/* The photograph the canvas puts across the top half. The image itself
+          is content the PRAE has to supply, so what stands here is its frame:
+          the gradient ground and the caption, sized as drawn. Dropping in the
+          file is all that is left. */}
+      <View style={styles.photo}>
+        <AppText variant="overline" style={styles.photoCaption}>
+          {content.photoCaption}
         </AppText>
-
-        <Button
-          label={texts.onboarding.skip}
-          onPress={() => void leaveOnboarding('/map')}
-          variant="ghost"
-          accessibilityHint={texts.onboarding.exploreAsGuest}
-        />
       </View>
 
       <View style={styles.body}>
@@ -69,19 +63,12 @@ export function OnboardingStep({ step, nextHref }: OnboardingStepProps) {
         ))}
       </View>
 
+      {/* Two actions, as the canvas draws: get on with it, or go look without
+          an account. The last step swaps «Siguiente» for «Empezar» and nothing
+          else — a third button here competed with both. */}
       <View style={styles.actions}>
         {isLastStep ? (
-          <>
-            <Button
-              label={texts.onboarding.start}
-              onPress={() => void leaveOnboarding('/sign-up')}
-            />
-            <Button
-              label={texts.onboarding.alreadyHaveAccount}
-              onPress={() => void leaveOnboarding('/sign-in')}
-              variant="secondary"
-            />
-          </>
+          <Button label={texts.onboarding.start} onPress={() => void leaveOnboarding('/sign-up')} />
         ) : (
           <Button label={texts.onboarding.next} onPress={() => router.push(nextHref)} />
         )}
@@ -97,10 +84,18 @@ export function OnboardingStep({ step, nextHref }: OnboardingStepProps) {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  photo: {
+    // 460 of the 844 the canvas draws, kept as a ratio so it holds on a phone
+    // that is not the one the artboard was drawn at.
+    height: '48%',
+    marginHorizontal: -spacing[6],
+    marginTop: -spacing[6],
+    justifyContent: 'flex-end',
+    padding: spacing[4],
+    backgroundColor: colors.green800,
+  },
+  photoCaption: {
+    color: colors.textSecondary,
   },
   body: {
     flex: 1,

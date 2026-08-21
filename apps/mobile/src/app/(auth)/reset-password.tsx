@@ -5,6 +5,7 @@ import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
+import { ScreenHeader } from '@/components/ui/screen-header';
 import { TextField } from '@/components/ui/text-field';
 import { texts } from '@/constants/texts';
 import { colors, spacing } from '@/constants/theme';
@@ -31,7 +32,7 @@ export default function ResetPasswordScreen() {
 
   const form = useZodForm({
     schema: newPasswordSchema,
-    initialValues: { password: '', passwordConfirmation: '' },
+    initialValues: { password: '' },
     onSubmit: async (values: NewPasswordValues) => {
       const succeeded = await updatePassword
         .mutateAsync(values)
@@ -65,7 +66,16 @@ export default function ResetPasswordScreen() {
   // may be doing is turning the code in the link into a session.
   if (isExchanging) {
     return (
-      <Screen isScrollable={false} hasConnectionBanner={false}>
+      <Screen
+        isScrollable={false}
+        hasConnectionBanner={false}
+        header={
+          <ScreenHeader
+            title={texts.resetPassword.title}
+            onBack={() => router.replace('/sign-in')}
+          />
+        }
+      >
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.accent} />
           <AppText variant="body">{texts.common.loading}</AppText>
@@ -79,9 +89,16 @@ export default function ResetPasswordScreen() {
   // that would fail on submit.
   if (session === null || !isRecoveringPassword) {
     return (
-      <Screen>
+      <Screen
+        header={
+          <ScreenHeader
+            title={texts.resetPassword.title}
+            onBack={() => router.replace('/sign-in')}
+          />
+        }
+      >
         <View style={styles.header}>
-          <AppText variant="display">{texts.resetPassword.linkExpiredTitle}</AppText>
+          <AppText variant="title">{texts.resetPassword.linkExpiredTitle}</AppText>
           <AppText variant="bodyMuted">
             {linkError?.message ?? texts.resetPassword.linkExpiredBody}
           </AppText>
@@ -98,11 +115,18 @@ export default function ResetPasswordScreen() {
   const failure = describeMaybeAuthError(updatePassword.error);
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <AppText variant="display">{texts.resetPassword.title}</AppText>
-        <AppText variant="bodyMuted">{texts.resetPassword.subtitle}</AppText>
-      </View>
+    <Screen
+      header={
+        <ScreenHeader
+          title={texts.resetPassword.title}
+          // The arrow does what «Cancelar» does: the recovery session exists
+          // only to replace the password, so leaving has to close it rather
+          // than drop the guardian into the app holding it.
+          onBack={() => void abandonRecovery()}
+        />
+      }
+    >
+      <AppText variant="bodyMuted">{texts.resetPassword.subtitle}</AppText>
 
       {failure !== null ? (
         <Notice
@@ -114,36 +138,21 @@ export default function ResetPasswordScreen() {
 
       {!isOnline ? <Notice tone="warning" message={texts.common.offlineHint} /> : null}
 
-      <View style={styles.form}>
-        <TextField
-          label={texts.resetPassword.passwordLabel}
-          value={form.values.password}
-          onChangeText={(value) => form.setValue('password', value)}
-          onBlur={() => form.reveal('password')}
-          error={form.errorFor('password')}
-          isPassword
-          textContentType="newPassword"
-          autoComplete="new-password"
-          autoCapitalize="none"
-          autoCorrect={false}
-          returnKeyType="next"
-        />
-
-        <TextField
-          label={texts.resetPassword.passwordConfirmationLabel}
-          value={form.values.passwordConfirmation}
-          onChangeText={(value) => form.setValue('passwordConfirmation', value)}
-          onBlur={() => form.reveal('passwordConfirmation')}
-          error={form.errorFor('passwordConfirmation')}
-          isPassword
-          textContentType="newPassword"
-          autoComplete="new-password"
-          autoCapitalize="none"
-          autoCorrect={false}
-          returnKeyType="done"
-          onSubmitEditing={() => void form.submit()}
-        />
-      </View>
+      <TextField
+        label={texts.resetPassword.passwordLabel}
+        value={form.values.password}
+        onChangeText={(value) => form.setValue('password', value)}
+        onBlur={() => form.reveal('password')}
+        error={form.errorFor('password')}
+        hint={texts.signUp.passwordRequirement}
+        isPassword
+        textContentType="newPassword"
+        autoComplete="new-password"
+        autoCapitalize="none"
+        autoCorrect={false}
+        returnKeyType="done"
+        onSubmitEditing={() => void form.submit()}
+      />
 
       <View style={styles.actions}>
         <Button

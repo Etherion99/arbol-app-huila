@@ -3,13 +3,56 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/ui/app-text';
 import { MIN_TOUCH_TARGET, colors, radii, spacing } from '@/constants/theme';
 
+export type CheckboxLink = {
+  /** A literal fragment of `label`. Matched once, in order of appearance. */
+  text: string;
+  onPress: () => void;
+};
+
 export type CheckboxFieldProps = {
   label: string;
   isChecked: boolean;
   onChange: (isChecked: boolean) => void;
+  /**
+   * Fragments of the label that open something. The canvas puts the links
+   * inside the sentence — «Acepto la _política de privacidad_ y los _términos
+   * de uso_» — rather than in a button underneath, so the consent reads as one
+   * statement instead of three separate things.
+   */
+  links?: CheckboxLink[];
   error?: string;
   accessibilityHint?: string;
 };
+
+type Segment = { text: string; onPress?: () => void };
+
+/**
+ * Cuts the label around each link fragment, keeping the copy a single string in
+ * the texts file where a wording review can read it whole.
+ */
+function segmentsOf(label: string, links: CheckboxLink[]): Segment[] {
+  let rest = label;
+  const segments: Segment[] = [];
+
+  for (const link of links) {
+    const at = rest.indexOf(link.text);
+    if (at === -1) {
+      continue;
+    }
+
+    if (at > 0) {
+      segments.push({ text: rest.slice(0, at) });
+    }
+    segments.push({ text: link.text, onPress: link.onPress });
+    rest = rest.slice(at + link.text.length);
+  }
+
+  if (rest !== '') {
+    segments.push({ text: rest });
+  }
+
+  return segments;
+}
 
 /**
  * A checkbox whose whole row is the target. The label of the two boxes on the
@@ -20,10 +63,12 @@ export function CheckboxField({
   label,
   isChecked,
   onChange,
+  links,
   error,
   accessibilityHint,
 }: CheckboxFieldProps) {
   const hasError = error !== undefined;
+  const segments = links === undefined ? null : segmentsOf(label, links);
 
   return (
     <View style={styles.container}>
@@ -50,7 +95,24 @@ export function CheckboxField({
         </View>
 
         <AppText variant="body" style={styles.label}>
-          {label}
+          {segments === null
+            ? label
+            : segments.map((segment, index) =>
+                segment.onPress === undefined ? (
+                  segment.text
+                ) : (
+                  <AppText
+                    // The fragments come from one immutable sentence, so their
+                    // position in it is a stable identity.
+                    key={`${segment.text}-${index}`}
+                    style={styles.link}
+                    onPress={segment.onPress}
+                    accessibilityRole="link"
+                  >
+                    {segment.text}
+                  </AppText>
+                ),
+              )}
         </AppText>
       </Pressable>
 
@@ -103,6 +165,10 @@ const styles = StyleSheet.create({
   },
   label: {
     flex: 1,
+  },
+  link: {
+    color: colors.textLink,
+    textDecorationLine: 'underline',
   },
   error: {
     color: colors.danger,
