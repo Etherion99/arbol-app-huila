@@ -46,13 +46,13 @@ export const typography = StyleSheet.create({
   display: {
     fontSize: fontSize.xxl,
     lineHeight: leading(fontSize.xxl, lineHeight.tight),
-    fontWeight: fontWeight.black,
+    fontWeight: fontWeight.bold,
     color: colors.textPrimary,
   },
   title: {
     fontSize: fontSize.xl,
     lineHeight: leading(fontSize.xl, lineHeight.snug),
-    fontWeight: fontWeight.bold,
+    fontWeight: fontWeight.semibold,
     color: colors.textPrimary,
   },
   subtitle: {
