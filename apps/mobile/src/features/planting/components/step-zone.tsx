@@ -1,12 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { Uuid } from '@arbolapp/core';
 
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { Notice } from '@/components/ui/notice';
-import { OptionSheet, type SheetOption } from '@/components/ui/option-sheet';
-import { SelectField } from '@/components/ui/select-field';
+import type { SheetOption } from '@/components/ui/option-sheet';
+import { Select } from '@/components/ui/select';
 import { texts } from '@/constants/texts';
 import { spacing } from '@/constants/theme';
 import type { ZoneCatalogue } from '@/features/map/use-zones';
@@ -46,8 +46,6 @@ export function StepZone({
   onChange,
   location,
 }: StepZoneProps) {
-  const [openSheet, setOpenSheet] = useState<'municipality' | 'village' | null>(null);
-
   const municipalities = useMemo(() => catalogue?.municipalities ?? [], [catalogue]);
   const villages = useMemo(
     () =>
@@ -93,9 +91,6 @@ export function StepZone({
     return best;
   }, [catalogue, location]);
 
-  const selectedMunicipality = municipalities.find((zone) => zone.id === municipalityId);
-  const selectedVillage = villages.find((zone) => zone.id === villageId);
-
   // Offered only while it would actually change something, so it stops being
   // noise the moment the guardian has answered it either way.
   const isSuggestionWorthShowing = suggestion !== null && suggestion.villageId !== villageId;
@@ -105,20 +100,34 @@ export function StepZone({
       <AppText variant="title">{texts.planting.zoneHeading}</AppText>
       <AppText variant="bodyMuted">{texts.planting.zoneBody}</AppText>
 
+      {/* Neither field offers a row that clears it: both are required, so
+          "ninguno" is not one of the answers. */}
       <View style={styles.fields}>
-        <SelectField
+        <Select
           label={texts.planting.municipalityLabel}
-          value={selectedMunicipality?.name ?? null}
+          options={municipalityOptions}
+          selectedId={municipalityId}
           placeholder={texts.planting.municipalityPlaceholder}
-          onPress={() => setOpenSheet('municipality')}
+          isLoading={isLoading}
+          style={styles.field}
+          // The vereda belonged to the municipality that just changed, so
+          // keeping it would leave a zone the guardian can no longer see.
+          onSelect={(id) => onChange(id, null)}
         />
-        <SelectField
+
+        <Select
           label={texts.planting.villageLabel}
-          value={selectedVillage?.name ?? null}
-          placeholder={texts.planting.villagePlaceholder}
-          onPress={() => setOpenSheet('village')}
-          isDisabled={municipalityId === null}
-          hint={municipalityId === null ? texts.planting.villageNeedsMunicipality : undefined}
+          options={villageOptions}
+          selectedId={villageId}
+          placeholder={
+            municipalityId === null
+              ? texts.planting.villageNeedsMunicipality
+              : texts.planting.villagePlaceholder
+          }
+          isLoading={isLoading}
+          emptyLabel={texts.planting.villageNeedsMunicipality}
+          style={styles.field}
+          onSelect={(id) => onChange(municipalityId, id)}
         />
       </View>
 
@@ -139,36 +148,6 @@ export function StepZone({
           />
         </View>
       ) : null}
-
-      <OptionSheet
-        isVisible={openSheet === 'municipality'}
-        title={texts.planting.municipalityLabel}
-        clearLabel={texts.planting.municipalityPlaceholder}
-        options={municipalityOptions}
-        selectedId={municipalityId}
-        isLoading={isLoading}
-        onSelect={(id) => {
-          // The vereda belonged to the municipality that just changed, so
-          // keeping it would leave a zone the guardian can no longer see.
-          onChange(id, null);
-          setOpenSheet(null);
-        }}
-        onClose={() => setOpenSheet(null)}
-      />
-
-      <OptionSheet
-        isVisible={openSheet === 'village'}
-        title={texts.planting.villageLabel}
-        clearLabel={texts.planting.villagePlaceholder}
-        options={villageOptions}
-        selectedId={villageId}
-        isLoading={isLoading}
-        onSelect={(id) => {
-          onChange(municipalityId, id);
-          setOpenSheet(null);
-        }}
-        onClose={() => setOpenSheet(null)}
-      />
     </View>
   );
 }
@@ -180,6 +159,9 @@ const styles = StyleSheet.create({
   fields: {
     flexDirection: 'row',
     gap: spacing[3],
+  },
+  field: {
+    flex: 1,
   },
   suggestion: {
     gap: spacing[2],

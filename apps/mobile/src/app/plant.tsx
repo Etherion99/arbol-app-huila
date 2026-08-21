@@ -7,9 +7,10 @@ import type { TreeRegistration } from '@arbolapp/core';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { ConnectionBanner } from '@/components/connection-banner';
+import { Dialog } from '@/components/ui/dialog';
 import { Notice } from '@/components/ui/notice';
 import { texts } from '@/constants/texts';
-import { MAX_CONTENT_WIDTH, colors, radii, spacing } from '@/constants/theme';
+import { MAX_CONTENT_WIDTH, colors, spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
 import { useZones } from '@/features/map/use-zones';
 import { useUserLocation } from '@/features/map/use-user-location';
@@ -352,20 +353,23 @@ export default function PlantTreeScreen() {
         </View>
       </ScrollView>
 
-      {isConfirmingExit ? (
-        <View style={styles.exitBackdrop}>
-          <View style={styles.exitDialog} accessibilityViewIsModal accessibilityRole="alert">
-            <AppText variant="subtitle">{texts.planting.exitTitle}</AppText>
-            <AppText variant="bodyMuted">{texts.planting.exitBody}</AppText>
-            <Button label={texts.planting.exitConfirm} onPress={leave} />
+      <Dialog
+        isVisible={isConfirmingExit}
+        title={texts.planting.exitTitle}
+        onClose={() => setIsConfirmingExit(false)}
+        footer={
+          <>
             <Button
               label={texts.planting.exitCancel}
               variant="secondary"
               onPress={() => setIsConfirmingExit(false)}
             />
-          </View>
-        </View>
-      ) : null}
+            <Button label={texts.planting.exitConfirm} onPress={leave} />
+          </>
+        }
+      >
+        <AppText variant="bodyMuted">{texts.planting.exitBody}</AppText>
+      </Dialog>
     </SafeAreaView>
   );
 }
@@ -456,25 +460,5 @@ const styles = StyleSheet.create({
   successCode: {
     textAlign: 'center',
     color: colors.accent,
-  },
-  exitBackdrop: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing[6],
-    backgroundColor: 'rgba(7, 14, 12, 0.72)',
-  },
-  exitDialog: {
-    width: '100%',
-    gap: spacing[3],
-    padding: spacing[6],
-    backgroundColor: colors.surfaceOverlay,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    borderRadius: radii.xl,
   },
 });

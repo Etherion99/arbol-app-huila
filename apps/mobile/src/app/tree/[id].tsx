@@ -9,7 +9,9 @@ import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { ConnectionBanner } from '@/components/connection-banner';
 import { Notice } from '@/components/ui/notice';
-import { StateBadge } from '@/components/ui/state-badge';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { ScreenHeader } from '@/components/ui/screen-header';
 import { texts } from '@/constants/texts';
 import { MAX_CONTENT_WIDTH, MIN_TOUCH_TARGET, colors, radii, spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
@@ -138,7 +140,7 @@ export default function TreeDetailScreen() {
                 )}
               </AppText>
             </View>
-            <StateBadge status={card.trackingStatus} />
+            <Badge status={card.trackingStatus} />
           </View>
         </View>
 
@@ -162,10 +164,10 @@ export default function TreeDetailScreen() {
             </View>
           </View>
 
-          <View style={styles.chartCard}>
+          <Card padding={spacing[3]} style={styles.chartCard}>
             <AppText variant="overline">{texts.treeDetail.heightHeading}</AppText>
             <HeightChart points={heightPoints} />
-          </View>
+          </Card>
 
           <AppText variant="overline">{texts.treeDetail.logHeading(entries.length)}</AppText>
 
@@ -177,7 +179,7 @@ export default function TreeDetailScreen() {
             ))
           )}
 
-          <View style={styles.guardianCard}>
+          <Card padding={spacing[3]} style={styles.guardianCard}>
             <AppText variant="caption" style={styles.guardianLine}>
               {card.guardianDisplayName === null
                 ? texts.treeDetail.guardianUnknown
@@ -215,7 +217,7 @@ export default function TreeDetailScreen() {
                 />
               </MapView>
             </View>
-          </View>
+          </Card>
         </View>
       </ScrollView>
 
@@ -230,12 +232,11 @@ function TimelineRow({ entry, onOpenPhoto }: { entry: TimelineEntry; onOpenPhoto
   const isPlanting = entry.cycle === 1;
 
   return (
-    <Pressable
-      onPress={onOpenPhoto}
-      disabled={entry.photoUrl === null}
-      accessibilityRole="button"
+    <Card
+      padding={spacing[3]}
+      onPress={entry.photoUrl === null ? undefined : onOpenPhoto}
       accessibilityLabel={texts.treeDetail.logOpenPhoto(entry.cycle)}
-      style={({ pressed }) => [styles.entry, pressed && entry.photoUrl !== null && styles.pressed]}
+      style={styles.entry}
     >
       <View style={styles.entryThumb}>
         {entry.thumbnailUrl != null ? (
@@ -273,7 +274,7 @@ function TimelineRow({ entry, onOpenPhoto }: { entry: TimelineEntry; onOpenPhoto
           {entry.notes === null ? '' : ` · «${entry.notes}»`}
         </AppText>
       </View>
-    </Pressable>
+    </Card>
   );
 }
 
@@ -340,18 +341,7 @@ function Frame({ children, onBack }: { children: React.ReactNode; onBack: () => 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
       <ConnectionBanner />
-      <View style={styles.frameBar}>
-        <Pressable
-          onPress={onBack}
-          accessibilityRole="button"
-          accessibilityLabel={texts.common.back}
-          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
-        >
-          <AppText variant="subtitle" style={styles.backGlyph}>
-            ‹
-          </AppText>
-        </Pressable>
-      </View>
+      <ScreenHeader title={texts.treeDetail.title} onBack={onBack} />
       <View style={styles.frameBody}>{children}</View>
     </SafeAreaView>
   );
@@ -433,20 +423,10 @@ const styles = StyleSheet.create({
   },
   chartCard: {
     gap: spacing[2],
-    padding: spacing[3],
-    backgroundColor: colors.surfaceCard,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: radii.lg,
   },
   entry: {
     flexDirection: 'row',
     gap: spacing[3],
-    padding: spacing[3],
-    backgroundColor: colors.surfaceCard,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: radii.lg,
   },
   entryThumb: {
     width: 56,
@@ -487,11 +467,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[3],
-    padding: spacing[3],
-    backgroundColor: colors.surfaceCard,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: radii.lg,
   },
   guardianLine: {
     flex: 1,

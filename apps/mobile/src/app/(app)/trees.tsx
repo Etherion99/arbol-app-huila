@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
@@ -7,8 +7,9 @@ import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { ConnectionBanner } from '@/components/connection-banner';
 import { Notice } from '@/components/ui/notice';
+import { Tabs } from '@/components/ui/tabs';
 import { texts } from '@/constants/texts';
-import { MAX_CONTENT_WIDTH, MIN_TOUCH_TARGET, colors, radii, spacing } from '@/constants/theme';
+import { MAX_CONTENT_WIDTH, colors, spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
 import { TreeListCard } from '@/features/trees/components/tree-list-card';
 import { useGuardianTrees } from '@/features/trees/use-guardian-trees';
@@ -70,18 +71,15 @@ export default function MyTreesScreen() {
       </View>
 
       {all.length > 0 ? (
-        <View style={styles.tabs} accessibilityRole="tablist">
-          <FilterTab
-            label={texts.myTrees.tabPending(pending.length)}
-            isActive={filter === 'pending'}
-            onPress={() => setFilter('pending')}
-          />
-          <FilterTab
-            label={texts.myTrees.tabAll(all.length)}
-            isActive={filter === 'all'}
-            onPress={() => setFilter('all')}
-          />
-        </View>
+        <Tabs
+          tabs={[
+            { id: 'pending', label: texts.myTrees.tabPending(pending.length) },
+            { id: 'all', label: texts.myTrees.tabAll(all.length) },
+          ]}
+          selectedId={filter}
+          onSelect={(id) => setFilter(id as Filter)}
+          accessibilityLabel={texts.myTrees.title}
+        />
       ) : null}
 
       {trees.error !== null ? (
@@ -151,30 +149,6 @@ function Frame({ children }: { children: React.ReactNode }) {
   );
 }
 
-function FilterTab({
-  label,
-  isActive,
-  onPress,
-}: {
-  label: string;
-  isActive: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="tab"
-      accessibilityState={{ selected: isActive }}
-      accessibilityLabel={label}
-      style={({ pressed }) => [styles.tab, isActive && styles.tabActive, pressed && styles.pressed]}
-    >
-      <AppText variant="caption" style={isActive ? styles.tabLabelActive : styles.tabLabel}>
-        {label}
-      </AppText>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -195,29 +169,6 @@ const styles = StyleSheet.create({
   summary: {
     color: colors.textSecondary,
   },
-  tabs: {
-    flexDirection: 'row',
-    gap: spacing[2],
-  },
-  tab: {
-    minHeight: MIN_TOUCH_TARGET,
-    justifyContent: 'center',
-    paddingHorizontal: spacing[4],
-    backgroundColor: colors.surfaceRaised,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    borderRadius: radii.full,
-  },
-  tabActive: {
-    backgroundColor: colors.accentSoft,
-    borderColor: colors.emerald600,
-  },
-  tabLabel: {
-    color: colors.textSecondary,
-  },
-  tabLabelActive: {
-    color: colors.accent,
-  },
   list: {
     gap: spacing[3],
     paddingBottom: spacing[4],
@@ -233,8 +184,5 @@ const styles = StyleSheet.create({
   },
   centredText: {
     textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });

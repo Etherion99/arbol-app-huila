@@ -1,11 +1,12 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
-import { StateBadge } from '@/components/ui/state-badge';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { texts } from '@/constants/texts';
-import { colors, effects, radii, spacing } from '@/constants/theme';
+import { colors, radii, spacing } from '@/constants/theme';
 import type { GuardianTree } from '@/features/trees/use-guardian-trees';
 import { useTreeThumbnail } from '@/features/trees/use-guardian-trees';
 import { daysSince, formatDayAndMonth } from '@/lib/dates';
@@ -19,11 +20,10 @@ export type TreeListCardProps = {
 /**
  * One tree in the guardian's list.
  *
- * The state is carried by three things at once -- the badge colour, the
- * silhouette inside it, and the word -- because the five tracking states are the
- * legend of this whole product and two of them collapse into one for anybody who
- * does not separate red from green. The line under the vereda is the fourth
- * channel: it says in words how overdue the tree actually is.
+ * The state is never carried by colour alone. The badge pairs its fill with the
+ * name of the state, and the line under the vereda says in words how overdue the
+ * tree actually is -- which is what keeps the list readable for a guardian who
+ * does not separate red from green, and what a screen reader reads out.
  *
  * The update button appears only on the trees that need one. A row of identical
  * buttons would make the list a wall and hide the two trees that are the reason
@@ -34,14 +34,13 @@ export function TreeListCard({ tree, onOpen, onUpdate }: TreeListCardProps) {
   const needsUpdate = tree.trackingStatus === 'due_soon' || tree.trackingStatus === 'overdue';
 
   return (
-    <Pressable
+    <Card
       onPress={onOpen}
-      accessibilityRole="button"
       accessibilityLabel={texts.myTrees.cardLabel(
         tree.speciesRawText,
-        texts.map.legend[tree.trackingStatus],
+        texts.treeState[tree.trackingStatus],
       )}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={styles.card}
     >
       <View style={styles.row}>
         <View style={styles.thumbnail}>
@@ -62,7 +61,7 @@ export function TreeListCard({ tree, onOpen, onUpdate }: TreeListCardProps) {
             <AppText variant="subtitle" numberOfLines={1} style={styles.name}>
               {tree.speciesRawText}
             </AppText>
-            <StateBadge status={tree.trackingStatus} />
+            <Badge status={tree.trackingStatus} />
           </View>
 
           <AppText variant="overline">
@@ -84,7 +83,7 @@ export function TreeListCard({ tree, onOpen, onUpdate }: TreeListCardProps) {
       {needsUpdate ? (
         <Button label={texts.growthLog.updateShort} onPress={onUpdate} style={styles.update} />
       ) : null}
-    </Pressable>
+    </Card>
   );
 }
 
@@ -112,12 +111,6 @@ function describeDue(tree: GuardianTree): string {
 const styles = StyleSheet.create({
   card: {
     gap: spacing[3],
-    padding: spacing[4],
-    backgroundColor: colors.surfaceCard,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: radii.lg,
-    boxShadow: effects.shadowCard,
   },
   row: {
     flexDirection: 'row',
@@ -152,9 +145,6 @@ const styles = StyleSheet.create({
   },
   update: {
     marginTop: spacing[1],
-  },
-  pressed: {
-    opacity: 0.8,
   },
 });
 
