@@ -4,7 +4,7 @@ import { AppText } from '@/components/ui/app-text';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
 import { texts } from '@/constants/texts';
-import { colors, radii, spacing } from '@/constants/theme';
+import { colors, fontFace, radii, spacing } from '@/constants/theme';
 
 /**
  * Privacy notice and terms.
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: colors.warning,
-    fontWeight: '700',
+    fontFamily: fontFace.bodyBold,
   },
   section: {
     gap: spacing[1],

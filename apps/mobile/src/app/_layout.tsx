@@ -1,4 +1,15 @@
+// One import per face, by subpath. The package index re-exports every weight
+// it ships, so importing from the root would bundle around thirty typefaces
+// into the app to render seven.
+import { Archivo_400Regular } from '@expo-google-fonts/archivo/400Regular';
+import { Archivo_500Medium } from '@expo-google-fonts/archivo/500Medium';
+import { Archivo_600SemiBold } from '@expo-google-fonts/archivo/600SemiBold';
+import { Archivo_700Bold } from '@expo-google-fonts/archivo/700Bold';
+import { BricolageGrotesque_600SemiBold } from '@expo-google-fonts/bricolage-grotesque/600SemiBold';
+import { BricolageGrotesque_700Bold } from '@expo-google-fonts/bricolage-grotesque/700Bold';
+import { IBMPlexMono_500Medium } from '@expo-google-fonts/ibm-plex-mono/500Medium';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -20,6 +31,23 @@ import { queryClient } from '@/lib/query-client';
 void SplashScreen.preventAutoHideAsync();
 
 void loadOnboardingState();
+
+/**
+ * Every face the type scale names, keyed by the family name a style asks for.
+ *
+ * The list mirrors `fontFace` in the theme exactly. If the two drift, a style
+ * asks for a face nobody registered and the text quietly falls back to the
+ * system font, which is the kind of failure that ships unnoticed.
+ */
+const appFonts = {
+  BricolageGrotesque_600SemiBold,
+  BricolageGrotesque_700Bold,
+  Archivo_400Regular,
+  Archivo_500Medium,
+  Archivo_600SemiBold,
+  Archivo_700Bold,
+  IBMPlexMono_500Medium,
+};
 
 function RootNavigator() {
   const { session, isLoading, isRecoveringPassword } = useSession();
@@ -91,6 +119,16 @@ function MissingConfigurationScreen() {
 }
 
 export default function RootLayout() {
+  const [areFontsLoaded, fontError] = useFonts(appFonts);
+
+  // The splash stays up until the type is ready. Swapping the font after the
+  // first frame reflows every screen, and on a mid range Android that reflow
+  // is visible. A load failure is a packaging bug rather than a field one, so
+  // it falls through to the system font instead of holding the app hostage.
+  if (!areFontsLoaded && fontError === null) {
+    return null;
+  }
+
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />

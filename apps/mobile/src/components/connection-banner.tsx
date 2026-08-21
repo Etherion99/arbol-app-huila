@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
 import { texts } from '@/constants/texts';
-import { colors, spacing } from '@/constants/theme';
+import { colors, fontFace, spacing } from '@/constants/theme';
 import { useIsOnline } from '@/hooks/use-is-online';
 
 /**
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   text: {
     // Dark ink on amber, which is the readable pairing of the two.
     color: colors.onAccent,
-    fontWeight: '600',
+    fontFamily: fontFace.bodySemibold,
     textAlign: 'center',
   },
 });
