@@ -46,9 +46,6 @@ export const LA_PLATA_FRAMING: MapRegion = {
   longitudeDelta: 0.28,
 };
 
-/** How long the opening move from the department to the municipality takes. */
-export const OPENING_FLIGHT_MS = 1_400;
-
 /**
  * Wait after the map stops moving before asking the server for the new
  * viewport. A pan is a stream of regions, not one, and firing on each of them
