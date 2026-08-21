@@ -1,13 +1,12 @@
 // One import per face, by subpath. The package index re-exports every weight
 // it ships, so importing from the root would bundle around thirty typefaces
-// into the app to render seven.
-import { Archivo_400Regular } from '@expo-google-fonts/archivo/400Regular';
-import { Archivo_500Medium } from '@expo-google-fonts/archivo/500Medium';
-import { Archivo_600SemiBold } from '@expo-google-fonts/archivo/600SemiBold';
-import { Archivo_700Bold } from '@expo-google-fonts/archivo/700Bold';
-import { BricolageGrotesque_600SemiBold } from '@expo-google-fonts/bricolage-grotesque/600SemiBold';
-import { BricolageGrotesque_700Bold } from '@expo-google-fonts/bricolage-grotesque/700Bold';
-import { IBMPlexMono_500Medium } from '@expo-google-fonts/ibm-plex-mono/500Medium';
+// into the app to render six.
+import { Montserrat_600SemiBold } from '@expo-google-fonts/montserrat/600SemiBold';
+import { Montserrat_700Bold } from '@expo-google-fonts/montserrat/700Bold';
+import { OpenSans_600SemiBold } from '@expo-google-fonts/open-sans/600SemiBold';
+import { Roboto_400Regular } from '@expo-google-fonts/roboto/400Regular';
+import { Roboto_500Medium } from '@expo-google-fonts/roboto/500Medium';
+import { RobotoMono_500Medium } from '@expo-google-fonts/roboto-mono/500Medium';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -45,13 +44,12 @@ loadPlantingDraft();
  * system font, which is the kind of failure that ships unnoticed.
  */
 const appFonts = {
-  BricolageGrotesque_600SemiBold,
-  BricolageGrotesque_700Bold,
-  Archivo_400Regular,
-  Archivo_500Medium,
-  Archivo_600SemiBold,
-  Archivo_700Bold,
-  IBMPlexMono_500Medium,
+  Montserrat_600SemiBold,
+  Montserrat_700Bold,
+  OpenSans_600SemiBold,
+  Roboto_400Regular,
+  Roboto_500Medium,
+  RobotoMono_500Medium,
 };
 
 function RootNavigator() {

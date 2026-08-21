@@ -51,22 +51,27 @@ export const MAX_CONTENT_WIDTH = 520;
  *
  * The names are the exports of `@expo-google-fonts`, which is why they are the
  * one place in the app that does not follow the design system's own naming.
- * Which family serves which size is the design system's rule: display from
- * 26px up, body at 20px and below.
+ * Which family serves which role is the design system's rule: Montserrat sets
+ * headlines, figures and buttons, Open Sans the subtitles and section headers,
+ * Roboto the running text, and Roboto Mono anything measured.
  *
  * Only the faces something renders are listed, and `appFonts` in the root
  * layout registers exactly these. Each typeface is around 120KB in the app, so
- * a weight nobody uses is 120KB a guardian downloads for nothing. Adding one
- * back is two lines: an entry here and an import there.
+ * a weight nobody uses is 120KB a guardian downloads for nothing. The branding
+ * guide names twelve faces across the four families and this app packages six
+ * of them; adding one back is two lines, an entry here and an import there.
+ *
+ * Roboto has no 600, which is why there is no `bodySemibold`: the weight above
+ * regular in the body family is `bodyMedium`, and anything that needs to read
+ * as a heading goes to `subheadSemibold` rather than to a heavier body.
  */
 export const fontFace = {
-  displaySemibold: 'BricolageGrotesque_600SemiBold',
-  displayBold: 'BricolageGrotesque_700Bold',
-  bodyRegular: 'Archivo_400Regular',
-  bodyMedium: 'Archivo_500Medium',
-  bodySemibold: 'Archivo_600SemiBold',
-  bodyBold: 'Archivo_700Bold',
-  monoMedium: 'IBMPlexMono_500Medium',
+  displaySemibold: 'Montserrat_600SemiBold',
+  displayBold: 'Montserrat_700Bold',
+  subheadSemibold: 'OpenSans_600SemiBold',
+  bodyRegular: 'Roboto_400Regular',
+  bodyMedium: 'Roboto_500Medium',
+  monoMedium: 'RobotoMono_500Medium',
 } as const;
 
 /** Rounds a size against its leading, because a fraction of a point is not a line. */
@@ -103,8 +108,9 @@ export const typography = StyleSheet.create({
     lineHeight: leading(fontSize.lg, lineHeight.snug),
     color: colors.textPrimary,
   },
+  /** The subhead role of the design system: Open Sans above a block of body. */
   subtitle: {
-    fontFamily: fontFace.bodySemibold,
+    fontFamily: fontFace.subheadSemibold,
     fontSize: fontSize.lg,
     lineHeight: leading(fontSize.lg, lineHeight.snug),
     color: colors.textPrimary,
@@ -124,7 +130,7 @@ export const typography = StyleSheet.create({
     color: colors.textSecondary,
   },
   label: {
-    fontFamily: fontFace.bodySemibold,
+    fontFamily: fontFace.bodyMedium,
     fontSize: fontSize.base,
     lineHeight: leading(fontSize.base, lineHeight.snug),
     color: colors.textPrimary,
@@ -142,9 +148,13 @@ export const typography = StyleSheet.create({
     lineHeight: leading(fontSize.md, lineHeight.normal),
     color: colors.textPrimary,
   },
-  /** The uppercase microlabels: vereda, cycle, section headers. */
+  /**
+   * The uppercase microlabels: vereda, cycle, section headers. On the subhead
+   * face because the design system gives Open Sans the section headings, and
+   * because Open Sans has no 500 to carry the medium weight this used to have.
+   */
   overline: {
-    fontFamily: fontFace.bodyMedium,
+    fontFamily: fontFace.subheadSemibold,
     fontSize: fontSize.xs,
     lineHeight: leading(fontSize.xs, lineHeight.normal),
     letterSpacing: fontSize.xs * tracking.wide,

@@ -20,15 +20,18 @@ importers:
       '@arbolapp/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@expo-google-fonts/archivo':
+      '@expo-google-fonts/montserrat':
         specifier: 0.4.2
         version: 0.4.2
-      '@expo-google-fonts/bricolage-grotesque':
-        specifier: 0.4.1
-        version: 0.4.1
-      '@expo-google-fonts/ibm-plex-mono':
-        specifier: 0.4.1
-        version: 0.4.1
+      '@expo-google-fonts/open-sans':
+        specifier: 0.4.2
+        version: 0.4.2
+      '@expo-google-fonts/roboto':
+        specifier: 0.4.3
+        version: 0.4.3
+      '@expo-google-fonts/roboto-mono':
+        specifier: 0.4.2
+        version: 0.4.2
       '@expo/ui':
         specifier: 57.0.12
         version: 57.0.12(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(expo@57.0.15)(react-dom@19.2.3(react@19.2.3))(react-native-worklets@0.10.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(supports-color@8.1.1))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
@@ -700,17 +703,20 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@expo-google-fonts/archivo@0.4.2':
-    resolution: {integrity: sha512-FLhI4/ZVIFSHHxx15Z7Rr4QX/4ZrJozEebBEFSdHSRRwULGCuSIpbb3dz56Hslux6LZEnJ1mVpZ6CyVpUzLwIg==}
-
-  '@expo-google-fonts/bricolage-grotesque@0.4.1':
-    resolution: {integrity: sha512-uijLLg+thOrFgw+gXtYA3dQJTBqqqleabcNFpamaYXqUUcbFe0J18C+4nfL0CyGzSJUicxUBLY4Zv7jdHmTGMA==}
-
-  '@expo-google-fonts/ibm-plex-mono@0.4.1':
-    resolution: {integrity: sha512-/yYz1mPZq8Nd4tSiH0SBDPEdJUqiOGBwVgSrQvLuw7SPh6C7ezBzmi6eFyHY4QaQwjHDmOLSBKsxzq8ZDFXVAg==}
-
   '@expo-google-fonts/material-symbols@0.4.44':
     resolution: {integrity: sha512-36JP9Chcy/QEVZ9ZGY4i6zInlyFPbQjkIm6gRNuWWltScIj0WR8rddcD57EIjSC5YKCe2ZKLO6eO/N5r8Jit0A==}
+
+  '@expo-google-fonts/montserrat@0.4.2':
+    resolution: {integrity: sha512-Xyq7rKJhhZOE1Xk4wKSSVoUeOkFmQEMhtZ3pdFrgYckGZMs115Apmld1AI8Ju+yrl5GzDdfRCCqRr33dvEDYUA==}
+
+  '@expo-google-fonts/open-sans@0.4.2':
+    resolution: {integrity: sha512-gvhPqLXYnltWgll3iBwRGUwf5yN2HCh4mgQmFoQ8oU66LTs23oX4N7T3t0BDsKfP/1Z8F8+4c7wSkA11Nnk4kA==}
+
+  '@expo-google-fonts/roboto-mono@0.4.2':
+    resolution: {integrity: sha512-TkWqMKicHKbWclt3dZuzHgBXE4OZgenz+Bp8XT26/wKcWvUXnzGvS7C140QYCsq+CKZsa+0JTZppq2Wfyx0SCQ==}
+
+  '@expo-google-fonts/roboto@0.4.3':
+    resolution: {integrity: sha512-kX3wmpmu06fN1yOwYWMdjYJWNUYW6xUiAGeHbvPzzSEb3A3j23JelQ3tAgwQNKgEKRq6wtMmzixy2r7y9c8dsA==}
 
   '@expo/cli@57.0.17':
     resolution: {integrity: sha512-PQc7if117dNh2qe+CHdlmSWpgwhFiP9CJ7XbwNF0w4KSKxFpJ2qUjDPoAcCMW1VZg1x30mEJ907bT8G1iDIZBQ==}
@@ -6118,13 +6124,15 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
-  '@expo-google-fonts/archivo@0.4.2': {}
-
-  '@expo-google-fonts/bricolage-grotesque@0.4.1': {}
-
-  '@expo-google-fonts/ibm-plex-mono@0.4.1': {}
-
   '@expo-google-fonts/material-symbols@0.4.44': {}
+
+  '@expo-google-fonts/montserrat@0.4.2': {}
+
+  '@expo-google-fonts/open-sans@0.4.2': {}
+
+  '@expo-google-fonts/roboto-mono@0.4.2': {}
+
+  '@expo-google-fonts/roboto@0.4.3': {}
 
   '@expo/cli@57.0.17(@expo/dom-webview@57.0.1)(@expo/metro-runtime@57.0.12)(expo-constants@57.0.13)(expo-font@57.0.1)(expo-router@57.0.15)(expo@57.0.15)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(supports-color@8.1.1)(typescript@6.0.3)':
     dependencies:

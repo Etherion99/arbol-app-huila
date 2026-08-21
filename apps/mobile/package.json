@@ -4,9 +4,10 @@
   "version": "1.0.0",
   "dependencies": {
     "@arbolapp/core": "workspace:*",
-    "@expo-google-fonts/archivo": "0.4.2",
-    "@expo-google-fonts/bricolage-grotesque": "0.4.1",
-    "@expo-google-fonts/ibm-plex-mono": "0.4.1",
+    "@expo-google-fonts/montserrat": "0.4.2",
+    "@expo-google-fonts/open-sans": "0.4.2",
+    "@expo-google-fonts/roboto": "0.4.3",
+    "@expo-google-fonts/roboto-mono": "0.4.2",
     "@expo/ui": "57.0.12",
     "@react-native-community/netinfo": "12.0.1",
     "@supabase/supabase-js": "2.112.3",
