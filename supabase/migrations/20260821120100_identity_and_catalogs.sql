@@ -220,6 +220,7 @@ create table public.species_merges (
   performed_at timestamptz not null default now(),
   affected_tree_ids uuid[] not null default '{}',
   affected_tree_count integer generated always as (cardinality(affected_tree_ids)) stored,
+  previous_canonical_name text,
   reverted_at timestamptz,
   reverted_by uuid references public.users (id),
   constraint species_merges_distinct_sides check (source_species_id <> target_species_id),
@@ -238,5 +239,7 @@ comment on column public.species_merges.affected_tree_ids is
   'Exact trees relabelled by this merge. The list, and not just the count, is what makes an exact revert possible after other trees have been registered.';
 comment on column public.species_merges.affected_tree_count is
   'Size of affected_tree_ids, stored so the admin panel can list merges without unnesting the array.';
+comment on column public.species_merges.previous_canonical_name is
+  'Display name the target carried before this merge. A merge may rename the surviving group to anything, so without this a revert could not put the old name back.';
 comment on column public.species_merges.reverted_at is
   'When the merge was undone. A reverted merge stays on record instead of being deleted.';

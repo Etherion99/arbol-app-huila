@@ -302,6 +302,192 @@ having count(*) = 1;
 comment on view public.species_with_single_occurrence is
   'Species used by exactly one tree, the shortlist a coordinator reviews before merging variants.';
 
+-- ---------------------------------------------------------------------------
+-- Species convergence
+-- ---------------------------------------------------------------------------
+
+-- What the free text field offers while the guardian types, most planted
+-- first. This is where species names are meant to converge: most people pick a
+-- suggestion, and the ones who do not are cleaned up afterwards by a merge.
+-- Nothing is rewritten at write time, so nothing is ever lost.
+create or replace function public.species_suggestions(
+  search_text text default '',
+  max_results integer default 10
+)
+returns table (
+  species_id uuid,
+  canonical_name text,
+  normalized_key text,
+  tree_count bigint
+)
+language sql
+stable
+set search_path = ''
+as $$
+  select
+    species.id,
+    species.canonical_name,
+    species.normalized_key,
+    count(tree.id)
+  from public.species species
+  left join public.trees tree
+    on tree.species_id = species.id
+   and tree.archived_at is null
+  where species.archived_at is null
+    and species.merged_into_id is null
+    and (
+      btrim(coalesce(search_text, '')) = ''
+      -- starts_with rather than like, so a % or a _ typed by the guardian is
+      -- matched literally instead of behaving as a wildcard.
+      or starts_with(species.normalized_key, public.normalize_species(search_text))
+    )
+  group by species.id, species.canonical_name, species.normalized_key
+  order by count(tree.id) desc, species.canonical_name
+  limit greatest(coalesce(max_results, 10), 1);
+$$;
+
+comment on function public.species_suggestions(text, integer) is
+  'Autocomplete for the free text species field, ordered by how many trees already carry each name.';
+
+-- Folds one or more species into another one and relabels their trees.
+--
+-- The surviving name is whatever the coordinator decides. It does not have to
+-- be any of the names being merged: five mandarinos and six mandarinas can end
+-- up as eleven trees called "Árboles de mandarina" if that is the right answer
+-- for the project. Nothing about this is enforced by a rule, because which
+-- names describe the same tree is a question about the real world.
+--
+-- Security definer, so the gate is the explicit role check rather than RLS.
+-- Returns one identifier per merge recorded, one for each source.
+create or replace function public.merge_species(
+  source_species_ids uuid[],
+  target_species_id uuid,
+  new_canonical_name text default null
+)
+returns setof uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  actor uuid := (select auth.uid());
+  target public.species;
+  source_id uuid;
+  moved_tree_ids uuid[];
+  merge_id uuid;
+begin
+  if not public.is_coordinator() then
+    raise exception 'only a coordinator can merge species' using errcode = '42501';
+  end if;
+
+  select * into target from public.species where id = target_species_id;
+
+  if not found then
+    raise exception 'target species % does not exist', target_species_id;
+  end if;
+
+  if target.merged_into_id is not null then
+    raise exception 'target species % has itself been merged away', target_species_id;
+  end if;
+
+  if target_species_id = any(source_species_ids) then
+    raise exception 'a species cannot be merged into itself';
+  end if;
+
+  foreach source_id in array source_species_ids loop
+    with relabelled as (
+      update public.trees tree
+         set species_id = target_species_id
+       where tree.species_id = source_id
+      returning tree.id
+    )
+    select coalesce(array_agg(id), '{}') into moved_tree_ids from relabelled;
+
+    -- The source row stays. It is archived and pointed at its target, so old
+    -- links keep resolving and the merge can be undone.
+    update public.species
+       set merged_into_id = target_species_id,
+           archived_at = now(),
+           archived_by = actor,
+           archive_reason = 'Fusionada con otra especie desde el panel.'
+     where id = source_id
+       and merged_into_id is null;
+
+    insert into public.species_merges (
+      source_species_id, target_species_id, performed_by,
+      affected_tree_ids, previous_canonical_name
+    )
+    values (source_id, target_species_id, actor, moved_tree_ids, target.canonical_name)
+    returning id into merge_id;
+
+    return next merge_id;
+  end loop;
+
+  if btrim(coalesce(new_canonical_name, '')) <> '' then
+    update public.species
+       set canonical_name = btrim(new_canonical_name)
+     where id = target_species_id;
+  end if;
+end;
+$$;
+
+comment on function public.merge_species(uuid[], uuid, text) is
+  'Folds species into one and relabels their trees. The surviving name is free text chosen by the coordinator and need not be one of the merged names.';
+
+-- Undoes one recorded merge exactly: the same trees go back to the same
+-- species, and the target gets its previous display name again.
+create or replace function public.revert_species_merge(merge_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  recorded public.species_merges;
+begin
+  if not public.is_coordinator() then
+    raise exception 'only a coordinator can revert a species merge' using errcode = '42501';
+  end if;
+
+  select * into recorded from public.species_merges where id = merge_id for update;
+
+  if not found then
+    raise exception 'merge % does not exist', merge_id;
+  end if;
+
+  if recorded.reverted_at is not null then
+    raise exception 'merge % was already reverted', merge_id;
+  end if;
+
+  -- Only the trees this merge actually moved, which is why the identifiers are
+  -- stored and not just the count: other trees may have joined the target in
+  -- the meantime and they must stay where they are.
+  update public.trees
+     set species_id = recorded.source_species_id
+   where id = any(recorded.affected_tree_ids);
+
+  update public.species
+     set merged_into_id = null,
+         archived_at = null,
+         archived_by = null,
+         archive_reason = null
+   where id = recorded.source_species_id;
+
+  update public.species
+     set canonical_name = recorded.previous_canonical_name
+   where id = recorded.target_species_id
+     and recorded.previous_canonical_name is not null;
+
+  update public.species_merges
+     set reverted_at = now(),
+         reverted_by = (select auth.uid())
+   where id = merge_id;
+end;
+$$;
+
+comment on function public.revert_species_merge(uuid) is
+  'Undoes a recorded merge, moving back exactly the trees it moved and restoring the previous display name.';
+
 grant select on public.zone_ancestry to anon, authenticated;
 grant select on public.tree_overview to anon, authenticated;
 grant select on public.statistics_overview to anon, authenticated;
@@ -311,6 +497,12 @@ grant select on public.statistics_by_species to anon, authenticated;
 grant select on public.species_with_single_occurrence to authenticated;
 
 grant execute on function public.zone_subtree(uuid[]) to anon, authenticated;
+grant execute on function public.species_suggestions(text, integer) to authenticated;
+
+-- Both check the caller's role themselves, since a security definer function
+-- runs outside the policies that would otherwise stop a guardian.
+grant execute on function public.merge_species(uuid[], uuid, text) to authenticated;
+grant execute on function public.revert_species_merge(uuid) to authenticated;
 grant execute on function public.trees_in_viewport(
   double precision, double precision, double precision, double precision,
   integer, uuid[], uuid[]
