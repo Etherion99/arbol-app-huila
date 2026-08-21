@@ -24,7 +24,8 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,json,md,yml}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,json,md,yml}\""
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,json,md,yml}\"",
+    "sprites": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/generate-marker-sprites.mjs"
   },
   "devDependencies": {
     "prettier": "3.4.2",
