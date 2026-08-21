@@ -448,9 +448,9 @@ check(
 const viewportAfterArchive = await request('rpc/trees_in_viewport', {
   method: 'POST',
   body: {
-    min_lng: -76.05,
-    min_lat: 2.28,
-    max_lng: -75.78,
+    min_lng: -76.12,
+    min_lat: 2.2,
+    max_lng: -75.76,
     max_lat: 2.5,
     zoom: 13,
   },
