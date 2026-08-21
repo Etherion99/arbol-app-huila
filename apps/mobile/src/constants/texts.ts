@@ -176,11 +176,57 @@ export const texts = {
     tabLabel: 'Mapa',
     accountTabLabel: 'Cuenta',
     profileTabLabel: 'Perfil',
-    placeholderTitle: 'El mapa llega en la próxima entrega',
-    placeholderBody:
-      'Aquí verás cada árbol sembrado como un punto de luz, con su especie, su guardián y su última fotografía.',
     guestNotice: 'Estás explorando sin cuenta. Puedes mirar el mapa, pero no registrar árboles.',
     guestAction: 'Crear cuenta de Guardián',
+    guestSignIn: 'Entrar',
+
+    searchPlaceholder: 'Buscar árbol o vereda…',
+    searchLabel: 'Buscar un árbol o una vereda',
+    myLocation: 'Centrar en mi ubicación',
+
+    municipalityFilter: 'Municipio',
+    villageFilter: 'Vereda',
+    speciesFilter: 'Especie',
+    clearFilter: (name: string) => `Quitar el filtro ${name}`,
+    allMunicipalities: 'Todos los municipios',
+    allVillages: 'Todas las veredas',
+    allSpecies: 'Todas las especies',
+    treeCount: (count: number) => (count === 1 ? '1 árbol' : `${count} árboles`),
+
+    legendTitle: 'Estados',
+    legend: {
+      up_to_date: 'Al día',
+      due_soon: 'Por actualizar',
+      overdue: 'Vencido',
+      dead: 'Muerto',
+      archived: 'Archivado',
+    },
+
+    clusterLabel: (count: number, zone: string) => `${count} árboles en ${zone}`,
+    clusterLabelPlain: (count: number) => `Grupo de ${count} árboles`,
+    markerLabel: (species: string, state: string) => `Árbol de ${species}, ${state}`,
+
+    loadingTrees: 'Cargando los árboles…',
+    emptyTitle: 'Aquí todavía no hay árboles',
+    emptyBody: 'Mueve el mapa o quita los filtros para ver otras zonas del proyecto.',
+    errorTitle: 'No pudimos cargar los árboles',
+    errorBody: 'Revisa tu conexión y vuelve a intentarlo.',
+    offlineCached: 'Sin conexión. Estás viendo la última zona guardada.',
+    locationDeniedTitle: 'Sin acceso a tu ubicación',
+    locationDeniedBody:
+      'El mapa funciona igual: se abre sobre La Plata y puedes moverlo con el dedo. Puedes permitir el acceso desde los ajustes del teléfono.',
+    locationUnavailable: 'No pudimos leer tu ubicación ahora. Inténtalo de nuevo en un momento.',
+
+    cardCycle: (cycle: number) => `CICLO ${cycle}`,
+    cardNoCycle: 'SIN BITÁCORA',
+    cardNoGuardian: 'Sin guardián asignado',
+    cardUpdated: (date: string) => `Actualizado el ${date}`,
+    cardNeverUpdated: 'Todavía sin actualizaciones',
+    cardOpen: 'Ver árbol',
+    cardClose: 'Cerrar la ficha del árbol',
+    cardNoPhoto: 'Todavía sin fotografía',
+    cardPhotoOf: (species: string) => `Última fotografía del árbol de ${species}`,
+    cardComingSoon: 'El detalle del árbol llega en la próxima entrega.',
   },
 
   legal: {
