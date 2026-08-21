@@ -28,13 +28,13 @@ export function ConnectionBanner() {
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: colors.warningText,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    backgroundColor: colors.warning,
+    paddingVertical: spacing[2],
+    paddingHorizontal: spacing[4],
   },
   text: {
     // Dark ink on amber, which is the readable pairing of the two.
-    color: colors.textOnLight,
+    color: colors.onAccent,
     fontWeight: '600',
     textAlign: 'center',
   },

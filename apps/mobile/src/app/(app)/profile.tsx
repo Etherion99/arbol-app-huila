@@ -33,7 +33,7 @@ export default function ProfileScreen() {
     return (
       <Screen isScrollable={false}>
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={colors.accent} />
           <AppText variant="body">{texts.common.loading}</AppText>
         </View>
       </Screen>
@@ -258,8 +258,8 @@ function NotificationToggle({
         onValueChange={onChange}
         accessibilityLabel={label}
         accessibilityHint={texts.profile.notificationsComingSoon}
-        trackColor={{ true: colors.primary, false: colors.border }}
-        thumbColor={colors.text}
+        trackColor={{ true: colors.accent, false: colors.borderSubtle }}
+        thumbColor={colors.textPrimary}
       />
     </View>
   );
@@ -270,27 +270,27 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.md,
+    gap: spacing[4],
   },
   header: {
-    gap: spacing.xs,
+    gap: spacing[1],
   },
   section: {
-    gap: spacing.md,
-    padding: spacing.md,
+    gap: spacing[4],
+    padding: spacing[4],
     borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: colors.borderSubtle,
+    backgroundColor: colors.surfaceCard,
   },
   readOnlyField: {
-    gap: spacing.xs,
+    gap: spacing[1],
   },
   toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.md,
+    gap: spacing[4],
     minHeight: MIN_TOUCH_TARGET,
   },
   toggleLabel: {

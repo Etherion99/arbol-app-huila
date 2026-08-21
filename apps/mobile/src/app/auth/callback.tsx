@@ -38,7 +38,7 @@ export default function AuthCallbackScreen() {
   return (
     <Screen isScrollable={false} hasConnectionBanner={false}>
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.accent} />
         <AppText variant="body">{texts.verifyEmail.confirming}</AppText>
       </View>
     </Screen>
@@ -50,6 +50,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.md,
+    gap: spacing[4],
   },
 });

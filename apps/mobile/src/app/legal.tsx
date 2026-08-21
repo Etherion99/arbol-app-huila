@@ -43,17 +43,17 @@ export default function LegalScreen() {
 const styles = StyleSheet.create({
   badge: {
     alignSelf: 'flex-start',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[1],
     borderRadius: radii.full,
     borderWidth: 1,
-    borderColor: colors.warningText,
+    borderColor: colors.warning,
   },
   badgeText: {
-    color: colors.warningText,
+    color: colors.warning,
     fontWeight: '700',
   },
   section: {
-    gap: spacing.xs,
+    gap: spacing[1],
   },
 });

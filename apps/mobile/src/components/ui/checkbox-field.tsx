@@ -65,14 +65,14 @@ export function CheckboxField({
 
 const styles = StyleSheet.create({
   container: {
-    gap: spacing.xs,
+    gap: spacing[1],
   },
   row: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: spacing.sm,
+    gap: spacing[2],
     minHeight: MIN_TOUCH_TARGET,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing[2],
   },
   pressed: {
     opacity: 0.75,
@@ -85,26 +85,26 @@ const styles = StyleSheet.create({
     marginTop: 1,
     borderRadius: radii.sm,
     borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: colors.borderSubtle,
+    backgroundColor: colors.surfaceCard,
     alignItems: 'center',
     justifyContent: 'center',
   },
   boxChecked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   boxError: {
-    borderColor: colors.dangerText,
+    borderColor: colors.danger,
   },
   mark: {
-    color: colors.textOnLight,
+    color: colors.onAccent,
     lineHeight: 22,
   },
   label: {
     flex: 1,
   },
   error: {
-    color: colors.dangerText,
+    color: colors.danger,
   },
 });

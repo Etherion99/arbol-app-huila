@@ -132,19 +132,19 @@ export default function SignInScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    gap: spacing.xs,
+    gap: spacing[1],
   },
   form: {
-    gap: spacing.md,
+    gap: spacing[4],
   },
   actions: {
-    gap: spacing.sm,
+    gap: spacing[2],
   },
   legalLink: {
     alignSelf: 'center',
-    padding: spacing.sm,
+    padding: spacing[2],
   },
   legalText: {
-    color: colors.primary,
+    color: colors.accent,
   },
 });

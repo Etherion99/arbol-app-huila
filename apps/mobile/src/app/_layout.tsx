@@ -43,7 +43,7 @@ function RootNavigator() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: colors.background },
+        contentStyle: { backgroundColor: colors.surfacePage },
       }}
     >
       {/* The intro is only in the way of somebody who has never seen it and is
@@ -113,11 +113,11 @@ const styles = StyleSheet.create({
   configScreen: {
     flex: 1,
     justifyContent: 'center',
-    gap: spacing.sm,
-    padding: spacing.lg,
-    backgroundColor: colors.background,
+    gap: spacing[2],
+    padding: spacing[6],
+    backgroundColor: colors.surfacePage,
   },
   configVar: {
-    color: colors.warningText,
+    color: colors.warning,
   },
 });

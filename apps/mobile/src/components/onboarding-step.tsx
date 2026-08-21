@@ -105,23 +105,23 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     justifyContent: 'center',
-    gap: spacing.md,
+    gap: spacing[4],
   },
   dots: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: spacing.sm,
+    gap: spacing[2],
   },
   dot: {
     width: 8,
     height: 8,
     borderRadius: radii.full,
-    backgroundColor: colors.border,
+    backgroundColor: colors.borderSubtle,
   },
   dotActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
   },
   actions: {
-    gap: spacing.sm,
+    gap: spacing[2],
   },
 });

@@ -39,10 +39,10 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     justifyContent: 'center',
-    gap: spacing.md,
+    gap: spacing[4],
   },
   guest: {
-    gap: spacing.md,
-    marginTop: spacing.lg,
+    gap: spacing[4],
+    marginTop: spacing[6],
   },
 });

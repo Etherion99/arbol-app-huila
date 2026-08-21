@@ -111,9 +111,9 @@ export default function ForgotPasswordScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    gap: spacing.xs,
+    gap: spacing[1],
   },
   actions: {
-    gap: spacing.sm,
+    gap: spacing[2],
   },
 });

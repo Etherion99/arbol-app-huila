@@ -39,9 +39,9 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     justifyContent: 'center',
-    gap: spacing.md,
+    gap: spacing[4],
   },
   actions: {
-    gap: spacing.sm,
+    gap: spacing[2],
   },
 });

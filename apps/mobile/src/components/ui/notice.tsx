@@ -52,27 +52,27 @@ export function Notice({ tone, message, title, onRetry, retryLabel }: NoticeProp
 
 const styles = StyleSheet.create({
   container: {
-    gap: spacing.xs,
-    padding: spacing.md,
+    gap: spacing[1],
+    padding: spacing[4],
     borderRadius: radii.md,
     borderWidth: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceCard,
   },
   retry: {
-    marginTop: spacing.sm,
+    marginTop: spacing[2],
   },
 });
 
 const toneStyles = StyleSheet.create({
-  error: { borderColor: colors.dangerText },
-  warning: { borderColor: colors.warningText },
-  info: { borderColor: colors.border },
-  success: { borderColor: colors.primary },
+  error: { borderColor: colors.danger },
+  warning: { borderColor: colors.warning },
+  info: { borderColor: colors.borderSubtle },
+  success: { borderColor: colors.accent },
 });
 
 const toneText = StyleSheet.create({
-  error: { color: colors.dangerText },
-  warning: { color: colors.warningText },
-  info: { color: colors.textMuted },
-  success: { color: colors.primary },
+  error: { color: colors.danger },
+  warning: { color: colors.warning },
+  info: { color: colors.textSecondary },
+  success: { color: colors.accent },
 });

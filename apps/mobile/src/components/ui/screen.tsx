@@ -49,7 +49,7 @@ export function Screen({ children, isScrollable = true, hasConnectionBanner = tr
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surfacePage,
   },
   filler: {
     flex: 1,
@@ -57,17 +57,17 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     alignItems: 'center',
-    padding: spacing.lg,
+    padding: spacing[6],
   },
   staticContent: {
     flex: 1,
     alignItems: 'center',
-    padding: spacing.lg,
+    padding: spacing[6],
   },
   column: {
     flex: 1,
     width: '100%',
     maxWidth: MAX_CONTENT_WIDTH,
-    gap: spacing.md,
+    gap: spacing[4],
   },
 });

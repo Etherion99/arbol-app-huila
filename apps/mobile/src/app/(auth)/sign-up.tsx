@@ -203,18 +203,18 @@ export default function SignUpScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    gap: spacing.xs,
+    gap: spacing[1],
   },
   form: {
-    gap: spacing.md,
+    gap: spacing[4],
   },
   declarations: {
-    gap: spacing.sm,
+    gap: spacing[2],
   },
   consentPending: {
-    color: colors.dangerText,
+    color: colors.danger,
   },
   actions: {
-    gap: spacing.sm,
+    gap: spacing[2],
   },
 });

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'rea
 
 import { AppText } from '@/components/ui/app-text';
 import { texts } from '@/constants/texts';
-import { MIN_TOUCH_TARGET, colors, radii, spacing } from '@/constants/theme';
+import { MIN_TOUCH_TARGET, colors, fontSize, radii, spacing } from '@/constants/theme';
 
 export type TextFieldProps = Omit<TextInputProps, 'style' | 'onChangeText' | 'value'> & {
   label: string;
@@ -44,7 +44,7 @@ export function TextField({
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={isPassword && !isRevealed}
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.textSecondary}
           // Screen readers announce the label, then the error, so the reason a
           // field is flagged travels with it instead of living somewhere else.
           accessibilityLabel={label}
@@ -83,38 +83,38 @@ export function TextField({
 
 const styles = StyleSheet.create({
   container: {
-    gap: spacing.xs,
+    gap: spacing[1],
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceCard,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderSubtle,
     borderRadius: radii.md,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing[2],
   },
   inputRowError: {
-    borderColor: colors.dangerText,
+    borderColor: colors.danger,
   },
   input: {
     flex: 1,
     minHeight: MIN_TOUCH_TARGET,
-    paddingVertical: spacing.sm,
-    fontSize: 16,
-    color: colors.text,
+    paddingVertical: spacing[2],
+    fontSize: fontSize.md,
+    color: colors.textPrimary,
   },
   reveal: {
     minHeight: MIN_TOUCH_TARGET,
     minWidth: MIN_TOUCH_TARGET,
     justifyContent: 'center',
     alignItems: 'flex-end',
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: spacing[1],
   },
   revealLabel: {
-    color: colors.primary,
+    color: colors.accent,
   },
   error: {
-    color: colors.dangerText,
+    color: colors.danger,
   },
 });

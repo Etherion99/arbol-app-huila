@@ -67,7 +67,7 @@ export default function ResetPasswordScreen() {
     return (
       <Screen isScrollable={false} hasConnectionBanner={false}>
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={colors.accent} />
           <AppText variant="body">{texts.common.loading}</AppText>
         </View>
       </Screen>
@@ -168,15 +168,15 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.md,
+    gap: spacing[4],
   },
   header: {
-    gap: spacing.xs,
+    gap: spacing[1],
   },
   form: {
-    gap: spacing.md,
+    gap: spacing[4],
   },
   actions: {
-    gap: spacing.sm,
+    gap: spacing[2],
   },
 });

@@ -57,7 +57,7 @@ export function Button({
         {isLoading ? (
           <ActivityIndicator
             size="small"
-            color={variant === 'primary' ? colors.textOnLight : colors.text}
+            color={variant === 'primary' ? colors.onAccent : colors.textPrimary}
           />
         ) : null}
         <AppText variant="label" style={[styles.label, textStyles[variant]]}>
@@ -72,8 +72,8 @@ const styles = StyleSheet.create({
   base: {
     minHeight: MIN_TOUCH_TARGET,
     justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
     borderRadius: radii.md,
     borderWidth: 1,
   },
@@ -81,18 +81,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
+    gap: spacing[2],
   },
   label: {
     textAlign: 'center',
   },
   primary: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   secondary: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
+    backgroundColor: colors.surfaceCard,
+    borderColor: colors.borderSubtle,
   },
   ghost: {
     backgroundColor: 'transparent',
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   },
   danger: {
     backgroundColor: 'transparent',
-    borderColor: colors.dangerText,
+    borderColor: colors.danger,
   },
   pressed: {
     opacity: 0.75,
@@ -113,8 +113,8 @@ const styles = StyleSheet.create({
 const textStyles = StyleSheet.create({
   // Dark ink on the green fill: the pair clears AA comfortably, which white on
   // the same green does not.
-  primary: { color: colors.textOnLight },
-  secondary: { color: colors.text },
-  ghost: { color: colors.primary },
-  danger: { color: colors.dangerText },
+  primary: { color: colors.onAccent },
+  secondary: { color: colors.textPrimary },
+  ghost: { color: colors.accent },
+  danger: { color: colors.danger },
 });
