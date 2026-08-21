@@ -1,0 +1,41 @@
+# Dependencias
+node_modules/
+
+# Entornos — nunca commitear claves reales
+.env
+.env.local
+.env.*.local
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Compilaciones nativas (se generan con prebuild)
+/apps/mobile/android/
+/apps/mobile/ios/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Supabase
+supabase/.branches
+supabase/.temp
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json

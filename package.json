@@ -1,0 +1,25 @@
+{
+  "name": "arbol-app-huila",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ÁrbolApp Huila — plataforma de geolocalización y seguimiento de árboles frutales del proyecto PRAE \"De la pantalla a la realidad\"",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": "^20.19.4 || ^22.13.0 || ^24.3.0 || >=25"
+  },
+  "scripts": {
+    "mobile": "npm run start -w @arbolapp/mobile",
+    "mobile:android": "npm run android -w @arbolapp/mobile",
+    "web": "npm run dev -w @arbolapp/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2"
+  }
+}
