@@ -236,6 +236,42 @@ export type TreeMarker = {
   speciesName: string;
 };
 
+/**
+ * A row of `tree_card`: everything the floating card on the map shows when a
+ * marker is tapped, and nothing the map itself needs.
+ *
+ * The photograph travels as an object key rather than a URL. The bucket is
+ * private, so a usable link has to be signed, and that happens once the card is
+ * open -- signing one per visible marker would be hundreds of requests to paint
+ * a screen most of which nobody taps.
+ */
+export type TreeCardSummary = {
+  treeId: Uuid;
+  code: string;
+  speciesId: Uuid;
+  speciesName: string;
+  /** Exactly what the guardian typed, never rewritten. */
+  speciesRawText: string;
+  trackingStatus: TrackingStatus;
+  status: TreeStatus;
+  plantedAt: IsoDate;
+  lastUpdatedAt: IsoDateTime;
+  nextReminderAt: IsoDateTime;
+  guardianId: Uuid | null;
+  /**
+   * Given name and the initial of the last surname, built in the database by
+   * `short_display_name()`. The email is not part of this payload and is not
+   * reachable from it.
+   */
+  guardianDisplayName: string | null;
+  villageName: string | null;
+  municipalityName: string | null;
+  /** Null when the tree has no growth log entry yet. */
+  latestCycle: number | null;
+  latestPhotoPath: string | null;
+  latestThumbnailPath: string | null;
+};
+
 /** Arguments of the `trees_in_viewport` function. */
 export type ViewportQuery = {
   minLng: number;

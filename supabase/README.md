@@ -64,6 +64,7 @@ no rompe nada.
 | `…_row_level_security.sql` | RLS en todas las tablas, permisos por columna y las vistas públicas de perfil |
 | `…_storage.sql` | El bucket de fotografías y sus políticas |
 | `…_access_functions.sql` | `trees_in_viewport()` y las vistas de estadística |
+| `…_tree_card.sql` | `tree_card()` y `short_display_name()`, lo que muestra la ficha flotante del mapa |
 
 ## Datos de prueba
 
