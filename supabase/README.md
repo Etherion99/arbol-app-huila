@@ -22,6 +22,6 @@ listas; el proyecto real se crea al iniciar la Fase 1.
 
 ## Convención transversal
 
-Toda consulta pública filtra `archivado_at IS NULL`. El sistema **no borra registros**:
+Toda consulta pública filtra `archived_at IS NULL`. El sistema **no borra registros**:
 archiva con borrado lógico, conservando la bitácora y el histórico. El borrado físico
 queda reservado a contenido inapropiado y a solicitudes de supresión de datos personales.

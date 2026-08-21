@@ -47,9 +47,9 @@ Sin un estado de "muerto", pasan tres cosas malas:
 2. El contador global de "árboles sembrados" deja de significar "árboles vivos", y es un dato que nadie puede sostener ante la Secretaría de Ambiente o en la sustentación del PRAE.
 3. Se pierde la métrica más valiosa del proyecto: **la tasa de supervivencia**.
 
-**Propuesta:** campo `estado` en el árbol con valores `vivo` · `en_riesgo` · `muerto`
+**Propuesta:** campo `status` en el árbol con valores `vivo` · `en_riesgo` · `muerto`
 · `replantado`. El guardián puede reportar la muerte con foto y causa; el docente la
-valida. Un árbol `replantado` conserva el punto en el mapa y encadena la bitácora
+valida. Un árbol `replanted` conserva el punto en el mapa y encadena la bitácora
 anterior, de modo que la historia del sitio no se pierde. Los indicadores del panel
 pasan a mostrar *sembrados / vivos / tasa de supervivencia*, que es el trío que
 realmente cuenta la historia del proyecto.
@@ -58,14 +58,14 @@ realmente cuenta la historia del proyecto.
 
 Los guardianes se retiran, se mudan o dejan de participar al terminar el ciclo del
 proyecto. Hoy el árbol quedaría huérfano y sin recordatorios para siempre. Se necesita
-reasignación por parte del coordinador y un estado `sin_guardian` visible en el panel
+reasignación por parte del coordinador y un estado `unassigned` visible en el panel
 para reclutar reemplazo.
 
 **Decisión confirmada — archivado con borrado lógico (*soft delete*):** el coordinador
 no borra registros, los archiva. El árbol sale del mapa activo y deja de generar
 recordatorios, pero conserva su bitácora completa, sigue contando en el histórico y puede
-reasignarse a un guardián nuevo. Se implementa con `archivado_at`, `archivado_por` y
-`motivo_archivado`, filtrando por `archivado_at IS NULL` en todas las consultas públicas.
+reasignarse a un guardián nuevo. Se implementa con `archived_at`, `archived_by` y
+`archive_reason`, filtrando por `archived_at IS NULL` en todas las consultas públicas.
 El borrado físico queda reservado para contenido inapropiado y para solicitudes de
 supresión de datos personales, que la Ley 1581 obliga a atender.
 

@@ -66,21 +66,21 @@ El esquema completo, con las decisiones ya tomadas incorporadas desde el inicio.
 
 **Tablas**
 
-- `usuarios` — perfil de Guardián, con declaración de mayoría de edad y aceptación de términos fechada.
-- `zonas` — departamento, municipio y vereda como catálogo jerárquico de texto, **con la columna `geometria` creada y vacía** para la migración futura de §2.9.
-- `arboles` — especie (texto original + clave normalizada), `ubicacion geometry(Point,4326)`, fecha de siembra, guardián, estado (`vivo` / `en_riesgo` / `muerto` / `replantado`), `ultima_actualizacion_at`, `proximo_recordatorio_at` como columna generada, y campos de archivado.
-- `bitacora_entradas` — los campos aprobados: foto y miniatura, `capturada_at` de EXIF, altura, ramas visibles, estado de salud, notas, coordenada de captura, ciclo y puntualidad.
-- `especies` — clave normalizada, nombre oficial, contador y registro de fusiones.
-- `dispositivos` y `recordatorios` — soporte del motor de notificaciones.
+- `users` — perfil de Guardián, con declaración de mayoría de edad y aceptación de términos fechada.
+- `zones` — departamento, municipio y vereda como catálogo jerárquico de texto, **con la columna `geometry` creada y vacía** para la migración futura de §2.9.
+- `trees` — especie (texto original + clave normalizada), `location geometry(Point,4326)`, fecha de siembra, guardián, estado (`alive` / `at_risk` / `dead` / `replanted`), `last_updated_at`, `next_reminder_at` como columna generada, y campos de archivado.
+- `log_entries` — los campos aprobados: foto y miniatura, `captured_at` de EXIF, altura, ramas visibles, estado de salud, notas, coordenada de captura, ciclo y puntualidad.
+- `species` — clave normalizada, nombre oficial, contador y registro de fusiones.
+- `devices` y `reminders` — soporte del motor de notificaciones.
 
 **Tareas**
 
-- Habilitar PostGIS e índices GiST sobre `arboles.ubicacion`.
+- Habilitar PostGIS e índices GiST sobre `trees.location`.
 - Políticas RLS: el guardián lee todo lo público y escribe solo lo suyo; el coordinador tiene acceso total; el visitante anónimo solo lee árboles no archivados.
 - Buckets de Storage con políticas de acceso a las fotos.
-- Función `arboles_en_vista(bbox, zoom, filtros)` para el mapa.
+- Función `trees_in_viewport(bbox, zoom, filters)` para el mapa.
 - Datos de prueba: 200 árboles ficticios distribuidos en veredas de La Plata.
-- **Convención transversal:** toda consulta pública filtra `archivado_at IS NULL`.
+- **Convención transversal:** toda consulta pública filtra `archived_at IS NULL`.
 
 **Criterio de aceptación:** se puede consultar por viewport y devolver solo los árboles visibles, con RLS activo y verificado con dos usuarios distintos.
 
@@ -161,7 +161,7 @@ El corazón de la aplicación y la pantalla de entrada.
 - `pg_cron` diario a las 8:00 hora Colombia que busca árboles vencidos.
 - Edge Function que agrupa por usuario (una sola notificación aunque tenga diez árboles vencidos), envía por Expo Push y deja registro.
 - Escalonamiento: día 0, día +7, día +21 con copia al coordinador, día +30 marca el árbol como vencido.
-- Enlace profundo `arbolapp://arbol/{id}/bitacora` que abre directamente la cámara.
+- Enlace profundo `arbolapp://tree/{id}/log` que abre directamente la cámara.
 - Notificación local de respaldo a 60 días, reprogramada en cada apertura.
 - Pantalla de Actividad con el histórico y ajustes de notificaciones.
 
@@ -180,7 +180,7 @@ El corazón de la aplicación y la pantalla de entrada.
 - Acceso restringido por rol de coordinador.
 - Gestión de usuarios: listado, búsqueda, activar y desactivar.
 - Moderación posterior: revisar árboles y fotos, **archivar con motivo** en lugar de borrar; borrado físico reservado a contenido inapropiado.
-- Reasignación de guardián y estado `sin_guardian`.
+- Reasignación de guardián y estado `unassigned`.
 - **Sección de fusión de especies:** seleccionar variantes, elegir cuál nombre queda como oficial, reetiquetar los árboles afectados y dejar registro reversible. Vista de especies con una sola ocurrencia.
 - Estadísticas: total sembrado, vivos, tasa de supervivencia, desglose por municipio, vereda y especie, y puntualidad de actualización.
 - Exportación a CSV y Excel para el seguimiento del PRAE.
