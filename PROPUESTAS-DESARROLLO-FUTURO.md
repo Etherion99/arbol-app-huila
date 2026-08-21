@@ -101,7 +101,7 @@ especies distintas, y el conteo deje de servir para cualquier informe.
 **Propuesta que conserva la libertad de escritura:**
 
 - Campo abierto con **autocompletado** que sugiere lo ya escrito por otros guardianes, ordenado por frecuencia. La mayoría elige la sugerencia y converge sola.
-- **Clave normalizada** interna para agrupar (minúsculas, sin tildes, singular), separada del texto que el usuario escribió, que se conserva tal cual.
+- **Clave normalizada** interna para agrupar (minúsculas, sin tildes, espacios colapsados), separada del texto que el usuario escribió, que se conserva tal cual. **Revisado el 21 de agosto de 2026:** la redacción original decía además «singular». Se descartó al implementarla. Recortar la `s` final no distingue un plural de una palabra que simplemente termina en `s`, e inventa claves que no corresponden a ningún nombre real: `hass` se convierte en `has` y `limones` en `limone`. La clave solo unifica lo que es inequívocamente la misma palabra escrita con descuido; decidir que `mandarino` y `mandarina` son el mismo árbol es un juicio sobre el mundo real y le corresponde al coordinador al fusionar, no a una regla de texto aplicada al escribir.
 - Sección de **fusión de especies** en el panel web de administración: el coordinador selecciona dos o más variantes (`mandarino` y `mandarina`), **elige cuál nombre queda como oficial** y la fusión reetiqueta todos los árboles afectados. Queda registro de la operación por si hay que revertirla.
 - Vista de "especies con una sola ocurrencia" para detectar errores de digitación antes de que ensucien la estadística.
 - Los árboles conservan el texto original escrito por su guardián en un campo aparte, de modo que una fusión nunca destruye el dato de origen.

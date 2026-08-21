@@ -130,8 +130,26 @@ export type SpeciesMerge = {
   /** Exactly which trees were relabelled, which is what an exact revert needs. */
   affectedTreeIds: Uuid[];
   affectedTreeCount: number;
+  /**
+   * Display name the target carried before the merge. A merge may rename the
+   * surviving group to anything at all, so without this a revert could not put
+   * the previous name back.
+   */
+  previousCanonicalName: string | null;
   revertedAt: IsoDateTime | null;
   revertedBy: Uuid | null;
+};
+
+/**
+ * A row of `species_suggestions`, the autocomplete behind the free text species
+ * field. Ordered by how many trees already carry each name, which is what makes
+ * the spellings converge on their own without anything being rewritten.
+ */
+export type SpeciesSuggestion = {
+  speciesId: Uuid;
+  canonicalName: string;
+  normalizedKey: string;
+  treeCount: number;
 };
 
 /** Row of `public.trees`. */
@@ -310,7 +328,16 @@ export function growthLogThumbnailPath(treeId: Uuid, cycle: number): string {
  * count adds up. The text the guardian actually wrote is stored separately and
  * never altered: this key exists only for grouping.
  *
- * `Mandarinos ` and `mandarino` collapse into the same key.
+ * `  MANDARINO ` and `Mandarino` collapse into the same key.
+ *
+ * It folds only what is unambiguously the same word written carelessly: case,
+ * accents and stray whitespace. It deliberately does **not** touch plurals.
+ * Stripping a trailing `s` looks harmless and is not: it turns `hass` into
+ * `has` and `limones` into `limone`, inventing keys that match no real name,
+ * and it cannot tell a plural from a word that simply ends in `s`. Deciding
+ * that `mandarino` and `mandarina` are one species is a judgement about the
+ * real world, so it belongs to the coordinator merging them by hand, not to a
+ * string rule. See `merge_species()` in the database.
  *
  * The database has its own copy of this in `public.normalize_species()`. The
  * two must agree exactly, because a species is counted over the key and a
@@ -323,6 +350,5 @@ export function normalizeSpecies(text: string): string {
     .replace(/\p{Diacritic}/gu, '')
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/s$/, '');
+    .replace(/\s+/g, ' ');
 }

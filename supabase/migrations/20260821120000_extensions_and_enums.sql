@@ -47,11 +47,18 @@ create type public.reminder_kind as enum ('cycle', 'follow_up_7d', 'follow_up_21
 -- ever drift, because a drift silently splits one species into two counts.
 --
 -- The steps mirror the TypeScript one for one: decompose to NFD, drop the
--- combining marks, lower case, collapse runs of whitespace, trim, and drop a
--- single trailing plural `s`. Both character classes are spelled with escapes
--- so this file stays plain ASCII, and both are wider than PostgreSQL's own
--- `\s` and `btrim` defaults, which do not cover the non breaking spaces and
--- combining marks JavaScript folds away.
+-- combining marks, lower case, collapse runs of whitespace and trim. Both
+-- character classes are spelled with escapes so this file stays plain ASCII,
+-- and both are wider than PostgreSQL's own `\s` and `btrim` defaults, which do
+-- not cover the non breaking spaces and combining marks JavaScript folds away.
+--
+-- It folds only what is unambiguously the same word written carelessly. It
+-- deliberately does not touch plurals: stripping a trailing `s` turns `hass`
+-- into `has` and `limones` into `limone`, keys that match no real name, and it
+-- cannot tell a plural from a word that simply ends in `s`. Whether
+-- `mandarino` and `mandarina` are one species is a judgement about the real
+-- world, and it belongs to the coordinator through merge_species(), not to a
+-- string rule applied blindly at write time.
 create or replace function public.normalize_species(raw_text text)
 returns text
 language sql
@@ -83,7 +90,7 @@ as $$
     ) as value
     from without_marks
   )
-  select regexp_replace(value, 's$', '') from squeezed;
+  select value from squeezed;
 $$;
 
 comment on function public.normalize_species(text) is
