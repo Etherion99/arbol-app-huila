@@ -40,6 +40,15 @@ const outputPath = join(repoRoot, 'apps', 'web', 'src', 'app', 'design-tokens.cs
  * a token the day someone adds `emerald1000`.
  */
 const colorVars = {
+  huilaGreen: 'huila-green',
+  platenoOrange: 'plateno-orange',
+  sunYellow: 'sun-yellow',
+  ripeRed: 'ripe-red',
+  riverBlue: 'river-blue',
+  earthBrown: 'earth-brown',
+  leafWhite: 'leaf-white',
+  ink: 'ink',
+  slateGrey: 'slate-grey',
   green990: 'green-990',
   green950: 'green-950',
   green900: 'green-900',
@@ -64,6 +73,9 @@ const colorVars = {
   accentPressed: 'accent-pressed',
   accentSoft: 'accent-soft',
   onAccent: 'on-accent',
+  accent2: 'accent-2',
+  accent2Soft: 'accent-2-soft',
+  onAccent2: 'on-accent-2',
   brandMagenta: 'jil-magenta',
   brandMagentaSoft: 'jil-magenta-soft',
   brandYellow: 'jil-yellow',
@@ -130,10 +142,7 @@ const px = (value) => `${value}px`;
 const ms = (value) => `${value}ms`;
 
 const groups = [
-  [
-    'Base: the forest at night, and the surfaces built from it',
-    mapTokens(colors, colorVars, 'colors'),
-  ],
+  ['Brand, base ramp and the surfaces built from it', mapTokens(colors, colorVars, 'colors')],
   [
     'Spacing, radii and the minimum touch target',
     [
