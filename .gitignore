@@ -31,6 +31,10 @@ next-env.d.ts
 supabase/.branches
 supabase/.temp
 
+# Claude Code — ajustes personales y worktrees de trabajo
+.claude/settings.local.json
+.claude/worktrees/
+
 # Sistema y editores
 .DS_Store
 Thumbs.db
