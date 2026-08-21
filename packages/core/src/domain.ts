@@ -54,6 +54,40 @@ export const DAYS_UNTIL_OVERDUE = 30;
 export const GROWTH_LOG_BUCKET = 'growth-log-photos';
 
 /**
+ * What a growth log photograph is allowed to weigh once the client has
+ * compressed it.
+ *
+ * This is not an optimisation, it is the budget. The free storage plan gives
+ * one gigabyte for the whole year and a camera original is around four
+ * megabytes, so uploading untouched photographs exhausts the allowance inside
+ * the first semester. At roughly 200 KB a tree updated six times a year costs
+ * little over a megabyte, and the project fits with room to spare.
+ */
+export const PHOTO_TARGET_BYTES = 200 * 1024;
+
+/**
+ * The bucket's own ceiling, mirrored here so the client can refuse before
+ * spending a rural upload on something Storage will reject anyway.
+ */
+export const PHOTO_MAX_BYTES = 1024 * 1024;
+
+/**
+ * Longest edge of the uploaded photograph. Enough to read a leaf and count a
+ * branch on a phone screen, far below what the camera produces.
+ */
+export const PHOTO_MAX_EDGE_PX = 1280;
+
+/** Side of the square thumbnail the timeline and the lists load. */
+export const THUMBNAIL_SIZE_PX = 300;
+
+/**
+ * JPEG qualities tried in order until the result fits the budget. Starting
+ * high and stepping down keeps a well lit photograph sharp and only punishes
+ * the noisy ones, which are the heavy ones to begin with.
+ */
+export const PHOTO_QUALITY_LADDER = [0.72, 0.6, 0.48, 0.36, 0.26] as const;
+
+/**
  * Fields every archivable record carries. Nothing is ever deleted: a record
  * that is gone is archived, and every public query filters `archivedAt` out.
  */
@@ -257,6 +291,9 @@ export type TreeCardSummary = {
   plantedAt: IsoDate;
   lastUpdatedAt: IsoDateTime;
   nextReminderAt: IsoDateTime;
+  /** Where the tree stands, which is what the detail screen's mini map draws. */
+  lng: number;
+  lat: number;
   guardianId: Uuid | null;
   /**
    * Given name and the initial of the last surname, built in the database by
@@ -264,12 +301,57 @@ export type TreeCardSummary = {
    * reachable from it.
    */
   guardianDisplayName: string | null;
+  /** When the guardian joined, which is what "guardián desde 2025" reads from. */
+  guardianSince: IsoDateTime | null;
   villageName: string | null;
   municipalityName: string | null;
   /** Null when the tree has no growth log entry yet. */
   latestCycle: number | null;
   latestPhotoPath: string | null;
   latestThumbnailPath: string | null;
+};
+
+/**
+ * A row of `guardian_trees()`: one card in the "Mis árboles" tab.
+ *
+ * Like the map card, the photograph travels as an object key rather than a
+ * URL. The bucket is private, and signing one link per row before the list is
+ * even on screen would be a round trip per tree just to paint it.
+ */
+export type GuardianTreeSummary = {
+  treeId: Uuid;
+  code: string;
+  speciesName: string;
+  /** Exactly what the guardian typed, never rewritten. */
+  speciesRawText: string;
+  trackingStatus: TrackingStatus;
+  status: TreeStatus;
+  plantedAt: IsoDate;
+  lastUpdatedAt: IsoDateTime;
+  nextReminderAt: IsoDateTime;
+  villageName: string | null;
+  municipalityName: string | null;
+  /** Null when the tree has no growth log entry yet. */
+  latestCycle: number | null;
+  latestThumbnailPath: string | null;
+};
+
+/**
+ * What `register_tree()` hands back: the tree it created, and the exact object
+ * keys its photograph has to be uploaded to.
+ *
+ * The keys come from the database rather than being rebuilt on the client, even
+ * though `growthLogPhotoPath()` below produces the same string, so the two can
+ * never disagree about where a photograph lives. The row is written first and
+ * the photograph sent after, because the storage policies read ownership out of
+ * the object name and there is no tree to own it until the row exists.
+ */
+export type TreeRegistration = {
+  treeId: Uuid;
+  code: string;
+  cycle: number;
+  photoPath: string;
+  thumbnailPath: string;
 };
 
 /** Arguments of the `trees_in_viewport` function. */
