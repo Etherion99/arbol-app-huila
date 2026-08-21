@@ -478,6 +478,7 @@ export default function MapScreen() {
         <GuestBar
           onSignUp={() => router.push('/sign-up')}
           onSignIn={() => router.push('/sign-in')}
+          onLegal={() => router.push('/legal')}
         />
       ) : null}
 

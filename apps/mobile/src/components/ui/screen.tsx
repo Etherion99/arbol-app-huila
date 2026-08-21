@@ -7,6 +7,11 @@ import { MAX_CONTENT_WIDTH, colors, spacing } from '@/constants/theme';
 
 export type ScreenProps = {
   children: ReactNode;
+  /**
+   * The modal bar, when the screen has one. It sits outside the scroll area so
+   * the way back stays reachable however far down the guardian has read.
+   */
+  header?: ReactNode;
   /** Scrolls the content. Off for screens that own their own scrolling. */
   isScrollable?: boolean;
   /** Hides the offline strip on screens where nothing is sent anyway. */
@@ -20,12 +25,18 @@ export type ScreenProps = {
  * The warning is placed here rather than per screen so it appears before the
  * guardian has filled a form and pressed a button that could not have worked.
  */
-export function Screen({ children, isScrollable = true, hasConnectionBanner = true }: ScreenProps) {
+export function Screen({
+  children,
+  header,
+  isScrollable = true,
+  hasConnectionBanner = true,
+}: ScreenProps) {
   const content = <View style={styles.column}>{children}</View>;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       {hasConnectionBanner ? <ConnectionBanner /> : null}
+      {header}
 
       <KeyboardAvoidingView
         style={styles.filler}

@@ -95,21 +95,20 @@ function RootNavigator() {
           guarded. What needs a session is protected inside its tab layout. */}
       <Stack.Screen name="(app)" />
       <Stack.Screen name="auth" />
-
-      {/* Three tasks rather than three places, so they cover the tab bar
-          instead of living inside it. All three need a session: without one
-          there is no guardian to own a tree. */}
+{/* Three tasks rather than three places, so they cover the tab bar
+          instead of living inside it. Planting and the growth log need a
+          session: without one there is no guardian to own a tree. */}
       <Stack.Protected guard={hasSession}>
-        <Stack.Screen name="plant" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="log/[treeId]" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="plant" options={{ presentation: "modal" }} />
+        <Stack.Screen name="log/[treeId]" options={{ presentation: "modal" }} />
       </Stack.Protected>
 
       {/* The detail is readable without an account, exactly like the map. */}
       <Stack.Screen name="tree/[id]" />
-      <Stack.Screen
-        name="legal"
-        options={{ presentation: 'modal', headerShown: true, title: texts.legal.title }}
-      />
+
+      {/* The bar is the design system's, drawn inside the screen, so the modal
+          keeps the app's typography instead of the platform's. */}
+      <Stack.Screen name="legal" options={{ presentation: "modal" }} />
     </Stack>
   );
 }

@@ -16,8 +16,12 @@ export type SheetOption = {
 export type OptionSheetProps = {
   isVisible: boolean;
   title: string;
-  /** The row that clears the filter, e.g. "Todas las veredas". */
-  clearLabel: string;
+  /**
+   * The row that clears the choice, e.g. "Todas las veredas". Absent, no such
+   * row is offered — which is what a required field of a form needs, where
+   * "ninguno" is not one of the answers.
+   */
+  clearLabel?: string;
   options: SheetOption[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
@@ -81,11 +85,13 @@ export function OptionSheet({
               data={options}
               keyExtractor={(option) => option.id}
               ListHeaderComponent={
-                <Row
-                  label={clearLabel}
-                  isSelected={selectedId === null}
-                  onPress={() => onSelect(null)}
-                />
+                clearLabel === undefined ? null : (
+                  <Row
+                    label={clearLabel}
+                    isSelected={selectedId === null}
+                    onPress={() => onSelect(null)}
+                  />
+                )
               }
               renderItem={({ item }) => (
                 <Row

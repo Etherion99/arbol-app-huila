@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'rea
 
 import { AppText } from '@/components/ui/app-text';
 import { texts } from '@/constants/texts';
-import { MIN_TOUCH_TARGET, colors, fontSize, radii, spacing } from '@/constants/theme';
+import { MIN_TOUCH_TARGET, colors, fontFace, fontSize, radii, spacing } from '@/constants/theme';
 
 export type TextFieldProps = Omit<TextInputProps, 'style' | 'onChangeText' | 'value'> & {
   label: string;
@@ -31,6 +31,7 @@ export function TextField({
   ...rest
 }: TextFieldProps) {
   const [isRevealed, setIsRevealed] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const hasError = error !== undefined;
 
   return (
@@ -39,7 +40,13 @@ export function TextField({
         {label}
       </AppText>
 
-      <View style={[styles.inputRow, hasError && styles.inputRowError]}>
+      <View
+        style={[
+          styles.inputRow,
+          isFocused && styles.inputRowFocused,
+          hasError && styles.inputRowError,
+        ]}
+      >
         <TextInput
           value={value}
           onChangeText={onChangeText}
@@ -52,6 +59,16 @@ export function TextField({
           accessibilityLabelledBy={`${label}-label`}
           style={styles.input}
           {...rest}
+          // After the spread, so a caller passing its own handler still gets
+          // the focus ring instead of silently replacing it.
+          onFocus={(event) => {
+            setIsFocused(true);
+            rest.onFocus?.(event);
+          }}
+          onBlur={(event) => {
+            setIsFocused(false);
+            rest.onBlur?.(event);
+          }}
         />
 
         {isPassword ? (
@@ -88,11 +105,17 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceCard,
+    backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
-    borderColor: colors.borderSubtle,
+    borderColor: colors.borderStrong,
     borderRadius: radii.md,
     paddingHorizontal: spacing[2],
+  },
+  // The accent ring of the catalogue. Focus is never ambiguous by design: the
+  // border token for it *is* the accent.
+  inputRowFocused: {
+    borderColor: colors.borderFocus,
+    boxShadow: `0 0 0 3px ${colors.accentSoft}`,
   },
   inputRowError: {
     borderColor: colors.danger,
@@ -101,6 +124,9 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: MIN_TOUCH_TARGET,
     paddingVertical: spacing[2],
+    // A TextInput is not an AppText and inherits nothing, so without this the
+    // field renders in the system font while every label beside it is Archivo.
+    fontFamily: fontFace.bodyRegular,
     fontSize: fontSize.md,
     color: colors.textPrimary,
   },

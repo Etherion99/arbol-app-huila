@@ -40,8 +40,13 @@ export default function SignInScreen() {
   return (
     <Screen>
       <View style={styles.header}>
+        {/* The wordmark, until the visual identity of phase 9 replaces it with
+            the real one. It is set in the display face rather than drawn, so
+            the swap is an asset and not a layout. */}
+        <AppText variant="title" style={styles.wordmark}>
+          {texts.common.appName}
+        </AppText>
         <AppText variant="display">{texts.signIn.title}</AppText>
-        <AppText variant="bodyMuted">{texts.signIn.subtitle}</AppText>
       </View>
 
       {didSessionExpire ? <Notice tone="warning" message={texts.signIn.sessionExpired} /> : null}
@@ -94,6 +99,15 @@ export default function SignInScreen() {
         />
       </View>
 
+      {/* Above the button and aligned right, which is where the canvas puts it:
+          it belongs to the password field it follows, not to the row of things
+          you do instead of signing in. */}
+      <Link href="/forgot-password" style={styles.forgotLink}>
+        <AppText variant="caption" style={styles.forgotText}>
+          {texts.signIn.forgotPassword}
+        </AppText>
+      </Link>
+
       <View style={styles.actions}>
         <Button
           label={texts.signIn.submit}
@@ -103,16 +117,18 @@ export default function SignInScreen() {
         />
 
         <Button
-          label={texts.signIn.forgotPassword}
-          onPress={() => router.push('/forgot-password')}
-          variant="ghost"
-        />
-
-        <Button
           label={texts.signIn.noAccount}
           onPress={() => router.push('/sign-up')}
           variant="secondary"
         />
+
+        <View style={styles.divider}>
+          <View style={styles.rule} />
+          <AppText variant="caption" style={styles.dividerLabel}>
+            {texts.signIn.or}
+          </AppText>
+          <View style={styles.rule} />
+        </View>
 
         <Button
           label={texts.signIn.exploreAsGuest}
@@ -122,7 +138,7 @@ export default function SignInScreen() {
 
         <Link href="/legal" style={styles.legalLink}>
           <AppText variant="caption" style={styles.legalText}>
-            {texts.account.legalLink}
+            {texts.common.legalLink}
           </AppText>
         </Link>
       </View>
@@ -133,6 +149,30 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   header: {
     gap: spacing[1],
+  },
+  wordmark: {
+    color: colors.textSecondary,
+  },
+  forgotLink: {
+    alignSelf: 'flex-end',
+    paddingVertical: spacing[2],
+  },
+  forgotText: {
+    color: colors.textLink,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
+    paddingVertical: spacing[1],
+  },
+  rule: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.borderSubtle,
+  },
+  dividerLabel: {
+    color: colors.textSecondary,
   },
   form: {
     gap: spacing[4],

@@ -5,6 +5,7 @@ import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
+import { ScreenHeader } from '@/components/ui/screen-header';
 import { TextField } from '@/components/ui/text-field';
 import { texts } from '@/constants/texts';
 import { spacing } from '@/constants/theme';
@@ -34,35 +35,9 @@ export default function ForgotPasswordScreen() {
 
   const failure = describeMaybeAuthError(requestReset.error);
 
-  // Supabase answers the same way whether or not the address exists, and so
-  // does this screen. Saying "no such account" would turn the form into a way
-  // of finding out who is registered.
-  if (requestReset.isSuccess) {
-    return (
-      <Screen>
-        <View style={styles.header}>
-          <AppText variant="display">{texts.forgotPassword.sentTitle}</AppText>
-          <AppText variant="bodyMuted">
-            {texts.forgotPassword.sentBody(requestReset.data.email)}
-          </AppText>
-          <AppText variant="caption">{texts.forgotPassword.sentHint}</AppText>
-        </View>
-
-        <Button
-          label={texts.forgotPassword.backToSignIn}
-          onPress={() => router.replace('/sign-in')}
-          variant="secondary"
-        />
-      </Screen>
-    );
-  }
-
   return (
-    <Screen>
-      <View style={styles.header}>
-        <AppText variant="display">{texts.forgotPassword.title}</AppText>
-        <AppText variant="bodyMuted">{texts.forgotPassword.subtitle}</AppText>
-      </View>
+    <Screen header={<ScreenHeader title={texts.forgotPassword.title} />}>
+      <AppText variant="bodyMuted">{texts.forgotPassword.subtitle}</AppText>
 
       {failure !== null ? (
         <Notice
@@ -105,6 +80,19 @@ export default function ForgotPasswordScreen() {
           variant="ghost"
         />
       </View>
+
+      {/* The canvas keeps this under the form rather than swapping the screen,
+          and the reason is the wording itself: Supabase answers the same way
+          whether or not the address exists, so «si existe una cuenta» is a
+          caveat about the message, not a confirmation that one was sent. A
+          screen that replaced the form would read as the second. */}
+      {requestReset.isSuccess ? (
+        <Notice
+          tone="info"
+          title={texts.forgotPassword.sentTitle}
+          message={texts.forgotPassword.sentBody(requestReset.data.email)}
+        />
+      ) : null}
     </Screen>
   );
 }
