@@ -28,7 +28,7 @@
 | **0** | Fundaciones | 3 días | | ✅ completada | ✅ tokens adoptados |
 | **1** | Modelo de datos y backend | 1 sem | | ✅ completada | ➖ no aplica |
 | **2** | Autenticación y perfil | 4 días | | ✅ completada | 🔧 **corregir** — consume los tokens, falta reconciliar maquetación con el lienzo |
-| **3** | Mapa interactivo | 1,5 sem | **A** | pendiente | ✅ **requerido** — `ui_kits/mobile/MapScreen` |
+| **3** | Mapa interactivo | 1,5 sem | **A** | ✅ completada — 👁️ validación visual diferida | ✅ **requerido** — `ui_kits/mobile/MapScreen` |
 | **4** | Registro de árbol y bitácora | 1,5 sem | **B** | pendiente | ✅ **requerido** — `TreeDetailScreen`, `TreeListScreen` |
 | **5** | Notificaciones bimestrales | 1 sem | | pendiente | 🔸 parcial — pantalla de actividad y ajustes |
 | **6** | Panel de administración | 1,5 sem | **C** | pendiente | ✅ **requerido** — `ui_kits/web/AdminScreens` |
@@ -240,7 +240,7 @@ El corazón de la aplicación y la pantalla de entrada.
 
 **Tareas**
 
-- Librería de mapas: **decisión pendiente al iniciar la fase.** `react-native-maps` 1.29 da Google Maps en Android y iOS con el mismo estilo oscuro personalizado, que es lo que pide el diseño de "puntos de luz"; pero su compatibilidad con React Native 0.86 hay que verificarla. `expo-maps` 57.0.2 es de primera parte y encaja perfecto con el SDK, pero usa **Apple Maps en iOS**, donde el estilo JSON de Google no aplica y el mapa se vería distinto en iPhone. Evaluar ambas con un prototipo antes de comprometerse.
+- Librería de mapas: **resuelta — `react-native-maps` 1.27.2.** Da Google Maps en Android y en iOS, así que un solo JSON de estilo sostiene el motivo de "puntos de luz" en ambas; `expo-maps` usa Apple Maps en iOS, exige iOS 17 y su evento de cámara entrega solo centro y zoom, no el rectángulo visible que `trees_in_viewport()` necesita. Contexto, alternativas y consecuencias en [docs/adr/0001-libreria-de-mapas.md](docs/adr/0001-libreria-de-mapas.md).
 - Marcadores como sprite PNG con resplandor pre-renderizado; `tracksViewChanges={false}` tras el primer render.
 - Agrupamiento por nivel de zoom: círculos por municipio con conteo, luego clusters, luego marcadores individuales.
 - Animación de pulso solo en el marcador seleccionado y en los árboles recién sembrados.
@@ -251,6 +251,37 @@ El corazón de la aplicación y la pantalla de entrada.
 **Criterio de aceptación:** el mapa se desplaza con fluidez con 200 árboles de prueba en un dispositivo de gama media, y el filtro por vereda encuadra correctamente.
 
 **Riesgo:** Google Maps no funciona en Expo Go sobre iOS. Se trabaja con *development build* desde el inicio, ya previsto en la Fase 0.
+
+### Cierre de la fase
+
+**Cerrada con la validación visual diferida.** El código está completo frente a los siete
+entregables y lo que se puede comprobar sin dispositivo está comprobado: `typecheck`, `lint`
+y `format` en verde, `expo-doctor` 21/21, Metro empaquetando Android, y contra la base local
+la corrección del viewport, la exclusión de archivados, el acceso anónimo, el rechazo de
+lectura del correo y el filtro por especie según identificador.
+
+**Lo que nadie ha visto todavía es el mapa pintando.** En el equipo de desarrollo no hay
+Android SDK, ni emulador, ni Gradle, ni API key de Google Maps, así que la aplicación nunca
+se ha compilado ni arrancado. El criterio de aceptación de arriba **no está verificado**.
+
+La validación se agrupa deliberadamente al final del proyecto, junto con la de las demás
+fases, para hacerla una sola vez como prueba de regresión y automatizar lo que se pueda en
+la Fase 8. Lo que hay que mirar, por orden de riesgo:
+
+| # | Qué comprobar | Por qué es el riesgo que es | ¿Automatizable? |
+|---|---|---|---|
+| 1 | Que la app arranque con `react-native-maps` 1.27.2 sobre React Native 0.86 | Es la apuesta de la fase. Se verificó que el paquete trae codegen Fabric completo, pero nunca se compiló | Sí — basta que la *development build* levante en CI |
+| 2 | Que los sprites midan 44 dp y se vean nítidos | La convención de densidades `@2x`/`@3x` ya provocó un fallo de empaquetado una vez | Sí — captura de pantalla comparada |
+| 3 | El vuelo de apertura Huila → La Plata | Depende de `onMapReady`; en Android animar antes del *layout* no hace nada | Parcial — se observa el encuadre final |
+| 4 | El latido del marcador seleccionado, y que al deseleccionar vuelva a mapa de bits | Es el único marcador que sigue cambios de vista | Difícil — inspección manual |
+| 5 | Fluidez del paneo con 200 y con 1.000 árboles | El criterio de aceptación. El trabajo en JavaScript ya está medido y es despreciable (≤ 0,012 ms por viewport asentado); lo que falta es el coste nativo | Sí — perfilador de fotogramas |
+| 6 | Los cinco estados en escala de grises, en el dispositivo | Ya verificado sobre los sprites generados; falta verlo sobre el mapa real | Sí — captura en escala de grises |
+
+**Sin la API key de Google Maps el mapa sale gris en Android y nada de lo anterior se puede
+juzgar.** Esa es la primera dependencia a resolver antes de la jornada de validación.
+
+**Hueco conocido y menor:** la carga del mapa muestra una píldora «Cargando los árboles…» en
+lugar de un esqueleto. La ficha del árbol sí lleva esqueleto.
 
 ---
 
@@ -348,8 +379,9 @@ Lo que decide si la app sobrevive al uso real en veredas con mala señal.
 - Respaldo diario de base de datos y fotos.
 - Pruebas de rendimiento del mapa con 1.000 árboles simulados.
 - Revisión de accesibilidad y de textos en toda la aplicación.
+- **Jornada de validación visual acumulada.** Las fases que se cerraron sin ejecutar la app en un dispositivo dejan aquí su lista de comprobación; la de la Fase 3 está en su propia sección de cierre. Se hace una sola vez, como prueba de regresión sobre todo lo construido, y lo que se pueda automatizar —arranque de la *development build* en CI, capturas comparadas, captura en escala de grises, perfilador de fotogramas— se automatiza en lugar de repetirse a mano en cada entrega.
 
-**Criterio de aceptación:** se registra un árbol en modo avión y se sincroniza al recuperar señal, sin pérdida de datos.
+**Criterio de aceptación:** se registra un árbol en modo avión y se sincroniza al recuperar señal, sin pérdida de datos, y ninguna comprobación diferida de las fases anteriores queda sin ejecutar.
 
 ---
 
@@ -378,7 +410,8 @@ Lo que decide si la app sobrevive al uso real en veredas con mala señal.
 
 | Necesidad | Fase que la requiere | Estado |
 |---|---|---|
-| API key de Google Maps | Fase 3, para probar en dispositivo | Pendiente de entrega |
+| API key de Google Maps | Fase 3 escrita sin ella; hace falta para la validación visual | Pendiente de entrega |
+| Android SDK y un dispositivo o emulador | Validación visual de las Fases 3 a 5 | No instalados en el equipo de desarrollo |
 | Cuenta Apple Developer | Fase 9 | En trámite |
 | Titularidad de cuentas | Fase 9 | Pendiente de definir |
 | Textos legales | Fase 9 | Pendiente de redactar |
