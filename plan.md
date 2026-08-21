@@ -16,8 +16,136 @@
 | Titularidad de cuentas | **Pendiente de definir** |
 | API key de Google Maps | Se asume disponible; placeholder hasta recibirla |
 | Cuenta Apple Developer | En trámite |
-| Identidad visual | Paleta provisional; diseño definitivo posterior |
+| Identidad visual | Sistema de diseño adoptado por completo: tokens y las tres tipografías |
 | Política de privacidad | Pantalla y ruta reservadas, contenido pendiente |
+
+---
+
+## Resumen de fases
+
+| Fase | Nombre | Duración | Hito | Estado | Claude Design |
+|---|---|---|---|---|---|
+| **0** | Fundaciones | 3 días | | ✅ completada | ✅ tokens adoptados |
+| **1** | Modelo de datos y backend | 1 sem | | ✅ completada | ➖ no aplica |
+| **2** | Autenticación y perfil | 4 días | | ✅ completada | 🔧 **corregir** — consume los tokens, falta reconciliar maquetación con el lienzo |
+| **3** | Mapa interactivo | 1,5 sem | **A** | pendiente | ✅ **requerido** — `ui_kits/mobile/MapScreen` |
+| **4** | Registro de árbol y bitácora | 1,5 sem | **B** | pendiente | ✅ **requerido** — `TreeDetailScreen`, `TreeListScreen` |
+| **5** | Notificaciones bimestrales | 1 sem | | pendiente | 🔸 parcial — pantalla de actividad y ajustes |
+| **6** | Panel de administración | 1,5 sem | **C** | pendiente | ✅ **requerido** — `ui_kits/web/AdminScreens` |
+| **7** | Mapa público web | 4 días | | pendiente | ✅ **requerido** — `ui_kits/web/PublicMap` |
+| **8** | Endurecimiento | 1 sem | | pendiente | 🔸 parcial — estados vacíos, de error y accesibilidad |
+| **9** | Publicación | 1 sem + revisión | **D** | pendiente | ✅ **requerido** — ícono, splash y capturas de tienda |
+
+### Lo que se diseñó antes de que existiera el sistema de diseño
+
+Las Fases 0 y 2 se construyeron sin referencia visual, con una paleta provisional
+inventada para salir del paso. La capa de **tokens** ya está reconciliada; lo que queda
+es la **maquetación**, que es otra tarea y no debe mezclarse con la anterior:
+
+| Qué | Dónde | Estado |
+|---|---|---|
+| Paleta completa | `packages/core/src/theme.ts` | ✅ grupos, nombres y variantes `*-soft` del sistema de diseño |
+| Estados del árbol | `colorByTrackingStatus` | ✅ cinco estados, cinco colores distintos |
+| Escalas de espaciado y radios | `packages/core/src/theme.ts` | ✅ `spacing.css` y `effects.css` adoptados |
+| Tipografía y efectos | `packages/core/src/theme.ts` | ✅ tamaños, interlineados, pesos, sombras y motion |
+| Variables CSS para la web | `apps/web/src/app/design-tokens.css` | ✅ generadas desde TypeScript con `pnpm tokens` |
+| Color del splash y del ícono adaptativo | `apps/mobile/app.config.js` | ✅ leído de los tokens; `app.json` ya no existe |
+| Fuentes | `apps/mobile`, `apps/web` | ✅ Bricolage Grotesque, Archivo e IBM Plex Mono cargadas en las dos plataformas |
+| **Componentes de interfaz** | `apps/mobile/src/components/ui/` | 🔧 pendiente — contrastar con `Button`, `Input`, `Checkbox`, `Card`, `Badge`, `Toast` y `Dialog` |
+| **Las 10 pantallas de autenticación** | `apps/mobile/src/app/(auth)/`, `onboarding/` | 🔧 pendiente — contrastar con `Pantallas v1.dc.html` |
+
+---
+
+## Referencias de diseño
+
+El diseño visual **no vive en este repositorio**: está en Claude Design, repartido en dos
+proyectos que se consultan desde cualquier agente a través del MCP `claude_design`.
+
+| Proyecto | Identificador | Contenido |
+|---|---|---|
+| **Pantallas v1** | `b4f2c6e6-b7c0-4ed3-ad11-bc0528be9e56` | Lienzo con las pantallas de la v1 (`Pantallas v1.dc.html`) |
+| **ÁrbolApp Huila Design System** | `f2a48455-80b5-4d27-b3ef-9f7282a24b10` | Tokens, componentes y kits de interfaz |
+
+Enlace directo al lienzo:
+<https://claude.ai/design/p/b4f2c6e6-b7c0-4ed3-ad11-bc0528be9e56?file=Pantallas+v1.dc.html>
+
+### Cómo accede un agente
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login)
+to import this project:
+https://claude.ai/design/p/b4f2c6e6-b7c0-4ed3-ad11-bc0528be9e56?file=Pantallas+v1.dc.html
+
+Focus on these files (the whole project is readable):
+- `Pantallas v1.dc.html`
+
+Also read these files the selection imports:
+- `_ds/rbolapp-huila-design-system-f2a48455-80b5-4d27-b3ef-9f7282a24b10/_ds_bundle.js`
+- `_ds/rbolapp-huila-design-system-f2a48455-80b5-4d27-b3ef-9f7282a24b10/styles.css`
+- `_ds/rbolapp-huila-design-system-f2a48455-80b5-4d27-b3ef-9f7282a24b10/tokens/colors.css`
+- `_ds/rbolapp-huila-design-system-f2a48455-80b5-4d27-b3ef-9f7282a24b10/tokens/effects.css`
+- `_ds/rbolapp-huila-design-system-f2a48455-80b5-4d27-b3ef-9f7282a24b10/tokens/fonts.css`
+- `_ds/rbolapp-huila-design-system-f2a48455-80b5-4d27-b3ef-9f7282a24b10/tokens/spacing.css`
+- `_ds/rbolapp-huila-design-system-f2a48455-80b5-4d27-b3ef-9f7282a24b10/tokens/typography.css`
+- `support.js`
+
+Implement: `Pantallas v1.dc.html`
+```
+
+### Qué hay en el sistema de diseño
+
+- **Tokens** — `colors.css`, `typography.css`, `spacing.css`, `effects.css`, `fonts.css`.
+- **Componentes** — formularios (`Button`, `Input`, `Checkbox`, `Radio`, `Select`,
+  `Switch`, `IconButton`), presentación (`Card`, `Badge`, `Tag`, `StatusDot`, `Tooltip`),
+  retroalimentación (`Dialog`, `Toast`) y navegación (`Tabs`). Cada uno con su `.jsx`,
+  su `.d.ts` y su `.prompt.md`.
+- **Kits de interfaz** — móvil (`MapScreen`, `TreeDetailScreen`, `TreeListScreen`,
+  `Icons`) y web (`AdminScreens`, `PublicMap`).
+- **Guías** — marca, motivo del mapa, y las escalas de color, tipografía y espaciado.
+
+### La paleta quedó resuelta
+
+La tensión entre el verde de la app y el magenta heredado de Juventud en línea se
+resolvió así: **esmeralda como color primario** —los árboles como puntos de luz sobre un
+fondo de bosque nocturno— y el **magenta y amarillo de Juventud en línea confinados a
+acentos de marca**, sin entrar en el mapa.
+
+Los estados del árbol tienen ahora **cinco colores distintos**:
+
+| Estado | Token | Color |
+|---|---|---|
+| Al día | `--state-ok` | `#3DDC97` |
+| Por actualizar | `--state-due` | `#FFD23F` |
+| Vencido | `--state-overdue` | `#FF8A3D` |
+| Muerto | `--state-dead` | `#F0567A` |
+| Archivado | `--state-archived` | `#66796F` |
+
+**El código ya está alineado.** `packages/core/src/theme.ts` refleja los grupos del
+sistema de diseño —superficies, bordes, acento, herencia de marca, estados, retroalimentación
+y texto, con sus variantes `*-soft`—, adopta la escala de espaciado, tipografía y efectos, y
+da **cinco colores distintos** para los cinco estados. La web recibe los mismos valores como
+propiedades personalizadas generadas desde TypeScript con `pnpm tokens`; nadie transcribe un
+color a mano en una hoja de estilos.
+
+Tres tokens del propio sistema de diseño **no alcanzan AA (4.5:1) como texto pequeño** y
+están acotados en el código: `--text-muted` y `--state-archived` (el mismo gris `#66796F`,
+máximo 4.01:1) valen como punto, filete o texto grande, nunca como texto pequeño; y
+`--danger` cae a 4.31:1 sobre `--surface-overlay`, para lo que el sistema de diseño no
+ofrece un rojo más claro.
+
+El detalle, con la tabla de medidas y lo que falta, está en
+[FIDELIDAD-UI.md](FIDELIDAD-UI.md).
+
+### Estado del lienzo
+
+`Pantallas v1.dc.html` cubre en alta fidelidad las pantallas de móvil, del panel web y
+del mapa público. `Especificación de Pantallas.dc.html` está **parcial**: tiene contexto,
+sistema de diseño, navegación y las fichas de las pantallas sin sesión; faltan las fichas
+de las pantallas autenticadas.
+
+La última sincronización del proyecto de diseño apunta a la rama `fase-0-fundaciones`,
+que ya no existe, y a `packages/core/src/dominio.ts`, renombrado a `domain.ts`. Conviene
+resincronizarlo contra `develop`.
 
 ---
 
@@ -88,7 +216,7 @@ El esquema completo, con las decisiones ya tomadas incorporadas desde el inicio.
 
 ## Fase 2 — Autenticación y perfil de Guardián
 
-**Duración:** 4 días · **Dependencias:** Fase 1
+**Duración:** 4 días · **Dependencias:** Fase 1 · **Diseño:** pantallas sin sesión de `Pantallas v1.dc.html`
 
 **Tareas**
 
@@ -106,7 +234,7 @@ El esquema completo, con las decisiones ya tomadas incorporadas desde el inicio.
 
 ## Fase 3 — Mapa interactivo · **Hito A**
 
-**Duración:** 1,5 semanas · **Dependencias:** Fase 1, y la API key de Maps para probar en dispositivo
+**Duración:** 1,5 semanas · **Dependencias:** Fase 1, y la API key de Maps para probar en dispositivo · **Diseño:** `ui_kits/mobile/MapScreen` y los tokens de estado
 
 El corazón de la aplicación y la pantalla de entrada.
 
@@ -128,7 +256,7 @@ El corazón de la aplicación y la pantalla de entrada.
 
 ## Fase 4 — Registro de árbol y bitácora · **Hito B**
 
-**Duración:** 1,5 semanas · **Dependencias:** Fases 2 y 3
+**Duración:** 1,5 semanas · **Dependencias:** Fases 2 y 3 · **Diseño:** `ui_kits/mobile/TreeDetailScreen` y `TreeListScreen`
 
 **Registro de árbol** — asistente de cuatro pasos con borrador guardado localmente:
 
@@ -153,7 +281,7 @@ El corazón de la aplicación y la pantalla de entrada.
 
 ## Fase 5 — Notificaciones y recordatorios bimestrales
 
-**Duración:** 1 semana · **Dependencias:** Fase 4
+**Duración:** 1 semana · **Dependencias:** Fase 4 · **Diseño:** pantalla de actividad y ajustes de notificaciones
 
 **Tareas**
 
@@ -173,7 +301,7 @@ El corazón de la aplicación y la pantalla de entrada.
 
 ## Fase 6 — Panel de administración · **Hito C**
 
-**Duración:** 1,5 semanas · **Dependencias:** Fases 4 y 5
+**Duración:** 1,5 semanas · **Dependencias:** Fases 4 y 5 · **Diseño:** `ui_kits/web/AdminScreens`
 
 **Tareas**
 
@@ -191,7 +319,7 @@ El corazón de la aplicación y la pantalla de entrada.
 
 ## Fase 7 — Mapa público web
 
-**Duración:** 4 días · **Dependencias:** Fases 3 y 6
+**Duración:** 4 días · **Dependencias:** Fases 3 y 6 · **Diseño:** `ui_kits/web/PublicMap`
 
 **Tareas**
 
@@ -207,7 +335,7 @@ El corazón de la aplicación y la pantalla de entrada.
 
 ## Fase 8 — Endurecimiento
 
-**Duración:** 1 semana · **Dependencias:** Fase 7
+**Duración:** 1 semana · **Dependencias:** Fase 7 · **Diseño:** estados vacíos, de error y guía de accesibilidad
 
 Lo que decide si la app sobrevive al uso real en veredas con mala señal.
 

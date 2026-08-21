@@ -191,6 +191,31 @@ específica.
 equipo Node 18 está activo por defecto y la 22.11 instalada **tampoco sirve**: la mínima
 de esa serie es la 22.13. Ver [README.md](README.md).
 
+## Diseño
+
+El diseño visual **no vive en este repositorio**: está en Claude Design y se consulta con
+el MCP `claude_design` (`https://api.anthropic.com/v1/design/mcp`, autenticación por
+`/design-login`).
+
+| Proyecto | Identificador |
+|---|---|
+| Lienzo de pantallas — `Pantallas v1.dc.html` | `b4f2c6e6-b7c0-4ed3-ad11-bc0528be9e56` |
+| ÁrbolApp Huila Design System | `f2a48455-80b5-4d27-b3ef-9f7282a24b10` |
+
+<https://claude.ai/design/p/b4f2c6e6-b7c0-4ed3-ad11-bc0528be9e56?file=Pantallas+v1.dc.html>
+
+- **Antes de construir cualquier pantalla, consulta el lienzo.** No inventes disposición,
+  color ni tipografía: ya están decididos.
+- **Los tokens del sistema de diseño son la fuente de verdad del color.** `packages/core`
+  los refleja; si divergen, gana el sistema de diseño y `packages/core` se corrige.
+- Los estados del árbol tienen **cinco colores distintos**: al día, por actualizar,
+  vencido, muerto y archivado. `due_soon` y `overdue` **no** comparten color.
+- El esmeralda es el color primario. El magenta y el amarillo heredados de Juventud en
+  línea son **acentos de marca** y no entran en el mapa.
+- Ningún componente nuevo sin contrastarlo antes con el catálogo del sistema de diseño.
+
+El detalle completo, incluido el bloque de acceso para agentes, está en [plan.md](plan.md).
+
 ## Reglas de dominio
 
 Decisiones de producto que el código no debe contradecir:

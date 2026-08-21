@@ -11,6 +11,7 @@ ubican en el mapa y actualizan su bitácora de crecimiento cada dos meses.
 
 - [plan.md](plan.md) — plan de trabajo por fases de la v1.
 - [PROPUESTAS-DESARROLLO-FUTURO.md](PROPUESTAS-DESARROLLO-FUTURO.md) — decisiones confirmadas y roadmap posterior al lanzamiento.
+- **Diseño visual** — [lienzo de pantallas en Claude Design](https://claude.ai/design/p/b4f2c6e6-b7c0-4ed3-ad11-bc0528be9e56?file=Pantallas+v1.dc.html). Los tokens y componentes viven en el proyecto *ÁrbolApp Huila Design System*. Ver [plan.md](plan.md) para el acceso desde un agente.
 
 ## Estructura
 

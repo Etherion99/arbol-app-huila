@@ -1,40 +1,148 @@
 # Fidelidad de la interfaz frente al sistema de diseño
 
-> Última medición: 21 de agosto de 2026 · rama `develop`
+> Última medición: 21 de agosto de 2026 · rama `develop` · último commit `82fcd19`
 > Fuente de verdad: **ÁrbolApp Huila Design System** (`f2a48455-80b5-4d27-b3ef-9f7282a24b10`)
 > Lienzo de pantallas: **Pantallas v1** (`b4f2c6e6-b7c0-4ed3-ad11-bc0528be9e56`)
+> Incluye el árbol de trabajo sin commitear de la Fase 3 (mapa interactivo).
 
 Este documento mide **cuánto del sistema de diseño está realmente en el código**, no cuánto
-se pretende adoptar. Todas las cifras salen de comparar el CSS generado desde
-`packages/core/src/theme.ts` contra los `tokens/*.css` del sistema de diseño, variable por
-variable. Ninguna es una estimación.
+se pretende adoptar. Se mide en dos planos:
+
+- **Pantallas** — cada artboard de `Pantallas v1.dc.html` contra su ruta en el código. El
+  score es un juicio de composición y de copy, no una cifra medida.
+- **Tokens** — el CSS generado desde `packages/core/src/theme.ts` contra los `tokens/*.css`
+  del sistema, variable por variable. Ahí ninguna cifra es una estimación.
 
 ---
 
-## Tabla general
+## Tabla general — pantalla por pantalla
+
+Las 38 pantallas del lienzo más las que existen en el código sin diseño que las respalde.
+
+**Score de fidelidad (1–100).** 90+ coincide y solo falta pulir · 70–89 la pantalla es
+reconocible pero divergen jerarquía o copys · 40–69 hay una versión funcional con otra
+composición · 10–39 solo un esbozo o un marcador de posición · 1–9 no existe nada.
+Mide fidelidad **visual y de composición**, no si la funcionalidad es correcta: una pantalla
+puede funcionar perfecto y puntuar bajo.
+
+**Diseño / Código.** ✅ existe · 🟡 existe a medias o embebido en otra pantalla · ⛔ no existe.
+
+| ID | Pantalla | Diseño | Código | Score | Qué falta para la fidelidad completa |
+|---|---|---|---|---|---|
+| **A1** | Splash | ✅ | 🟡 `app.config.js` | **25** | Solo coincide el fondo `#0B1512`. `splash-icon.png` sigue siendo byte a byte el logo de Expo (mismo MD5 que `expo-logo.png`). Faltan el logotipo «ÁrbolApp Huila» en display 38 px, la micro-etiqueta magenta «UN PROYECTO DE JUVENTUD EN LÍNEA» y el punto esmeralda con `--glow-accent`. |
+| **A2.1** | Onboarding 1/3 | ✅ | ✅ `onboarding/index.tsx` | **65** | Falta el bloque superior de fotografía de campo (460 px) con degradado y pie «FOTO REAL DE CAMPO · VEREDA SAN ANDRÉS». El cuerpo no es el del diseño. Sobra el encabezado «Paso 1 de 3 / Omitir», que el lienzo no tiene. |
+| **A2.2** | Onboarding 2/3 | ✅ | ✅ `onboarding/prae.tsx` | **60** | Igual que A2.1. El cuerpo habla del PRAE; el diseño dice «La bitácora guarda la altura y las ramas de tu árbol. Te avisaremos cuando toque». |
+| **A2.3** | Onboarding 3/3 | ✅ | ✅ `onboarding/guardian.tsx` | **60** | Igual que A2.1. Sobra el botón «Ya tengo cuenta»: el diseño cierra con «Empezar» + «Explorar sin cuenta». |
+| **A3** | Inicio de sesión | ✅ | ✅ `(auth)/sign-in.tsx` | **80** | Faltan el logotipo sobre el título y el separador «O» antes de «Explorar sin cuenta». «¿Olvidaste tu contraseña?» va como enlace a la derecha **encima** de «Entrar», no como botón fantasma debajo. Sobran el subtítulo y el enlace legal al pie. |
+| **A4** | Registro de Guardián | ✅ | ✅ `(auth)/sign-up.tsx` | **82** | Falta la barra modal con flecha atrás y título «Crear cuenta». El orden de campos difiere (el diseño pone la contraseña antes del rol). «Rol o institución» es un **select** en el diseño y aquí texto libre. Sobran «Repite la contraseña» y el botón «Leer la política…»: el diseño lleva los enlaces dentro de la etiqueta del checkbox. Los copys de las dos declaraciones coinciden literalmente. |
+| **A5** | Recuperación de contraseña | ✅ | ✅ `(auth)/forgot-password.tsx` | **78** | Falta la barra modal. El diseño deja «Si existe una cuenta con ese correo…» como caja informativa **bajo el formulario**; el código reemplaza la pantalla entera. Título «Recuperar contraseña» vs «Recuperar la contraseña». |
+| **A6** | Verificación de correo | ✅ | ✅ `(auth)/verify-email.tsx` | **82** | Falta el ícono de sobre. **La jerarquía de botones está invertida**: el diseño hace primario «Ya verifiqué mi correo» y deja «Reenviar en 0:42» como texto secundario. Sobra el botón «Entrar». |
+| **A7** | Privacidad y términos | ✅ | ✅ `app/legal.tsx` | **65** | Faltan las **pestañas Privacidad / Términos** (componente `Tabs`) y el pie «Versión del 21 ago 2026». Los encabezados de sección no son los del diseño. El badge «Borrador» duplica el aviso que ya dice lo mismo. |
+| **A8** | Mapa · exploración sin cuenta | ✅ | ✅ `(app)/map.tsx` | **85** | Construida en la Fase 3. Están el mapa oscuro, el pill de búsqueda, los chips de filtro, los clústeres, la leyenda de 4 estados y la `GuestBar` con «Crear cuenta de guardián» / «Entrar». Falta que el buscador acepte texto: el placeholder promete «Buscar árbol o vereda…» y hoy solo abre la hoja de veredas, no busca árboles. Tres desviaciones del lienzo son **deliberadas y están razonadas en el código**: la búsqueda es botón y no campo (el teclado taparía el mapa), la leyenda usa 12 px en vez de 11 (el suelo legible a pleno sol) y los controles 44 px en vez de 42 (área táctil mínima). |
+| **B1** | Mapa con ficha flotante | ✅ | 🟡 `(app)/map.tsx` | **65** | Lo mismo que A8, más la `TreeSummarySheet` con especie, ciclo, guardián y chip de estado. Faltan el **FAB «⌖ Sembrar»** (llega con la Fase 4), el botón de capas junto a la búsqueda, y la **barra de 4 pestañas**: hoy siguen siendo 2 y el control de ubicación vive dentro de la fila de búsqueda en vez de ser un FAB propio. |
+| **B2** | Mis árboles | ✅ | ⛔ | **1** | **Solo en diseño.** No existe ruta. Faltan encabezado con conteo, tarjetas con miniatura, chip de estado, línea `VEREDA · CICLO`, texto de urgencia, botón «Actualizar» por tarjeta y badge «PENDIENTE DE ENVIAR». |
+| **B3** | Actividad | ✅ | ⛔ | **1** | **Solo en diseño.** Faltan la caja de «notificaciones desactivadas» con su botón «Activar» y las secciones PENDIENTES / ANTERIORES con filas fechadas, incluidos los avisos del coordinador. |
+| **B4** | Perfil | ✅ | ✅ `(app)/profile.tsx` | **45** | El código lo resuelve como **formulario de edición**; el diseño como **ficha + lista de opciones**. Faltan avatar con iniciales, badge «✦ Guardiana desde 2025», las tres fichas de estadística, las filas de menú con chevron y el pie de versión. La edición debe vivir tras «Editar perfil». |
+| **B4b** | Ajustes de notificaciones | ✅ | 🟡 embebido en `profile.tsx` | **38** | Falta la pantalla propia. Los interruptores no son los del diseño: pide «Recordatorios de bitácora» y «Avisos del coordinador» con subtítulo cada uno, más la nota «Aunque desactives los avisos, tus árboles seguirán apareciendo como pendientes». |
+| **C1.1** | Registrar · paso 1, ubicación | ✅ | ⛔ | **1** | **Solo en diseño.** Encabezado «PASO 1 DE 4» con progreso, mini-mapa con pin arrastrable, coordenadas con precisión (`±8 m`), enlace «Escribir coordenadas a mano» y selects de municipio y vereda. |
+| **C1.2** | Registrar · paso 2, especie | ✅ | ⛔ | **1** | **Solo en diseño.** Campo libre con autocompletado sobre lo ya escrito por otros guardianes, resaltado del fragmento, conteo por variante y nota «Se guarda tal como lo escribas». |
+| **C1.3** | Registrar · paso 3, datos | ✅ | ⛔ | **1** | **Solo en diseño.** Selector de fecha con «Hoy, por defecto», altura con sufijo `cm` y contador `− 2 +` de ramas. |
+| **C1.4** | Registrar · paso 4, foto | ✅ | ⛔ | **1** | **Solo en diseño.** Cámara en vivo sin galería y tarjeta RESUMEN con la nota «se comprime a ~200 KB». |
+| **C1e** | Éxito + permiso de notificaciones | ✅ | ⛔ | **1** | **Solo en diseño.** Confirmación con la próxima fecha de foto y solicitud de permiso («Activar recordatorios» / «Ahora no»). |
+| **C2** | Detalle del árbol | ✅ | ⛔ | **1** | **Solo en diseño.** Foto de cabecera, chip de estado, «Actualizar bitácora», comparador ANTES / DESPUÉS, gráfica de altura, lista de entradas con puntualidad y línea «Este árbol pertenece a…». |
+| **C3** | Nueva entrada de bitácora | ✅ | ⛔ | **1** | **Solo en diseño.** Cámara con **fantasma de la foto anterior**, altura y ramas, estado de salud (Sano / Con plagas / Débil), notas y coordenada de captura. |
+| **C3m** | Reportar árbol muerto | ✅ | ⛔ | **1** | **Solo en diseño.** Aviso de consecuencias, foto de evidencia obligatoria, chips de causa (Sequía / Ganado / Quema / Plaga / Otra) y campo «¿Qué pasó?». |
+| **C4** | Visor de fotografía | ✅ | ⛔ | **1** | **Solo en diseño.** Visor a pantalla completa con pie de ciclo, fecha, medidas y coordenada. |
+| **D1** | Acceso del coordinador | ✅ | ⛔ | **1** | **Solo en diseño.** `apps/web` sigue siendo la plantilla de `create-next-app`. Falta la composición a dos columnas con el panel de marca y el formulario restringido. |
+| **D2** | Tablero de estadísticas | ✅ | ⛔ | **1** | **Solo en diseño.** Barra lateral con badge de moderación, filtros de municipio y año, cuatro fichas de indicador y los gráficos por vereda y por especie. |
+| **D3** | Gestión de usuarios | ✅ | ⛔ | **1** | **Solo en diseño.** Tabla de guardianes con rol, conteos, chip de estado y acciones, buscador, y la nota de que el correo solo se ve en el panel. |
+| **D4** | Moderación · archivado motivado | ✅ | ⛔ | **1** | **Solo en diseño.** Lista de árboles marcados con su motivo y el diálogo de archivado con motivo obligatorio visible para el guardián. |
+| **D5** | Fusión de especies | ✅ | ⛔ | **1** | **Solo en diseño.** Lista de claves con conteos, selección múltiple de variantes, elección del nombre oficial y aviso de que el texto original se conserva. |
+| **D6** | Detalle admin y reasignación | ✅ | ⛔ | **1** | **Solo en diseño.** Ficha de datos, mini-mapa, historial de moderación y buscador de guardián activo. |
+| **D7** | Exportación PRAE | ✅ | ⛔ | **1** | **Solo en diseño.** Tres tarjetas de reporte con CSV / Excel, nota de exclusión de correos y registro de la última exportación. |
+| **E1/E2** | Mapa público con ficha | ✅ | ⛔ | **1** | **Solo en diseño.** Encabezado con los tres indicadores, mapa con clústeres, filtros, leyenda y ficha lateral con medidas, atribución y línea de tiempo de ciclos. |
+| **E3** | Variante incrustable | ✅ | ⛔ | **1** | **Solo en diseño.** Versión compacta con clúster, conteo de vivos, firma de marca y enlace «Ver el mapa completo». |
+| **F1** | Mis árboles · vacío | ✅ | ⛔ | **1** | **Solo en diseño.** Depende de B2. Ilustración, título «Todavía no has sembrado ningún árbol» y botón «Sembrar mi primer árbol». |
+| **F2** | Offline con cola de pendientes | ✅ | 🟡 `connection-banner.tsx` | **20** | Existe la franja de «sin conexión» pero con copy genérico. El diseño cuenta los registros en cola («Sin conexión — 2 registros se enviarán cuando vuelva la señal»), con enlace «Ver» y cierre. Falta entera la sección PENDIENTES DE ENVIAR con sus tarjetas «En cola». |
+| **F3** | Permiso de ubicación | ✅ | 🟡 `use-user-location.ts` | **30** | `useUserLocation` pide el permiso y, si lo niegan, el mapa muestra un `Notice` con el motivo. Falta la **pantalla previa** del diseño: el permiso se pide en frío, sin explicar antes para qué se usa el GPS, y no existe la salida «Ahora no — puedo escribir las coordenadas a mano». |
+| **F4** | Error de red y sesión expirada | ✅ | 🟡 `map.tsx` + `Notice` + `sign-in` | **45** | El mapa ya tiene su estado de error con título, cuerpo y reintento, y el aviso de caché sin conexión. Falta que sean estados **a pantalla completa** como los dibuja el lienzo, y «Tu sesión venció» sigue siendo un `Notice` dentro de `sign-in` en vez de una pantalla con el texto que tranquiliza sobre los registros pendientes. |
+| **F5** | GPS impreciso y cámara denegada | ✅ | ⛔ | **1** | **Solo en diseño.** Franja de GPS débil con la precisión (`±45 m`) sobre el mapa y pantalla de cámara desactivada con «Abrir ajustes del teléfono». |
+| — | Nueva contraseña | ⛔ | ✅ `(auth)/reset-password.tsx` | **n/a** | **Solo en código.** El lienzo cubre A5 (pedir el enlace) pero no la pantalla donde se escribe la contraseña nueva, ni sus estados «El enlace ya no sirve» y el spinner de canje. **Falta diseñarla** para poder medirla. |
+| — | Retorno del enlace de correo | ⛔ | ✅ `auth/callback.tsx` | **n/a** | **Solo en código.** Pantalla de espera mientras se canjea el enlace. Sin diseño contra el cual medir. |
+| — | Tu cuenta (pestaña de invitado) | ⛔ | ✅ `(app)/account.tsx` | **n/a** | **Solo en código.** Existe porque la barra tiene 2 pestañas. En el diseño el invitado no tiene pestaña propia: las llamadas a registrarse viven en la barra inferior de A8. **Probablemente sobra.** |
+| — | No encontramos tu perfil · error de carga | ⛔ | ✅ `(app)/profile.tsx` | **n/a** | **Solo en código.** Estados de error del perfil. Encajarían en el patrón de F4 una vez exista. |
+| — | Falta configurar la aplicación | ⛔ | ✅ `app/_layout.tsx` | **n/a** | **Solo en código.** Pantalla de desarrollo; no necesita diseño. |
+
+### Recuento de inconsistencias
+
+| | Cantidad |
+|---|---|
+| Pantallas del lienzo con algo construido | **16** de 38 |
+| **Pantallas en Claude Design que no existen en el código** | **22** — todas de las Fases 4 a 7 |
+| **Pantallas en el código que no existen en Claude Design** | **5** — una de ellas, «Nueva contraseña», sí necesita diseño |
+
+| Bloque | Pantallas | Score medio | Tras las fuentes | Antes de las fuentes |
+|---|---|---|---|---|
+| A · Móvil sin sesión | 10 | **68,5** | 60,9 | 52,7 |
+| B · Móvil con sesión | 5 | **30,0** | 18,8 | 15,0 |
+| C · Flujos modales | 9 | **1,0** | 1,0 | 1,0 |
+| D · Web administración | 7 | **1,0** | 1,0 | 1,0 |
+| E · Web mapa público | 2 | **1,0** | 1,0 | 1,0 |
+| F · Estados transversales | 5 | **19,4** | 12,2 | 9,6 |
+| **Total del lienzo** | **38** | **≈ 25** | ≈ 21 | ≈ 18 |
+
+**Cómo se recalculó, dos veces.**
+
+1. *Tipografías.* Cargar las tres familias sube la fidelidad de toda pantalla que renderice
+   texto con la escala de tipos, y de ninguna otra. Se aplicó **+10** a las pantallas
+   construidas que usan `AppText`, **+2** a las que solo mostraban un marcador de posición o
+   una franja, y **+0** a A1 —el splash es nativo y no usa las fuentes de la aplicación— y a
+   las que solo existen en el diseño. Incremento uniforme, no una medida.
+2. *Fase 3.* A8, B1, F3 y F4 se **volvieron a medir contra el código**, no se ajustaron por
+   fórmula: el mapa dejó de ser un marcador de posición. Ese salto es lo que mueve el total
+   de 21 a 25, y casi todo se concentra en cuatro filas.
+
+**Veredicto de pantallas.** El promedio bajo sigue reflejando que las Fases 4 a 7 no han
+empezado: 22 de las 38 pantallas no tienen una sola línea. La lectura útil es la de lo
+construido — **68,5** en el bloque A. Ni los tokens ni las fuentes ponen ya el techo. Lo que
+queda es maquetación y catálogo: sin `Card`, `Badge`/`StatusDot` y `Dialog`, y sin barra de
+encabezado modal, el bloque A no pasa de ~85 por más que se retoque.
+
+> ⚠️ **La Fase 3 está sin commitear.** Las cuatro filas remedidas describen el árbol de
+> trabajo del 21 de agosto de 2026, no un commit. `apps/mobile/src/features/map/`,
+> `packages/core/src/map.ts` y la migración `20260821140000_tree_card.sql` están sin
+> versionar, y `pnpm typecheck` está rojo en `map.tsx` (ver «Cómo se reproduce»).
+
+---
+
+## Tabla general — tokens
 
 La columna **declarado** mide si el valor del token coincide con el del sistema de diseño.
-La columna **aplicado** mide si eso llega a la pantalla. Se separan porque un token puede
-ser correcto y no pintar nada: es exactamente lo que pasa hoy con las fuentes.
+La columna **aplicado** mide si eso llega a la pantalla. Se separan porque un token puede ser
+correcto y no pintar nada: fue exactamente el caso de las familias tipográficas, declaradas
+con el valor correcto durante toda la adopción de tokens y sin una sola cara cargada hasta
+que se resolvió aparte.
 
 | Capa | Alcance | Declarado | Aplicado | Estado |
 |---|---|---|---|---|
 | Color | 50 variables | **100 %** (50/50) | **100 %** | ✅ |
 | Espaciado, radios y área táctil | 16 variables | **100 %** (16/16) | **100 %** | ✅ |
 | Escala tipográfica — tamaños, interlineado, pesos, tracking | 17 variables | **100 %** (17/17) | **100 %** | ✅ |
-| Familias tipográficas | 3 variables | **100 %** (3/3) | **0 %** | ⛔ bloqueado |
+| Familias tipográficas | 3 variables | **100 %** (3/3) | **100 %** | ✅ |
 | Efectos, sombras y motion | 9 variables | **100 %** (9/9) | ➖ sin consumir aún | ✅ |
 | **Total de tokens** | **95 variables** | **100 %** | — | ✅ |
 | Consumo en móvil | 24 archivos | — | **100 %** | ✅ |
-| Consumo en web | `design-tokens.css` + `globals.css` | — | **100 %** | ✅ |
-| Splash e ícono adaptativo | 2 valores | — | **100 %** | ✅ |
+| Consumo en web | `design-tokens.css` + `globals.css` + utilidades Tailwind (`bg-state-overdue`, `text-surface-card`…) | — | **100 %** | ✅ |
+| Splash e ícono adaptativo | 2 valores, desde `app.config.js` | — | **100 %** | ✅ |
+| Variantes de tipografía | 9 variantes | **100 %** (9/9) | **7 de 9 en uso** | 🔸 `data` y `overline` sin consumir |
 | Componentes de interfaz vs. catálogo | 7 componentes | — | *no evaluado* | 🔧 pendiente |
-| Pantallas vs. lienzo | 10 pantallas | — | *no evaluado* | 🔧 pendiente |
+| Pantallas vs. lienzo | 38 pantallas | — | **≈ 25 / 100** | 🔧 ver tabla de pantallas |
 
-**Veredicto.** La capa de tokens está completa y verificada. Lo que separa hoy a la
-aplicación del diseño no son los valores, sino **las fuentes** —el único elemento visual
-del sistema que no se ha podido cargar— y la **maquetación** de las pantallas de la Fase 2,
-que es una tarea aparte y deliberadamente no se mezcló con esta.
+**Veredicto.** La capa de tokens está completa y verificada, y las tres familias
+tipográficas ya se cargan en las dos plataformas. Lo único que separa hoy a la aplicación
+del diseño es **maquetación**: la composición de las pantallas de la Fase 2 y los tres
+componentes del catálogo que no existen. Ninguna de las dos cosas es un problema de valores,
+y por eso no se mezclaron con esta tarea.
 
 ---
 
@@ -145,57 +253,87 @@ ha visitado.
 
 ## Lo que falta
 
-### ⛔ Fuentes — bloqueado, requiere permiso
+### ✅ Fuentes — resuelto
 
-Es **el único hueco de fidelidad visual que queda**. El sistema de diseño pide tres familias
-y ninguna está en el repositorio, así que ambas aplicaciones caen al `system-ui` del final de
-cada pila.
+Las tres familias se cargan ya en las dos plataformas. `tokens/fonts.css` las trae con un
+`@import` de Google Fonts, que en móvil no sirve; se resolvió con `@expo-google-fonts` en
+móvil y `next/font/google` en web, ninguno de los dos con tecnología nueva —`expo-font` ya
+era dependencia y `next/font` ya servía Geist.
 
-| Familia | Uso | Pesos | Dónde |
+| Familia | Uso | Caras cargadas | Peso |
 |---|---|---|---|
-| **Bricolage Grotesque** | Titulares y cifras, ≥26 px | 600 · 700 · 800 | `--font-display` |
-| **Archivo** | Interfaz y párrafos, ≤20 px | 400 · 500 · 600 · 700 + itálica 400 | `--font-body` |
-| **IBM Plex Mono** | Coordenadas, medidas, fechas, IDs | 400 · 500 · 600 | `--font-mono` |
+| **Bricolage Grotesque** | Titulares, ≥26 px | 600 · 700 | 182 KB |
+| **Archivo** | Interfaz y párrafos, ≤20 px | 400 · 500 · 600 · 700 | 483 KB |
+| **IBM Plex Mono** | Coordenadas, medidas, fechas, IDs | 500 | 135 KB |
 
-`tokens/fonts.css` las carga con un `@import` de Google Fonts, que en móvil no sirve. La vía
-correcta en este repositorio es `@expo-google-fonts`, y **`expo-font` ya es dependencia**
-(`57.0.1`), así que no hay tecnología nueva que justificar:
+**Solo se empaqueta la cara que algo renderiza.** El índice de cada paquete reexporta todos
+sus pesos, así que importar desde la raíz metía unas treinta tipografías en la aplicación
+para dibujar siete: se importa por subruta
+(`@expo-google-fonts/archivo/400Regular`). El mapa `fontFace` del tema y `appFonts` del
+layout raíz enumeran exactamente el mismo conjunto, para que ningún estilo pida una cara que
+nadie registró y caiga en silencio a la del sistema.
 
-```bash
-cd apps/mobile
-npx expo install @expo-google-fonts/bricolage-grotesque @expo-google-fonts/archivo @expo-google-fonts/ibm-plex-mono
-```
+En React Native el peso no se elige dentro de una familia: cada peso es su propia cara
+registrada, y pedir una negrita que no se cargó produce un engrosado sintético. Por eso los
+estilos nombran una cara y **nunca** llevan `fontWeight` al lado; los dos `fontWeight`
+sueltos que quedaban en `legal.tsx` y `connection-banner.tsx` se sustituyeron por su cara
+real.
 
-Falta además cargarlas en el layout raíz con `useFonts` y una compuerta de splash, y aplicar
-`fontFamily` en `apps/mobile/src/constants/theme.ts`. En la web se resuelve con
-`next/font/google`, que ya se usa para Geist y no añade dependencias.
+En web cada familia publica su propia variable (`--font-display-face`) en lugar de pisar la
+del sistema de diseño: `globals.css` compone `var(--font-body-face), var(--font-body)`, de
+modo que la cara cargada va primera y el stack generado queda de reserva.
 
-**Este comando fue denegado por el clasificador de permisos del entorno.** No se rodeó. Para
-desbloquearlo hay que autorizar `npx expo install` o ejecutarlo manualmente.
+**Añadir una cara son dos líneas y ~120 KB**: una entrada en `fontFace` y otra en `appFonts`
+del layout raíz. Ese coste es la razón de que haya siete y no treinta, así que una pantalla
+nueva se maqueta con las caras registradas salvo que el lienzo pida otra explícitamente.
+
+### Una regla que se hereda de esta capa
+
+**No se editan `design-tokens.css` ni `design-tokens.json`.** Los emite `pnpm tokens` desde
+TypeScript. Si el sistema de diseño cambia, se corrige `theme.ts` y se regenera; una
+corrección escrita a mano en el CSS se pierde en la siguiente ejecución.
+
+### 🔸 Dos variantes de tipografía que existen y nadie usa
+
+`typography` publica nueve variantes y las pantallas consumen siete. Las dos que sobran no
+son de adorno: son exactamente el patrón que más se echa de menos al comparar contra el
+lienzo.
+
+| Variante | Cara | Para qué la dibuja el lienzo | Quién debería usarla |
+|---|---|---|---|
+| `data` | `monoMedium` — IBM Plex Mono | Coordenadas, alturas, fechas, IDs | C1.1 (`2.3894° N · ±8 m`), C2, C3, C4, E1 |
+| `overline` | `bodyMedium` en mayúsculas con `tracking.wide` | Micro-etiquetas en versalitas | `VEREDA SAN ANDRÉS · CICLO 2` en B2, `PENDIENTES` en B3, `PASO 1 DE 4` en C1 |
+
+Mientras nadie las use, cada pantalla nueva que necesite una coordenada o una micro-etiqueta
+la resolverá con `caption` y perderá la textura del lienzo. **La primitiva ya existe: el
+trabajo es aplicarla, no crearla.**
 
 ### 🔧 Maquetación de la Fase 2 — tarea aparte
 
 Los componentes de `apps/mobile/src/components/ui/` y las diez pantallas de autenticación y
-onboarding **consumen los tokens correctos**, pero su disposición nunca se contrastó con el
-lienzo. Mezclar esa reconciliación con la corrección de tokens habría hecho imposible revisar
-ninguna de las dos.
+onboarding **consumen los tokens correctos**, pero su disposición diverge del lienzo. Mezclar
+esa reconciliación con la corrección de tokens habría hecho imposible revisar ninguna de las
+dos.
 
+- Pantallas contra `Pantallas v1.dc.html`: ya medidas, **68,5 / 100** en el bloque A. El
+  detalle está en la tabla de pantallas al inicio de este documento.
 - Componentes contra el catálogo: `Button`, `Input`, `Checkbox`, `Card`, `Badge`, `Toast`,
-  `Dialog`.
-- Pantallas contra `Pantallas v1.dc.html`.
+  `Dialog`. **Sin medir todavía.** Tres de ellos —`Card`, `Badge`/`StatusDot` y `Dialog`— no
+  existen en el código, y son la pieza más repetida del lienzo: mientras falten, B2, B3, C2
+  y E1 no se pueden construir con fidelidad.
 
-### 🔸 Dos literales de color que siguen fuera de `packages/core`
+### 🔸 Un literal de color que sigue fuera de `packages/core`
 
 | Dónde | Valor | Situación |
 |---|---|---|
 | `apps/web/src/app/page.tsx` | `#383838`, `#ccc`, `#1a1a1a` | Página de ejemplo de `create-next-app`, intacta. La Fase 6 la sustituye entera. |
-| `apps/mobile/app.json` | `#0B1512` ×2 | Correcto y alineado, pero copiado a mano: **JSON no puede importar TypeScript.** |
 
-Eliminar el segundo requiere migrar `app.json` a `app.config.js` y hacer que el generador
-emita también un `design-tokens.json`. Se intentó y **la operación fue denegada por el
-clasificador de permisos** (borrado de `app.json`), y sin poder ejecutar `npx expo config`
-para comprobar que la configuración resuelve, se revirtió antes que dejar una configuración
-de Expo sin verificar.
+El de `app.json` **ya no existe**. La configuración de Expo pasó a `app.config.js`, que lee
+`design-tokens.json` —emitido por `pnpm tokens` desde los mismos tokens de TypeScript— para
+el color del splash y el fondo del ícono adaptativo. Era el único lugar donde un color se
+copiaba a mano, porque un JSON no puede importar TypeScript y la configuración se evalúa
+antes de que exista un empaquetador. Comprobado con `npx expo config --type public`: ambos
+resuelven a `#0B1512`.
 
 ### 🔸 Una inconsistencia del propio sistema de diseño
 
@@ -216,9 +354,35 @@ pnpm lint
 pnpm format:check
 
 pnpm --filter @arbolapp/web build
-cd apps/mobile && npx expo-doctor      # 21/21
+cd apps/mobile
+npx expo config --type public          # el splash resuelve desde los tokens
+npx expo-doctor
+npx expo export --platform android     # comprueba qué caras se empaquetan
 ```
 
-Estado en la última medición: **typecheck, lint y format en verde**; `expo-doctor` **21/21
-sin incidencias**; Metro empaqueta Android; `next build` compila y los tokens llegan al CSS
-emitido.
+Estado en la última medición: `next build` compila y los tokens llegan al CSS emitido; Metro
+empaqueta Android con **siete** tipografías, las que algo renderiza; **`expo-doctor` pasa
+21/21**.
+
+**`pnpm typecheck` está rojo, y no en la capa de diseño.** Falla en la Fase 3, que está en
+curso y sin commitear:
+
+```
+src/app/(app)/map.tsx(107,26): error TS2304: Cannot find name 'useMunicipalityCounts'.
+src/app/(app)/map.tsx(253,48): error TS7006: Parameter 'municipality' implicitly has an 'any' type.
+```
+
+`packages/core` y `apps/web` compilan limpios. La regla del proyecto —una tarea no está
+terminada hasta que `typecheck`, `lint` y `format` estén en verde— sigue aplicando a quien
+cierre la Fase 3; esta medición se tomó igualmente porque los archivos del mapa se leen
+aunque no compilen.
+
+### Dos avisos del handoff que ya no aplican
+
+Se comprobaron contra el árbol de trabajo antes de escribir esto:
+
+- **`react-native-maps` ya está en `1.27.2`**, la versión que espera el SDK 57. Por eso
+  `expo-doctor` volvió a 21/21 desde el 20/21 que reportaba el handoff.
+- **`expo-location` ya está fijo en `57.0.12`**, sin tilde. Cumple `save-exact` de `.npmrc`.
+- El error de typecheck tampoco es el que anunciaba el handoff (`lastLoaded` en
+  `use-trees-in-viewport.ts`): ese se resolvió y aparecieron los dos de `map.tsx`.
