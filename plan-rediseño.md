@@ -96,7 +96,11 @@ en paralelo. Las olas dentro de una fase sí van en orden.
 5. Una tarea no está terminada hasta que `typecheck`, `lint` y `format` estén en verde.
 6. **Un agente por rama, commits pequeños.** Dentro de una ola nadie toca los archivos de
    otro; si dos tareas se pisan, es que la ola está mal cortada.
-7. El protocolo de peticiones al diseño de `PLAN-FIDELIDAD-UI.md` sigue vigente: nivel 1 se
+7. **Al cerrar una ola, sus ramas se fusionan a `develop`.** La ola siguiente ramifica
+   desde `develop`, nunca desde la rama de la anterior. Encadenar ramas entre olas obliga a
+   cada agente a heredar trabajo sin revisar y deja las verificaciones midiendo un árbol
+   que nadie aprobó; una ola no está cerrada hasta que está en `develop`.
+8. El protocolo de peticiones al diseño de `PLAN-FIDELIDAD-UI.md` sigue vigente: nivel 1 se
    aplica y se documenta, nivel 2 se redacta como petición, nivel 3 se pregunta.
 
 ---
