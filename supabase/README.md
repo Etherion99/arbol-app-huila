@@ -26,6 +26,7 @@ Verificaciones que dependen del stack local:
 ```bash
 pnpm test:species   # la clave normalizada de SQL coincide con la de packages/core
 pnpm test:rls       # las políticas RLS, ejercitadas con dos guardianes y un coordinador
+pnpm test:merge     # la fusión de especies y su reversión, de extremo a extremo
 ```
 
 `pnpm test:rls` archiva un árbol como parte de la prueba. Ejecuta `pnpm db:reset`
@@ -112,3 +113,55 @@ construyen desde el código con `growthLogPhotoPath()` y `growthLogThumbnailPath
 - Las especies nunca se cuentan sobre el texto crudo, siempre sobre `normalized_key`. El
   texto que escribió el guardián se conserva intacto en `trees.species_raw_text`.
 - Toda tabla nueva nace con políticas RLS. Una tabla sin políticas no se da por terminada.
+
+## Especies: nada se corrige al escribir
+
+`normalize_species()` unifica solo lo que es inequívocamente la misma palabra escrita con
+descuido: mayúsculas, tildes y espacios sobrantes. **No toca los plurales.** Recortar la
+`s` final no distingue un plural de una palabra que termina en `s`, y produce claves que
+no corresponden a ningún nombre real (`hass` → `has`, `limones` → `limone`).
+
+Por eso `mandarino`, `mandarinos` y `Mandarina` conviven como tres especies distintas
+hasta que alguien decida que son la misma. La convergencia ocurre en dos momentos, ninguno
+de ellos restrictivo:
+
+1. **Al escribir** — `species_suggestions(texto)` ofrece lo que ya existe, ordenado por
+   número de árboles. La mayoría elige una sugerencia y el catálogo converge solo.
+2. **Después** — el coordinador fusiona desde el panel con `merge_species()`.
+
+```sql
+-- 18 mandarinos + 12 MANDARINOS + 6 Mandarina = 36 árboles,
+-- y el coordinador decide que todos se llamen otra cosa.
+select public.merge_species(
+  array[<id de mandarinos>, <id de mandarina>],
+  <id de mandarino>,
+  'Árboles de mandarina'
+);
+```
+
+El nombre que sobrevive es texto libre y **no tiene que ser ninguno de los fusionados**.
+Cada fusión queda registrada en `species_merges` con la lista exacta de árboles que movió,
+y `revert_species_merge()` la deshace devolviendo esos mismos árboles y el nombre anterior.
+Las especies fusionadas no se borran: quedan archivadas apuntando a su destino, para que
+los enlaces viejos sigan resolviendo.
+
+`trees.species_raw_text` nunca cambia, ni siquiera en una fusión.
+
+## Zonas: todo es corregible
+
+Los nombres de las 12 veredas del seed son reales, tomados del componente rural del Plan
+Básico de Ordenamiento Territorial de La Plata, donde figuran bajo el corregimiento de
+Belén. **Los centroides son aproximados**: no existen datos oficiales de contornos ni de
+puntos centrales, así que son posiciones verosímiles dentro del municipio, suficientes
+para encuadrar el mapa y repartir los datos de prueba.
+
+El coordinador puede editar nombre, slug, centroide y zoom de cualquier zona desde el
+panel, y crear las que falten, sin necesidad de una migración. Cuando aparezcan los
+contornos oficiales, cargarlos en `zones.geometry` es una carga de datos y no un rediseño.
+
+**Nota sobre la jerarquía real:** La Plata tiene seis corregimientos —Belén, Gallego,
+Monserrate, San Andrés, San Vicente y Villa Losada— y las veredas cuelgan de ellos. El
+esquema modela tres niveles (departamento ▸ municipio ▸ vereda), así que las veredas
+cuelgan directamente del municipio y el corregimiento no se representa. Añadirlo después
+es agregar un valor al enum `zone_type` y un caso al disparador de jerarquía; no obliga a
+mover datos.
