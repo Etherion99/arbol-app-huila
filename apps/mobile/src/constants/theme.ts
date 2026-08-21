@@ -1,65 +1,37 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Design values every screen consumes. The palette itself lives in
+ * packages/core so the mobile app and the web panel cannot drift apart; this
+ * file only adds what is specific to a touch interface.
  */
+import { StyleSheet } from 'react-native';
 
-import '@/global.css';
+import { HIT_TARGET, colors, radii, spacing } from '@arbolapp/core';
 
-import { Platform } from 'react-native';
+export { colors, radii, spacing };
 
-export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-  },
-} as const;
+/**
+ * Minimum side of any tappable control. Both platforms recommend it and the
+ * app is used outdoors, standing up, often with one hand busy holding a branch.
+ */
+export const MIN_TOUCH_TARGET = HIT_TARGET;
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+/** Widest a form gets, so the fields do not stretch on a tablet. */
+export const MAX_CONTENT_WIDTH = 520;
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
+/**
+ * The type scale of the design system. Body text never drops under 15px: the
+ * app is read outdoors, in direct sun, by people of every age in the vereda.
+ *
+ * The families are still the system ones. The design system asks for Bricolage
+ * Grotesque, Archivo and IBM Plex Mono, and none of the three is packaged in
+ * the repository yet.
+ */
+export const typography = StyleSheet.create({
+  display: { fontSize: 34, lineHeight: 39, fontWeight: '800', color: colors.text },
+  title: { fontSize: 26, lineHeight: 34, fontWeight: '700', color: colors.text },
+  subtitle: { fontSize: 20, lineHeight: 26, fontWeight: '600', color: colors.text },
+  body: { fontSize: 17, lineHeight: 26, fontWeight: '400', color: colors.text },
+  bodyMuted: { fontSize: 17, lineHeight: 26, fontWeight: '400', color: colors.textMuted },
+  label: { fontSize: 15, lineHeight: 20, fontWeight: '600', color: colors.text },
+  caption: { fontSize: 13, lineHeight: 18, fontWeight: '400', color: colors.textMuted },
 });
-
-export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
-} as const;
-
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
