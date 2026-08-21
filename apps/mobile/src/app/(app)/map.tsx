@@ -7,7 +7,6 @@ import {
   CLUSTER_ZOOM,
   HUILA_FRAMING,
   LA_PLATA_FRAMING,
-  OPENING_FLIGHT_MS,
   framingForZone,
   regionToZoom,
   type MapRegion,
@@ -28,20 +27,24 @@ import { GuestBar } from '@/features/map/components/guest-bar';
 import { MapLegend } from '@/features/map/components/map-legend';
 import { MapSearchBar } from '@/features/map/components/map-search-bar';
 import { OptionSheet, type SheetOption } from '@/features/map/components/option-sheet';
+import { SearchSheet } from '@/features/map/components/search-sheet';
+import { SelectedMarker } from '@/features/map/components/selected-marker';
 import { TreeSummarySheet } from '@/features/map/components/tree-summary-sheet';
 import { clusterMarkers } from '@/features/map/clustering';
+import { mapMotion } from '@/features/map/map-motion';
 import { darkMapStyle } from '@/features/map/map-style';
 import { markerSprite } from '@/features/map/marker-sprites';
 import { useDebouncedRegion } from '@/features/map/use-debounced-region';
 import { useSpeciesCatalogue } from '@/features/map/use-species-catalogue';
 import { useTreeCard } from '@/features/map/use-tree-card';
+import type { TreeSearchResult } from '@/features/map/use-tree-search';
 import { useTreesInViewport } from '@/features/map/use-trees-in-viewport';
 import { useUserLocation } from '@/features/map/use-user-location';
 import { useMunicipalityCounts } from '@/features/map/use-municipality-counts';
-import { useZones } from '@/features/map/use-zones';
+import { useZones, type ZoneOption } from '@/features/map/use-zones';
 
 /** Which filter list is open, if any. */
-type OpenSheet = 'municipality' | 'village' | 'species' | null;
+type OpenSheet = 'search' | 'municipality' | 'village' | 'species' | null;
 
 /**
  * The map, which is the entry screen and the centre of the application.
@@ -116,7 +119,7 @@ export default function MapScreen() {
     [viewport.trees, viewport.zoom],
   );
 
-  const flyTo = useCallback((target: MapRegion, duration = OPENING_FLIGHT_MS) => {
+  const flyTo = useCallback((target: MapRegion, duration = mapMotion.zoneFlightMs) => {
     mapRef.current?.animateToRegion(target, duration);
   }, []);
 
@@ -127,7 +130,7 @@ export default function MapScreen() {
    * yet is a no-op on Android.
    */
   const handleMapReady = useCallback(() => {
-    flyTo(LA_PLATA_FRAMING);
+    flyTo(LA_PLATA_FRAMING, mapMotion.openingFlightMs);
   }, [flyTo]);
 
   const handleLocationPress = useCallback(async () => {
@@ -150,7 +153,7 @@ export default function MapScreen() {
         latitudeDelta: 0.02,
         longitudeDelta: 0.02,
       },
-      600,
+      mapMotion.zoneFlightMs,
     );
   }, [flyTo, location]);
 
@@ -172,7 +175,7 @@ export default function MapScreen() {
       if (zoneId === null) {
         // Clearing a filter pulls back out to the municipality the project
         // lives in, rather than leaving the camera inside a zone nobody chose.
-        flyTo(LA_PLATA_FRAMING, 600);
+        flyTo(LA_PLATA_FRAMING);
         return;
       }
 
@@ -186,10 +189,41 @@ export default function MapScreen() {
       // zoom the catalogue suggests. A zone the coordinator created without a
       // centroid still filters; it just cannot move the camera.
       if (zone !== undefined && zone.centroid !== null) {
-        flyTo(framingForZone(zone.centroid, zone.suggestedZoom), 600);
+        flyTo(framingForZone(zone.centroid, zone.suggestedZoom));
       }
     },
     [flyTo, zones.data],
+  );
+
+  /** A zone chosen in the search behaves exactly like choosing it in a filter. */
+  const searchToZone = useCallback(
+    (zone: ZoneOption) => {
+      setOpenSheet(null);
+      frameZone(zone.id, zone.type === 'municipality' ? 'municipality' : 'village');
+    },
+    [frameZone],
+  );
+
+  /**
+   * A tree chosen in the search opens its card.
+   *
+   * It flies past the clustering threshold on purpose: landing on a zoom where
+   * the tree is still folded into a group would answer the search with a bubble
+   * instead of the tree that was asked for.
+   */
+  const searchToTree = useCallback(
+    (tree: TreeSearchResult) => {
+      setOpenSheet(null);
+      const delta = 360 / 2 ** (CLUSTER_ZOOM.individualMarkers + 2);
+      flyTo({
+        latitude: tree.lat,
+        longitude: tree.lng,
+        latitudeDelta: delta,
+        longitudeDelta: delta,
+      });
+      setSelectedTreeId(tree.treeId);
+    },
+    [flyTo],
   );
 
   const municipalityOptions = useMemo<SheetOption[]>(
@@ -269,25 +303,35 @@ export default function MapScreen() {
                 </Marker>
               ))
             : marks.kind === 'trees'
-              ? marks.trees.map((tree) => (
-                  <Marker
-                    key={tree.treeId}
-                    identifier={tree.treeId}
-                    coordinate={{ latitude: tree.lat, longitude: tree.lng }}
-                    image={markerSprite(tree.trackingStatus, tree.treeId === selectedTreeId)}
-                    // The whole performance story of this screen. The marker is a
-                    // finished bitmap, so after the first frame there is nothing
-                    // left to observe -- without this, iOS re-rasterises every
-                    // marker on every frame of a pan.
-                    tracksViewChanges={false}
-                    anchor={{ x: 0.5, y: 0.5 }}
-                    onPress={() => setSelectedTreeId(tree.treeId)}
-                    accessibilityLabel={texts.map.markerLabel(
-                      tree.speciesName,
-                      texts.map.legend[tree.trackingStatus],
-                    )}
-                  />
-                ))
+              ? marks.trees.map((tree) => {
+                  const isSelected = tree.treeId === selectedTreeId;
+
+                  return (
+                    <Marker
+                      key={tree.treeId}
+                      identifier={tree.treeId}
+                      coordinate={{ latitude: tree.lat, longitude: tree.lng }}
+                      // The whole performance story of this screen. Every marker
+                      // but one is a finished bitmap, so after the first frame
+                      // there is nothing left to observe -- without this, iOS
+                      // re-rasterises every marker on every frame of a pan.
+                      //
+                      // The selected tree is the single exception, and it is
+                      // affordable exactly because there is never more than one.
+                      image={isSelected ? undefined : markerSprite(tree.trackingStatus, false)}
+                      tracksViewChanges={isSelected}
+                      anchor={{ x: 0.5, y: 0.5 }}
+                      zIndex={isSelected ? 1 : 0}
+                      onPress={() => setSelectedTreeId(tree.treeId)}
+                      accessibilityLabel={texts.map.markerLabel(
+                        tree.speciesName,
+                        texts.map.legend[tree.trackingStatus],
+                      )}
+                    >
+                      {isSelected ? <SelectedMarker status={tree.trackingStatus} /> : undefined}
+                    </Marker>
+                  );
+                })
               : marks.clusters.map((cluster) => (
                   <Marker
                     key={cluster.id}
@@ -305,7 +349,7 @@ export default function MapScreen() {
                           latitudeDelta: region.latitudeDelta / 2.5,
                           longitudeDelta: region.longitudeDelta / 2.5,
                         },
-                        400,
+                        mapMotion.clusterFlightMs,
                       )
                     }
                     accessibilityLabel={texts.map.clusterLabelPlain(cluster.count)}
@@ -322,7 +366,7 @@ export default function MapScreen() {
         <View style={styles.controls} pointerEvents="box-none">
           <MapSearchBar
             query={selectedVillage?.label ?? selectedMunicipality?.label ?? null}
-            onPress={() => setOpenSheet('village')}
+            onPress={() => setOpenSheet('search')}
             onLocationPress={() => void handleLocationPress()}
           />
 
@@ -423,6 +467,14 @@ export default function MapScreen() {
           onSignIn={() => router.push('/sign-in')}
         />
       ) : null}
+
+      <SearchSheet
+        isVisible={openSheet === 'search'}
+        catalogue={zones.data}
+        onSelectZone={searchToZone}
+        onSelectTree={searchToTree}
+        onClose={() => setOpenSheet(null)}
+      />
 
       <OptionSheet
         isVisible={openSheet === 'municipality'}

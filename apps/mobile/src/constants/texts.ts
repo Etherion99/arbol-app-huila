@@ -182,6 +182,10 @@ export const texts = {
 
     searchPlaceholder: 'Buscar árbol o vereda…',
     searchLabel: 'Buscar un árbol o una vereda',
+    searchHint: 'Escribe el nombre de una vereda o el código de un árbol, como HUI-LP-0042.',
+    searchZonesHeading: 'Veredas y municipios',
+    searchTreesHeading: 'Árboles',
+    searchNoResults: (query: string) => `No encontramos nada que coincida con «${query}».`,
     myLocation: 'Centrar en mi ubicación',
 
     municipalityFilter: 'Municipio',
