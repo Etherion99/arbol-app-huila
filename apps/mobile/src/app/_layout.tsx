@@ -144,7 +144,9 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" />
+      {/* Dark glyphs, not a dark bar: `style` names the content colour, and the
+          2026 scheme puts the bar on leaf white. */}
+      <StatusBar style="dark" />
       {isEnvComplete ? (
         <QueryClientProvider client={queryClient}>
           <SessionProvider>
