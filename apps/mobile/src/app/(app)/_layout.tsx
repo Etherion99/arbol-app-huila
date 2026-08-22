@@ -1,14 +1,14 @@
 import { Tabs } from 'expo-router';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import type { ColorValue } from 'react-native';
 
+import { Icon, type IconName } from '@/components/ui/icon';
 import { texts } from '@/constants/texts';
 import { colors } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
 
-function tabIcon(name: SymbolViewProps['name']) {
+function tabIcon(name: IconName) {
   return function TabIcon({ color, size }: { color: ColorValue; size: number }) {
-    return <SymbolView name={name} tintColor={color} size={size} />;
+    return <Icon name={name} color={String(color)} size={size} />;
   };
 }
 
@@ -23,6 +23,10 @@ function tabIcon(name: SymbolViewProps['name']) {
  * map; B1 has the bar, with the four places a guardian moves between. A visitor
  * is exploring one screen, not navigating an application, and a bar with a
  * single tab in it says the opposite.
+ *
+ * The icons are the design system's own, not the platform's. Each tab already
+ * carries `tabBarAccessibilityLabel`, so the drawing beside it is decorative
+ * and stays unlabelled.
  */
 export default function AppLayout() {
   const { session } = useSession();
@@ -47,7 +51,7 @@ export default function AppLayout() {
         options={{
           title: texts.map.tabLabel,
           tabBarAccessibilityLabel: texts.map.tabLabel,
-          tabBarIcon: tabIcon({ ios: 'map.fill', android: 'map', web: 'map' }),
+          tabBarIcon: tabIcon('map'),
         }}
       />
 
@@ -57,7 +61,7 @@ export default function AppLayout() {
           options={{
             title: texts.myTrees.tabLabel,
             tabBarAccessibilityLabel: texts.myTrees.title,
-            tabBarIcon: tabIcon({ ios: 'leaf.fill', android: 'eco', web: 'eco' }),
+            tabBarIcon: tabIcon('sprout'),
           }}
         />
 
@@ -66,11 +70,7 @@ export default function AppLayout() {
           options={{
             title: texts.map.profileTabLabel,
             tabBarAccessibilityLabel: texts.profile.title,
-            tabBarIcon: tabIcon({
-              ios: 'person.crop.circle',
-              android: 'account_circle',
-              web: 'account_circle',
-            }),
+            tabBarIcon: tabIcon('user'),
           }}
         />
       </Tabs.Protected>

@@ -1,9 +1,9 @@
 import { useRouter } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
+import { Icon } from '@/components/ui/icon';
 import { texts } from '@/constants/texts';
 import { MIN_TOUCH_TARGET, colors, spacing } from '@/constants/theme';
 
@@ -27,9 +27,9 @@ export type ScreenHeaderProps = {
  * is nowhere to go back to: one is waiting for a message and the other was
  * opened from it.
  *
- * The chevron is a system symbol rather than a bundled icon. The design
- * system's icon kit is not ported yet, and this is the same source the tab bar
- * already draws from — one strategy instead of two.
+ * The chevron comes from the design system's icon kit, the same source the tab
+ * bar draws from. The `Pressable` around it already announces «Atrás», so the
+ * drawing itself stays decorative instead of repeating the word.
  */
 export function ScreenHeader({ title, onBack, hasBack = true, action }: ScreenHeaderProps) {
   const router = useRouter();
@@ -43,11 +43,7 @@ export function ScreenHeader({ title, onBack, hasBack = true, action }: ScreenHe
           accessibilityLabel={texts.common.back}
           style={({ pressed }) => [styles.back, pressed && styles.pressed]}
         >
-          <SymbolView
-            name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
-            tintColor={colors.textPrimary}
-            size={22}
-          />
+          <Icon name="chevronLeft" color={colors.textPrimary} size={22} />
         </Pressable>
       ) : null}
 
