@@ -2,6 +2,10 @@ import type { Metadata } from 'next';
 import { Montserrat, Open_Sans, Roboto, Roboto_Mono } from 'next/font/google';
 import './globals.css';
 
+import { MissingConfigScreen } from '@/components/missing-config-screen';
+import { Providers } from '@/components/providers';
+import { isEnvComplete } from '@/lib/env';
+
 /**
  * The four families the design system asks for, self hosted by `next/font` so
  * no page reaches out to Google at render time.
@@ -55,7 +59,12 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       lang="es"
       className={`${fontDisplay.variable} ${fontSubhead.variable} ${fontBody.variable} ${fontMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      {/* A build without Supabase credentials cannot render a single screen,
+          so it says which variables are missing rather than failing inside a
+          query the coordinator never sees. */}
+      <body className="min-h-full flex flex-col">
+        {isEnvComplete ? <Providers>{children}</Providers> : <MissingConfigScreen />}
+      </body>
     </html>
   );
 }
