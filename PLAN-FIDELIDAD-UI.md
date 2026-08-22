@@ -197,37 +197,71 @@ Estado al 21 de agosto de 2026. Los copys citados son **literales verificados** 
 | | |
 |---|---|
 | **Bloque y posición** | B1, el mapa. No es pantalla nueva. Afecta a los treinta sprites de `apps/mobile/assets/markers/` y, en cuanto se decida, a la leyenda y a cualquier sitio que repita el punto de color. |
-| **Por qué hace falta** | La inversión del tema dejó el suelo del mapa en un degradado de `--surface-raised` `#FFFFFF` a `--border-subtle` `#DCEBDF`. Medido con la fórmula de WCAG 2.1, `--state-due` `#FFD700` da **1.40:1** sobre el blanco y **1.13:1** sobre el verde pálido. El umbral de elementos gráficos, SC 1.4.11, es **3:1**. No es que se quede corto: está a menos de la mitad. Y el recurso que rescata a los otros cuatro —el aro `2px solid var(--surface-raised)` que el lienzo dibuja— **al amarillo no le hace nada**, porque es blanco sobre casi blanco. El segundo hallazgo es que `--state-overdue` `#F26522` tampoco llega en todo el rango: **3.15:1** sobre blanco, pero **2.55:1** sobre `#DCEBDF`. |
+| **Por qué hace falta** | El suelo del mapa ya está decidido: `map-style.ts` lo pinta de `--surface-page` **`#F4FDF4`**, un color plano. Medido con la fórmula de WCAG 2.1 contra ese suelo, `--state-due` `#FFD700` da **1.35:1**. El umbral de elementos gráficos, SC 1.4.11, es **3:1**. No es que se quede corto: está a menos de la mitad. Y el recurso que rescata a los otros cuatro —el aro `2px solid var(--surface-raised)` que el lienzo dibuja— **al amarillo no le hace nada**, porque ese aro blanco contrasta **1.04:1** contra `#F4FDF4`: es blanco sobre casi blanco. El segundo hallazgo es que `--state-overdue` `#F26522` se queda en **3.03:1**, es decir aprobado por tres centésimas. |
 | **Archivo del código** | `scripts/generate-marker-sprites.mjs` y `apps/mobile/assets/markers/` (los treinta PNG). El mismo punto dibujado como vista está en `apps/mobile/src/components/ui/status-dot.tsx`. Los colores viven en `packages/core/src/theme.ts` y la geometría en `packages/core/src/map.ts`. |
 | **Qué hace falta decidir** | Qué tratamiento recibe «Por actualizar» en el mapa, y si «Vencido» necesita el mismo. Las tres opciones están abajo. |
 | **Qué NO cambiar** | **Los cinco colores de estado.** `--state-due` `#FFD700` es el amarillo de la guía de branding 2026 y repintarlo es nivel 3. La petición no propone otro amarillo: propone decidir cómo se dibuja el marcador que lo lleva. Tampoco cambia la silueta de los otros cuatro estados ni el aro blanco que el lienzo ya fija para ellos. |
 
-**Los cinco estados medidos contra los dos extremos del degradado del suelo:**
+**Los cinco estados medidos contra el suelo elegido, y contra los dos extremos del degradado
+que el lienzo dibuja, para situarlo:**
 
-| Estado | Token | Hex | Sobre `#FFFFFF` | Sobre `#DCEBDF` | Veredicto a 3:1 |
-|---|---|---|---|---|---|
-| Al día | `--state-ok` | `#008D46` | 4.29 | 3.47 | ✅ pasa en todo el rango |
-| **Por actualizar** | `--state-due` | `#FFD700` | **1.40** | **1.13** | ⛔⛔ **falla en todo el rango** |
-| **Vencido** | `--state-overdue` | `#F26522` | 3.15 | **2.55** | ⚠️ **falla en el extremo verde** |
-| Muerto | `--state-dead` | `#E31B23` | 4.72 | 3.82 | ✅ pasa en todo el rango |
-| Archivado | `--state-archived` | `#757575` | 4.61 | 3.73 | ✅ pasa, pero no llega al mapa |
+| Estado | Token | Hex | Sobre `#FFFFFF` | **Sobre `#F4FDF4` (el suelo elegido)** | Sobre `#DCEBDF` | Veredicto a 3:1 |
+|---|---|---|---|---|---|---|
+| Al día | `--state-ok` | `#008D46` | 4.29 | **4.12** | 3.47 | ✅ pasa |
+| **Por actualizar** | `--state-due` | `#FFD700` | 1.40 | **1.35** | 1.13 | ⛔⛔ **falla, y por mucho** |
+| **Vencido** | `--state-overdue` | `#F26522` | 3.15 | **3.03** | 2.55 | ⚠️ **pasa por 0.03** |
+| Muerto | `--state-dead` | `#E31B23` | 4.72 | **4.54** | 3.82 | ✅ pasa |
+| Archivado | `--state-archived` | `#757575` | 4.61 | **4.43** | 3.73 | ✅ pasa, pero no llega al mapa |
 
-> El suelo real es un color plano que aproxima ese degradado, porque Google Maps no admite
-> degradados en el estilo. Por eso se miden los dos extremos: cualquier plano que se elija
-> dentro del rango queda cubierto por las dos columnas. **El extremo verde es el peor caso** y
-> es el que manda.
+> **La columna que manda es `#F4FDF4`.** El lienzo dibuja el suelo como un degradado de
+> `--surface-raised` `#FFFFFF` a `--border-subtle` `#DCEBDF`, pero Google Maps no admite
+> degradados en el estilo, así que `map-style.ts` lo aproxima con un plano. Las otras dos
+> columnas quedan como referencia de hasta dónde llegaría la cifra si ese plano se moviera.
+
+**«Vencido» no tiene holgura: tiene tres centésimas.** Los 3.03:1 son un aprobado aritmético,
+no un margen. El antialiasing del borde del sprite ya mezcla el naranja con el suelo en los
+píxeles del contorno, y cualquier sombreado de la tesela —una carretera, una mancha de terreno,
+la etiqueta de una vereda— baja el fondo local por debajo de `#F4FDF4`. En la práctica el
+naranja está en el filo, no por encima de él, y conviene leer su fila como un tercer caso a
+decidir y no como un aprobado.
 
 **Archivado se mide por completitud y no decide nada.** Un árbol archivado nunca entra en el
 mapa —toda consulta pública filtra `archived_at IS NULL`—, así que su sprite existe para que la
 tabla esté completa, no porque alguien lo vaya a ver sobre una tesela.
 
+**Lo más importante de esta petición: los dos estados que fallan tiran en direcciones
+opuestas, y el suelo ya no puede contentar a los dos.**
+
+Esto solo se ve juntando la medición del suelo con la inspección visual de los sprites, y es lo
+que decide el peso de las tres opciones de abajo:
+
+- **El naranja impide oscurecer el suelo.** `map-style.ts` fija `#F4FDF4`, el extremo claro del
+  degradado, y no su promedio, precisamente porque «Vencido» pasa ahí con 3.03:1 y **cae por
+  debajo de 3:1 a un quinto del recorrido hacia el verde**. El suelo está clavado cerca del
+  blanco por el naranja.
+- **Pero el amarillo empeora cuanto más blanco es el suelo.** Su relleno no contrasta en ningún
+  punto del rango —1.40 en blanco, 1.35 en `#F4FDF4`, 1.13 en el verde—, así que lo único que
+  podría separarlo del fondo es el aro. Y el aro es blanco: contrasta 1.24:1 contra `#DCEBDF`,
+  pero **1.04:1 contra `#F4FDF4`**. Cuanto más claro es el suelo, menos hace el aro, y la marca
+  se queda sostenida solo por su propio resplandor pálido.
+
+**Es decir: el suelo está bloqueado por el naranja en el punto exactamente peor para el
+amarillo, y no existe ningún suelo que satisfaga a los dos.** Oscurecerlo para rescatar el aro
+del amarillo tira al naranja por debajo del umbral; aclararlo para dar aire al naranja apaga el
+aro del amarillo del todo. **Mover el suelo dejó de ser una salida.**
+
+La consecuencia para las opciones es directa: **la (A) deja de ser «una excepción fea» y pasa a
+ser la única de las tres que no exige mover ni el suelo ni la paleta.** Aun así **no se
+recomienda ninguna**, porque las tres escriben una regla del sistema de diseño y eso es de
+diseño; lo que sigue es el análisis hecho, para que quien decida no tenga que rehacerlo.
+
 **Tres opciones, sin recomendación, porque elegir es escribir el sistema de diseño:**
 
 | # | Propuesta | Qué arregla | Coste |
 |---|---|---|---|
-| A | Aro oscuro solo para «Por actualizar» — por ejemplo `--earth-brown` `#8B572A`, que ya es la tinta que el lienzo le da a esa insignia en PD-07 | La marca se recorta del suelo aunque el relleno siga sin contrastar. Es el arreglo más barato en código: un parámetro de aro por estado en el generador. | **Rompe la regla de que los cinco marcadores comparten tratamiento.** Un aro distinto en uno solo se lee como error de dibujo antes que como decisión, y `StatusDot` tendría que seguirle en la leyenda de B2, en la lista de árboles y en la cabecera de la ficha, o el mapa y la leyenda dejarían de mostrar la misma marca. |
-| B | Un color de estado más profundo para el mapa — un ámbar que cruce 3:1 sobre `#DCEBDF` | Arregla el problema en su origen y sirve igual al marcador, a la insignia y al punto de la leyenda. También rescataría a «Vencido» si se aplica el mismo criterio. | Toca la paleta, que es **nivel 3**: no lo decide un agente. Y si el amarillo de marca se conserva para la insignia y se usa otro en el mapa, aparecen dos amarillos de «por actualizar» y hay que decir cuál manda dónde. |
-| C | Distinguir por forma y peso en vez de por color — engordar el rombo, o darle una silueta que ocupe más tinta | No toca ningún token ni rompe la uniformidad del aro. El mapa ya usa la silueta como segundo canal, así que refuerza algo que existe. | El área no sustituye al contraste: SC 1.4.11 se mide sobre el color, y un rombo grande a 1.13:1 sigue sin verse. Además cambia la geometría de `MARKER_GEOMETRY`, que hoy es común a los cinco. |
+| A | Aro oscuro solo para «Por actualizar» — por ejemplo `--earth-brown` `#8B572A`, que ya es la tinta que el lienzo le da a esa insignia en PD-07 | La marca se recorta del suelo aunque el relleno siga sin contrastar, y es lo único que funciona **sin mover el suelo**, que el naranja tiene bloqueado. Es además el arreglo más barato en código: un parámetro de aro por estado en el generador. | **Rompe la regla de que los cinco marcadores comparten tratamiento.** Un aro distinto en uno solo se lee como error de dibujo antes que como decisión, y `StatusDot` tendría que seguirle en la leyenda de B2, en la lista de árboles y en la cabecera de la ficha, o el mapa y la leyenda dejarían de mostrar la misma marca. |
+| B | Un color de estado más profundo para el mapa — un ámbar que cruce 3:1 sobre `#F4FDF4` | Arregla el problema en su origen y sirve igual al marcador, a la insignia y al punto de la leyenda. Y es la única que también daría holgura real a «Vencido», que hoy pasa por 0.03. | Toca la paleta, que es **nivel 3**: no lo decide un agente. Y si el amarillo de marca se conserva para la insignia y se usa otro en el mapa, aparecen dos amarillos de «por actualizar» y hay que decir cuál manda dónde. |
+| C | Distinguir por forma y peso en vez de por color — engordar el rombo, o darle una silueta que ocupe más tinta | No toca ningún token ni rompe la uniformidad del aro. El mapa ya usa la silueta como segundo canal, así que refuerza algo que existe. | El área no sustituye al contraste: SC 1.4.11 se mide sobre el color, y un rombo grande a 1.35:1 sigue sin verse. Además cambia la geometría de `MARKER_GEOMETRY`, que hoy es común a los cinco. |
 
 **Por qué no lo resolvemos aquí.** Cualquiera de las tres decide una regla del sistema de
 diseño: si los cinco estados comparten tratamiento, qué amarillo es el amarillo, o si la forma
@@ -237,15 +271,17 @@ que salen del mapa y llegan a la leyenda y a la ficha del árbol.
 **Estado del código mientras tanto.** Los treinta sprites se han regenerado con **el
 tratamiento uniforme que dibuja el lienzo**: relleno del color de estado, aro blanco de 2 dp,
 resplandor de 14 dp del propio color y halo de selección del color del estado al 18 % con 7 dp
-de radio. Es decir, **«Por actualizar» queda hoy por debajo del umbral en el mapa**, y
-«Vencido» queda por debajo sobre el extremo verde del suelo. Se deja así a propósito: inventar
+de radio. Es decir, **«Por actualizar» queda hoy en 1.35:1 sobre el suelo del mapa**, muy por
+debajo del umbral, y «Vencido» queda en el filo con 3.03:1. Se deja así a propósito: inventar
 el arreglo sería peor que documentar el hueco.
 
-**Lo que sí se comprobó a ojo.** Los PNG se abrieron compuestos sobre `#FFFFFF` y sobre
-`#DCEBDF`. Sobre blanco, el aro del rombo amarillo **es literalmente invisible** y lo único que
+**Lo que sí se comprobó a ojo.** Los PNG se abrieron compuestos sobre los dos extremos del
+degradado, que son los que acotan el suelo elegido. Sobre el extremo blanco —el lado al que
+`#F4FDF4` está pegado— el aro del rombo amarillo **es literalmente invisible** y lo único que
 separa la marca del fondo es su propio resplandor pálido; sobre `#DCEBDF` el aro sí aparece y el
-marcador mejora, que es justo al revés que los otros cuatro. El verde, el rojo y el gris se
-recortan con claridad en los dos fondos.
+marcador mejora, que es justo al revés que los otros cuatro. Esa es la observación de la que
+sale el conflicto de direcciones de más arriba. El verde, el rojo y el gris se recortan con
+claridad en los dos fondos.
 
 ### PD-08 · Al kit de iconos le faltan ocho piezas que la app ya usa
 
