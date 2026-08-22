@@ -17,6 +17,10 @@ export type HeightChartProps = {
   height?: number;
 };
 
+/** Side of an ordinary reading, and of the emphasised latest one with its ring. */
+const DOT_SIZE = 6;
+const LATEST_DOT_SIZE = 12;
+
 /**
  * Height against time, drawn with plain views.
  *
@@ -130,7 +134,10 @@ export function HeightChart({ points, height = 86 }: HeightChartProps) {
             style={[
               styles.dot,
               isLast && styles.dotLatest,
-              { left: x - (isLast ? 4 : 3), top: y - (isLast ? 4 : 3) },
+              {
+                left: x - (isLast ? LATEST_DOT_SIZE : DOT_SIZE) / 2,
+                top: y - (isLast ? LATEST_DOT_SIZE : DOT_SIZE) / 2,
+              },
             ]}
           />
         );
@@ -160,22 +167,36 @@ const styles = StyleSheet.create({
   },
   dot: {
     position: 'absolute',
-    width: 6,
-    height: 6,
+    width: DOT_SIZE,
+    height: DOT_SIZE,
     borderRadius: radii.full,
     backgroundColor: colors.accent,
   },
+  /**
+   * The latest reading, drawn stronger than the rest.
+   *
+   * On paper «stronger» is darker, not paler: `emerald700` `#00592C` reads
+   * 8.52:1 against the white card, where the pale end of the ramp reads 1.70:1
+   * and shows nothing at all. The ring is the paper colour because the dot sits
+   * on top of the `accent` line and the two greens are only 1.99:1 apart, which
+   * would fuse them into one blob; the ring separates the dot from the line at
+   * 4.29:1 and from the card it stands on at 8.52:1.
+   */
   dotLatest: {
-    width: 8,
-    height: 8,
-    backgroundColor: colors.emerald300,
+    width: LATEST_DOT_SIZE,
+    height: LATEST_DOT_SIZE,
+    borderWidth: 2,
+    borderColor: colors.surfaceCard,
+    backgroundColor: colors.emerald700,
   },
   latest: {
     position: 'absolute',
     right: 0,
     top: 0,
     fontFamily: fontFace.monoMedium,
-    color: colors.emerald300,
+    // Same ink as the dot it names, and the only end of the green ramp that
+    // carries small text on a white card: 8.52:1 against 1.70:1.
+    color: colors.emerald700,
   },
   since: {
     position: 'absolute',
