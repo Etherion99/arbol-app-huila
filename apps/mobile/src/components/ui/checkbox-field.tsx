@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
-import { MIN_TOUCH_TARGET, colors, radii, spacing } from '@/constants/theme';
+import { MIN_TOUCH_TARGET, colors, fontFace, radii, spacing } from '@/constants/theme';
 
 export type CheckboxLink = {
   /** A literal fragment of `label`. Matched once, in order of appearance. */
@@ -140,35 +140,55 @@ const styles = StyleSheet.create({
     opacity: 0.75,
   },
   box: {
-    width: 26,
-    height: 26,
+    width: 24,
+    height: 24,
     // Nudged down so the square lines up with the first line of a label that
     // wraps over several lines.
     marginTop: 1,
     borderRadius: radii.sm,
-    borderWidth: 2,
-    borderColor: colors.borderSubtle,
-    backgroundColor: colors.surfaceCard,
+    borderWidth: 1.5,
+    // An unchecked box is an empty square: its border is the entire control,
+    // so it is the border that has to clear the 3:1 SC 1.4.11 asks of a
+    // boundary. `borderStrong`, which the catalogue draws around a field,
+    // measures 1.58:1 on white and 1.52:1 on the page — it disappears. The
+    // neutral grey reaches 4.61:1 on the box and 4.43:1 against the page, so
+    // the square is visible before it is filled. It is the grey the text fields
+    // and the select set their edge in, named here as the palette's own
+    // `slateGrey` because a border is not muted text.
+    borderColor: colors.slateGrey,
+    backgroundColor: colors.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // The catalogue fills the checked box with `accent` and sets the tick in
+  // white, which is 4.29:1 — enough for a drawn glyph, short of the 4.5:1 small
+  // text needs. This tick is drawn as a character rather than as a path, so it
+  // is measured as text and takes the darker fill: white on `accentPressed` is
+  // 5.82:1. Same ink, same green ramp, no new colour.
   boxChecked: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
+    backgroundColor: colors.accentPressed,
+    borderColor: colors.accentPressed,
   },
   boxError: {
     borderColor: colors.danger,
   },
   mark: {
     color: colors.onAccent,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   label: {
     flex: 1,
   },
+  // The catalogue tells these fragments apart by colour alone, with no
+  // underline, and `textLink` reads at 5.60:1 on the page. Colour alone is not
+  // enough on its own though: a link inside a sentence may drop its underline
+  // only when it stands 3:1 clear of the text around it, and `textLink` against
+  // `textPrimary` measures 2.99:1 — short by a hundredth. The weight carries
+  // that difference instead of an underline, so the sentence still looks like
+  // the one the catalogue draws.
   link: {
     color: colors.textLink,
-    textDecorationLine: 'underline',
+    fontFamily: fontFace.bodyMedium,
   },
   error: {
     color: colors.danger,
