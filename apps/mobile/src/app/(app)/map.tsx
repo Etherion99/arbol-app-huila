@@ -542,13 +542,44 @@ const styles = StyleSheet.create({
     // style paints, so the first frame is never a white flash.
     backgroundColor: colors.green990,
   },
+  /**
+   * A veil of the page colour under the control band, so the two darkest things
+   * the map style paints — the highway casing and the river — cannot swallow
+   * the edge of a control sitting on them.
+   *
+   * The catalogue draws this as a gradient from the page colour at 92% down to
+   * nothing. React Native paints no gradients without pulling in a library for
+   * it, and one dependency is a poor trade for a band 130px tall, so this is
+   * the flat approximation of that ramp and the alpha is where the whole of the
+   * reasoning sits.
+   *
+   * A light veil helps the controls and costs the markers, because it lifts a
+   * marker and the ground under it by the same amount and the gap between them
+   * closes. Measured against the page ground: the accent ring on a control over
+   * the highway casing goes from 2.71:1 to 2.96:1, while `up_to_date` falls
+   * from 4.12:1 to 3.06:1. So 0.2 is a ceiling rather than a taste — it is the
+   * most veil `up_to_date` can take and still clear the 3:1 a mark on a map
+   * owes. `overdue` is the casualty, dropping from 3.03:1 to 2.48:1; it already
+   * sat exactly on the limit before any veil, and no flat alpha above zero
+   * leaves it there. That is the part of the gradient that cannot be
+   * approximated, and it is owed back to the design.
+   *
+   * The colour is the token and the alpha is `opacity` rather than a mixed
+   * `rgba()`: the view has no children, so the two render identically, and this
+   * way there is no hand-copied hex to drift from `surfacePage`.
+   *
+   * What this scrim no longer does is protect the search pill. On a light map
+   * a light veil cannot lift a white control off a white ground — the controls
+   * carry that themselves now, with an opaque fill and a border at 3:1.
+   */
   topScrim: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     height: 130,
-    backgroundColor: 'rgba(7, 14, 12, 0.55)',
+    backgroundColor: colors.surfacePage,
+    opacity: 0.2,
   },
   controls: {
     position: 'absolute',
