@@ -49,8 +49,8 @@ type ActivityListItem =
  * delivery engine is a later piece of work, and `expo-notifications` is not
  * even a dependency. So the box is not reporting a permission it read from the
  * system; notifications really are off, for everybody, and it says so. Its
- * action goes to the profile, where the notification settings live, rather than
- * flipping a switch that would silently do nothing.
+ * action goes to the notification settings screen, where the switches live,
+ * rather than flipping a switch that would silently do nothing.
  */
 export default function ActivityScreen() {
   const router = useRouter();
@@ -111,7 +111,7 @@ export default function ActivityScreen() {
         tone="warning"
         title={texts.activity.notificationsOffTitle}
         message={texts.activity.notificationsOffBody}
-        onRetry={() => router.push('/profile')}
+        onRetry={() => router.push('/settings/notifications')}
         retryLabel={texts.activity.notificationsOffAction}
       />
 
