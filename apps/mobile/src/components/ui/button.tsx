@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View, type ViewStyle } from '
 import { AppText } from '@/components/ui/app-text';
 import { MIN_TOUCH_TARGET, colors, radii, spacing } from '@/constants/theme';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'dangerSolid';
 type Size = 'sm' | 'md' | 'lg';
 
 /**
@@ -22,6 +22,7 @@ const HEIGHT: Record<Size, number> = { sm: 32, md: 40, lg: 48 };
  * - `secondary` — `textPrimary` over page or card, 16.74:1 at worst.
  * - `ghost` — `textLink` `#00753A`, 5.60:1 with no ground of its own.
  * - `danger` — `danger` `#E31B23` straight on the page, 4.54:1.
+ * - `dangerSolid` — white on the `stateDead` fill, 4.72:1.
  *
  * The spinner reads from this map as well, so a button that is loading can
  * never draw itself in a colour its own label does not use.
@@ -31,6 +32,7 @@ const LABEL_COLOR: Record<Variant, string> = {
   secondary: colors.textPrimary,
   ghost: colors.textLink,
   danger: colors.danger,
+  dangerSolid: colors.onAccent,
 };
 
 export type ButtonProps = {
@@ -159,6 +161,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderColor: colors.danger,
   },
+  /**
+   * The filled counterpart, and it is for one action only: the one that ends a
+   * tree's tracking. Everything destructive that can still be undone stays on
+   * the outline above; a solid block of the colour the tree will carry on the
+   * map from then on is kept for the one that cannot.
+   *
+   * White on `stateDead` measures 4.72:1, clearing the 4.5:1 the 15 point label
+   * owes. That is the fill the outline variant could not have: its own red over
+   * `dangerSoft` composites to 3.75:1 and loses the label.
+   */
+  dangerSolid: {
+    backgroundColor: colors.stateDead,
+    borderColor: colors.stateDead,
+  },
   pressed: {
     opacity: 0.75,
   },
@@ -172,4 +188,5 @@ const textStyles = StyleSheet.create({
   secondary: { color: LABEL_COLOR.secondary },
   ghost: { color: LABEL_COLOR.ghost },
   danger: { color: LABEL_COLOR.danger },
+  dangerSolid: { color: LABEL_COLOR.dangerSolid },
 });
