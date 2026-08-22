@@ -43,8 +43,8 @@ export type StepLocationProps = {
  * path rather than an apology, so both are first class here and the pin is
  * draggable whichever produced it.
  *
- * The map reuses the dark style and the framing of `features/map`: the same
- * night-forest ground, so the pin reads as the same kind of object the map draws
+ * The map reuses the style and the framing of `features/map`: the same leaf
+ * paper ground, so the pin reads as the same kind of object the map draws
  * everywhere else.
  */
 export function StepLocation({
@@ -265,13 +265,17 @@ const styles = StyleSheet.create({
   container: {
     gap: spacing[3],
   },
+  // The ground under the tiles while they load. The canvas paints it as a
+  // radial gradient from `surfaceRaised` to `borderSubtle`; a View takes one
+  // flat colour, and the darker end is the one that keeps the frame reading as
+  // a panel rather than as a hole in the page.
   mapFrame: {
     height: 330,
     overflow: 'hidden',
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
-    backgroundColor: colors.green900,
+    backgroundColor: colors.borderSubtle,
   },
   pinHalo: {
     width: 56,
@@ -279,9 +283,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radii.full,
-    backgroundColor: 'rgba(61, 220, 151, 0.12)',
+    backgroundColor: 'rgba(0, 141, 70, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(61, 220, 151, 0.35)',
+    borderColor: 'rgba(0, 141, 70, 0.25)',
   },
   pin: {
     width: 18,
@@ -292,13 +296,17 @@ const styles = StyleSheet.create({
     borderColor: colors.green990,
     boxShadow: effects.glowAccent,
   },
+  // Both chips float over a light map now, so they are near-white glass rather
+  // than the smoked panels the dark theme used. The alpha is the canvas's own:
+  // enough of the ground shows through that the chip reads as laid on the map,
+  // not cut out of it.
   hint: {
     position: 'absolute',
     right: spacing[3],
     top: spacing[3],
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
-    backgroundColor: 'rgba(16, 29, 24, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     borderRadius: radii.full,
@@ -314,7 +322,7 @@ const styles = StyleSheet.create({
     gap: spacing[2],
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
-    backgroundColor: 'rgba(16, 29, 24, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     borderRadius: radii.md,
@@ -323,13 +331,19 @@ const styles = StyleSheet.create({
     fontFamily: fontFace.monoMedium,
     color: colors.textSecondary,
   },
+  // The canvas sets the accuracy figure in `accent`, which reads 4.28:1 on this
+  // near-white chip and is a 13px mono word. `textLink` is the same green two
+  // steps darker and reaches 5.81:1, which is why the palette keeps it.
   accuracyGood: {
     fontFamily: fontFace.monoMedium,
-    color: colors.accent,
+    color: colors.textLink,
   },
+  // A weak fix is the yellow warning of the canvas, and yellow ink is 1.40:1 on
+  // this chip — invisible. `earthBrown` is the ink the design system already
+  // pairs with that warning, at 5.99:1 here.
   accuracyPoor: {
     fontFamily: fontFace.monoMedium,
-    color: colors.stateDue,
+    color: colors.earthBrown,
   },
   actions: {
     flexDirection: 'row',
