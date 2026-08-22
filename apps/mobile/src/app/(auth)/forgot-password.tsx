@@ -88,7 +88,11 @@ export default function ForgotPasswordScreen() {
           screen that replaced the form would read as the second. */}
       {requestReset.isSuccess ? (
         <Notice
-          tone="info"
+          // The success tone, because that is the box the canvas draws here: an
+          // `accent-soft` fill under a green check. The tone reports that the
+          // request left, which it did; the wording is what carries the caveat
+          // that Supabase answers the same either way.
+          tone="success"
           title={texts.forgotPassword.sentTitle}
           message={texts.forgotPassword.sentBody(requestReset.data.email)}
         />
@@ -98,9 +102,6 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    gap: spacing[1],
-  },
   actions: {
     gap: spacing[2],
   },

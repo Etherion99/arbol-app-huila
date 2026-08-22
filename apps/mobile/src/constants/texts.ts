@@ -143,7 +143,8 @@ export const texts = {
 
   forgotPassword: {
     title: 'Recuperar contraseña',
-    subtitle: 'Escribe el correo con el que te registraste.',
+    subtitle:
+      'Escribe el correo con el que te registraste y te enviaremos un enlace para restablecerla.',
     emailLabel: 'Correo electrónico',
     submit: 'Enviar enlace',
     submitting: 'Enviando…',
