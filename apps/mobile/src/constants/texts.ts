@@ -444,6 +444,9 @@ export const texts = {
     retake: 'Repetir la foto',
     shutter: 'Tomar la fotografía',
     preview: 'Fotografía tomada',
+    /** Printed over the viewfinder, where the absence of a gallery button is
+        otherwise read as a missing feature rather than as the rule it is. */
+    liveOnly: 'CÁMARA EN VIVO · SIN GALERÍA',
     compressNote: 'Se comprime a ~200 KB antes de subir',
     preparing: 'Preparando la fotografía…',
     ready: (kilobytes: number) => `Lista · ${kilobytes} KB`,

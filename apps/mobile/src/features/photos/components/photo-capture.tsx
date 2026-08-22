@@ -7,7 +7,15 @@ import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { Notice } from '@/components/ui/notice';
 import { texts } from '@/constants/texts';
-import { MIN_TOUCH_TARGET, colors, effects, fontSize, radii, spacing } from '@/constants/theme';
+import {
+  MIN_TOUCH_TARGET,
+  colors,
+  effects,
+  fontFace,
+  fontSize,
+  radii,
+  spacing,
+} from '@/constants/theme';
 import {
   PhotoTooHeavyError,
   preparePhoto,
@@ -100,7 +108,7 @@ export function PhotoCapture({
 
   if (!permission.granted) {
     return (
-      <View style={[styles.frame, styles.centred, { height }]}>
+      <View style={[styles.panel, styles.centred, { height }]}>
         <AppText variant="subtitle" style={styles.deniedTitle}>
           {texts.photo.permissionTitle}
         </AppText>
@@ -171,7 +179,16 @@ export function PhotoCapture({
           />
         ) : null}
 
-        {ghostUrl !== null ? (
+        {/* One slot at the top of the well, and what belongs in it depends on
+            the cycle: the ghost of the previous photograph when there is one,
+            and otherwise the reason the gallery is not on offer. */}
+        {ghostUrl === null ? (
+          <View style={styles.liveChip} pointerEvents="none">
+            <AppText variant="caption" style={styles.liveLabel}>
+              {texts.photo.liveOnly}
+            </AppText>
+          </View>
+        ) : (
           <>
             <View style={styles.hint} pointerEvents="none">
               <AppText variant="caption" style={styles.hintLabel}>
@@ -194,7 +211,7 @@ export function PhotoCapture({
               </AppText>
             </Pressable>
           </>
-        ) : null}
+        )}
 
         <View style={styles.shutterRow} pointerEvents="box-none">
           <Pressable
@@ -237,13 +254,36 @@ const styles = StyleSheet.create({
   stack: {
     gap: spacing[2],
   },
+  /**
+   * The well the live preview and the captured photograph sit in.
+   *
+   * It stays dark while the rest of the app turned light, and that is the
+   * canvas's decision rather than a relic: paso 4 paints this well as a
+   * near-black gradient, because a bright surround is a second light source in
+   * the eye of somebody framing a tree in the sun, and because a photograph
+   * needs a ground that does not compete with it. `emerald900` is the darkest
+   * tone the palette holds and the nearest to that gradient. The mint it
+   * replaces was the same token name in the dark palette and became a highlight
+   * when the ramp was inverted.
+   */
   frame: {
     position: 'relative',
     overflow: 'hidden',
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
-    backgroundColor: colors.green800,
+    backgroundColor: colors.emerald900,
+  },
+  // The camera-denied state is a message, not a viewfinder, so it is drawn on
+  // paper the way the canvas draws it: a card on the page, with the way out
+  // underneath. Putting a paragraph in the dark well is what made the ink
+  // unreadable in the first place.
+  panel: {
+    overflow: 'hidden',
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+    backgroundColor: colors.surfaceCard,
   },
   centred: {
     alignItems: 'center',
@@ -261,19 +301,49 @@ const styles = StyleSheet.create({
   ghost: {
     opacity: 0.28,
   },
+  /**
+   * Every pill that floats over the preview is white glass, which is how the
+   * canvas draws them and is not the same move as whitening the well. A pill
+   * carries a sentence and needs a ground that holds whatever the camera is
+   * pointed at; the well carries a photograph and does not.
+   *
+   * At 0.9 the pill composites to `#E6E6E6` over the darkest frame a camera can
+   * produce and to white over the brightest, so `textSecondary` reads between
+   * 5.86:1 and 7.32:1 whatever is behind it. The smoked pill this replaces put
+   * `textPrimary` on a near-black ground at 1.10:1.
+   */
   hint: {
     position: 'absolute',
     top: spacing[3],
     alignSelf: 'center',
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
-    backgroundColor: 'rgba(7, 14, 12, 0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     borderRadius: radii.full,
   },
   hintLabel: {
-    color: colors.textPrimary,
+    color: colors.textSecondary,
+  },
+  // The one pill the canvas keeps dark, on the step where there is no ghost:
+  // it names the rule the whole flow rests on, over a live preview, and light
+  // ink on a scrim holds at both extremes of an image (10.61:1 over the
+  // brightest frame, 17.41:1 over the darkest) where the canvas's own quiet
+  // grey would fall to 1.51:1.
+  liveChip: {
+    position: 'absolute',
+    top: spacing[3],
+    left: spacing[3],
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[1],
+    backgroundColor: 'rgba(26, 26, 26, 0.85)',
+    borderRadius: radii.full,
+  },
+  liveLabel: {
+    fontFamily: fontFace.monoMedium,
+    fontSize: fontSize.xs,
+    color: colors.textInverse,
   },
   ghostToggle: {
     position: 'absolute',
@@ -285,22 +355,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing[1],
     paddingHorizontal: spacing[2],
-    backgroundColor: 'rgba(21, 37, 31, 0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderWidth: 1,
+    // 4.81:1 against the pill it edges. The same green measured only 2.89:1
+    // against the well, which is under the 3:1 a control boundary owes.
     borderColor: colors.emerald600,
     borderRadius: radii.md,
   },
+  // The ring is the boundary and the fill is the state. `emerald400`, which the
+  // canvas draws the glyph in, measures 2.08:1 on the white pill and cannot be
+  // the only thing that says the ghost is on; the ring holds at 4.81:1 and the
+  // accent fill at 3.54:1, which is the bar for a graphical object.
   ghostDot: {
     width: 14,
     height: 14,
     borderRadius: radii.full,
     borderWidth: 2,
-    borderColor: colors.emerald400,
+    borderColor: colors.emerald600,
   },
   ghostDotOn: {
-    backgroundColor: colors.emerald400,
+    backgroundColor: colors.accent,
   },
+  // Mono, as the canvas sets it, but at the body floor rather than the 9px it
+  // draws, and in `textSecondary` (6.04:1 on the pill) rather than the muted
+  // grey, which reaches 3.80:1 there.
   ghostBadge: {
+    fontFamily: fontFace.monoMedium,
     fontSize: fontSize.xs,
     color: colors.textSecondary,
   },
@@ -321,18 +401,26 @@ const styles = StyleSheet.create({
     borderColor: '#FFFFFF',
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
   },
+  // This one lies over the photograph that was just taken, so it is measured
+  // against both ends of what a camera can hand back rather than against a
+  // known ground.
   readyPill: {
     position: 'absolute',
     left: spacing[3],
     bottom: spacing[3],
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
-    backgroundColor: 'rgba(7, 14, 12, 0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
     borderRadius: radii.full,
     boxShadow: effects.shadowCard,
   },
+  // Still green, because the pill is saying the photograph is ready, but the
+  // darker green of the pair: `accent` reads 3.43:1 on the pill over a dark
+  // photograph, `textLink` 4.67:1 there and 5.82:1 over a bright one.
   readyLabel: {
-    color: colors.accent,
+    color: colors.textLink,
   },
   status: {
     textAlign: 'center',
