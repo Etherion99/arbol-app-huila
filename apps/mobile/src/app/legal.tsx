@@ -5,7 +5,7 @@ import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
 import { ScreenHeader } from '@/components/ui/screen-header';
 import { texts } from '@/constants/texts';
-import { spacing } from '@/constants/theme';
+import { fontFace, spacing } from '@/constants/theme';
 
 /**
  * Privacy notice and terms.
@@ -39,6 +39,16 @@ export default function LegalScreen() {
         <AppText variant="bodyMuted">{texts.legal.contactBody}</AppText>
       </View>
 
+      {/* A date stamp, so the mono face, which is what the design system gives
+          anything measured. `overline` is the only 12 point role in the scale,
+          and its uppercasing and tracking are dropped here: the canvas sets
+          this line in sentence case and shouting a date is not the same
+          statement as labelling a section.
+
+          It also draws it in `textMuted` #757575, which measures 4.43:1 on the
+          page and cannot carry 12 point text. `textSecondary` at 7.04:1 is the
+          quiet tone in this palette that clears AA, and it is what the rest of
+          the app already recedes to. */}
       <AppText variant="overline" style={styles.version}>
         {texts.legal.version}
       </AppText>
@@ -51,6 +61,9 @@ const styles = StyleSheet.create({
     gap: spacing[1],
   },
   version: {
+    fontFamily: fontFace.monoMedium,
+    textTransform: 'none',
+    letterSpacing: 0,
     paddingTop: spacing[2],
   },
 });
