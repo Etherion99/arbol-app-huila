@@ -59,25 +59,30 @@ export const texts = {
     skip: 'Omitir',
     next: 'Siguiente',
     start: 'Empezar',
-    exploreAsGuest: 'Explorar el mapa sin cuenta',
+    exploreAsGuest: 'Explorar sin cuenta',
     alreadyHaveAccount: 'Ya tengo cuenta',
     stepLabel: (current: number, total: number) => `Paso ${current} de ${total}`,
+    /**
+     * Caption of the field photograph, one per step that has one. The third
+     * step shows the public map rather than a picture, so there are two of
+     * these and three steps. Placeholders until the PRAE supplies the files.
+     */
+    photoCaptions: [
+      'Foto real de campo · vereda San Andrés',
+      'Foto real de campo · guardiana y su mandarino',
+    ],
     steps: [
       {
         title: 'Siembra un árbol y ponlo en el mapa',
         body: 'Cada árbol frutal del Huila se vuelve un punto de luz que toda la comunidad puede ver.',
-        /** Caption of the field photograph. Placeholder until the PRAE supplies it. */
-        photoCaption: 'Foto real de campo · vereda San Andrés',
       },
       {
         title: 'Cada dos meses, una foto y sus medidas',
         body: 'La bitácora guarda la altura y las ramas de tu árbol. Te avisaremos cuando toque.',
-        photoCaption: 'Foto real de campo · guardiana y su mandarino',
       },
       {
         title: 'El Huila ve crecer el bosque',
         body: 'El mapa es público: tu colegio, tu vereda y tu municipio pueden seguir cada siembra.',
-        photoCaption: 'Foto real de campo · el bosque del Huila',
       },
     ],
   },
