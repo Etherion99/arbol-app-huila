@@ -44,6 +44,15 @@ export const texts = {
     save: 'Guardar cambios',
     saving: 'Guardando…',
     offlineBanner: 'Sin conexión. Revisa tus datos o el wifi para continuar.',
+    /**
+     * Said instead of the line above once there is something waiting on the
+     * phone. It names the number because "sin conexión" alone leaves the
+     * guardian wondering whether the photo they just took survived.
+     */
+    offlinePending: (pending: number) =>
+      pending === 1
+        ? 'Sin conexión — 1 registro se enviará cuando vuelva la señal.'
+        : `Sin conexión — ${pending} registros se enviarán cuando vuelva la señal.`,
     offlineHint: 'Sin conexión. Necesitas señal para continuar.',
     /** Reachable from every screen a reader can land on, with or without an account. */
     legalLink: 'Política de privacidad y términos',
