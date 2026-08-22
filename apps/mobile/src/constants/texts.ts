@@ -331,12 +331,13 @@ export const texts = {
     locationHeading: '¿Dónde quedó sembrado?',
     locationHint: 'Arrastra el pin al punto exacto',
     locationAccuracy: (metres: number) => `±${Math.round(metres)} m`,
+    /** Between the coordinate and its radius, so the readout is one reading. */
+    locationReadoutSeparator: ' · ',
     locationAccuracyLabel: (metres: number) => `Precisión del GPS: ${Math.round(metres)} metros`,
     locationNoFix: 'Sin lectura del GPS',
     locationUseGps: 'Usar mi ubicación',
-    locationPoorTitle: 'Señal de GPS débil',
     locationPoorBody: (metres: number) =>
-      `Bajo los árboles el GPS pierde precisión (±${Math.round(metres)} m). Ajusta el pin al punto exacto de la siembra antes de continuar.`,
+      `Señal de GPS débil (±${Math.round(metres)} m). Ajusta el pin al punto exacto de la siembra.`,
     locationDeniedTitle: 'Tu ubicación pone el árbol en su sitio',
     locationDeniedBody:
       'Usamos el GPS solo para ubicar los árboles que siembras y centrar el mapa. Funciona sin señal de datos.',
