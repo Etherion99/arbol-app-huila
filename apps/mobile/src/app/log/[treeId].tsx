@@ -8,6 +8,7 @@ import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { ChipGroup } from '@/components/ui/chip-group';
 import { ConnectionBanner } from '@/components/connection-banner';
+import { Icon } from '@/components/ui/icon';
 import { Notice } from '@/components/ui/notice';
 import { StepperField } from '@/components/ui/stepper-field';
 import { TextField } from '@/components/ui/text-field';
@@ -228,6 +229,7 @@ export default function GrowthLogScreen() {
                   inputMode="numeric"
                   maxLength={4}
                   placeholder="118"
+                  suffix={texts.planting.heightUnit}
                   error={
                     hasTriedToSave && (!Number.isFinite(heightNumber) || heightNumber < 1)
                       ? texts.planting.heightRequired
@@ -277,13 +279,19 @@ export default function GrowthLogScreen() {
             }
           />
 
-          <AppText variant="caption" style={styles.capture}>
-            {photo?.captureLocation == null
-              ? texts.growthLog.captureLocationMissing
-              : texts.growthLog.captureLocation(
-                  formatCoordinates(photo.captureLocation.lat, photo.captureLocation.lng),
-                )}
-          </AppText>
+          <View style={styles.captureRow}>
+            {/* Decorative on purpose: the sentence beside it already names what
+                the target marks, and announcing both would read the same thing
+                twice before the coordinate itself. */}
+            <Icon name="locate" size={14} color={colors.textMuted} />
+            <AppText variant="caption" style={styles.capture}>
+              {photo?.captureLocation == null
+                ? texts.growthLog.captureLocationMissing
+                : texts.growthLog.captureLocation(
+                    formatCoordinates(photo.captureLocation.lat, photo.captureLocation.lng),
+                  )}
+            </AppText>
+          </View>
 
           {isDead ? (
             <AppText variant="caption" style={styles.centredText}>
@@ -389,7 +397,24 @@ const styles = StyleSheet.create({
   measure: {
     flex: 1,
   },
+  captureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+  },
+  /**
+   * Mono, because it is a measurement and that is the face the design system
+   * keeps for them.
+   *
+   * The canvas sets the target and the coordinate in the same `textMuted`
+   * grey. The grey is `#757575` and measures 4.43:1 on the page: enough for the
+   * 3:1 a drawing owes, which is why the target keeps it, and short of the
+   * 4.5:1 this thirteen point line owes, which is why the words are in
+   * `textSecondary` at 7.04:1 instead. The coordinate is the one thing on this
+   * screen a guardian may have to read back to a coordinator.
+   */
   capture: {
+    flex: 1,
     fontFamily: fontFace.monoMedium,
     color: colors.textSecondary,
   },
