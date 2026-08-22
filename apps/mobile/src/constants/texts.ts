@@ -435,7 +435,7 @@ export const texts = {
     deadWarning:
       'El árbol quedará marcado como muerto en el mapa y dejarán de llegar recordatorios. Su bitácora se conserva completa.',
     deadPhotoTitle: 'Fotografía de evidencia',
-    deadPhotoHint: 'Obligatoria',
+    deadPhotoHint: 'Obligatoria · cámara en vivo',
     deadCauseLabel: 'Causa',
     deadCauses: ['Sequía', 'Ganado', 'Quema', 'Plaga', 'Otra'],
     deadStoryLabel: '¿Qué pasó? (opcional)',
@@ -443,9 +443,24 @@ export const texts = {
     deadNoMeasures: 'No se piden medidas. El coordinador validará el reporte.',
     deadSubmit: 'Reportar como muerto',
     deadCauseRequired: 'Elige la causa para poder reportarlo.',
+    deadBack: 'Volver a la entrada normal',
+    /**
+     * What a death report writes into `notes`, which is the column
+     * `log_entries_cause_when_dead` refuses to leave blank.
+     *
+     * The cause is stored as the label the guardian actually chose, in Spanish,
+     * because that same string is read back in the log timeline and by the
+     * coordinator validating the report. Whatever else was written follows it
+     * after an em dash, so the cause is always the first thing on the line.
+     */
+    deadNotes: (cause: string, story: string | null) =>
+      story === null ? cause : `${cause} — ${story}`,
 
     savedTitle: 'Bitácora actualizada',
     savedBody: (date: string) => `Próxima foto: ${date}.`,
+    deadSavedTitle: 'Reporte enviado',
+    deadSavedBody:
+      'El árbol quedó marcado como muerto en el mapa y dejarán de llegar recordatorios. Su bitácora se conserva completa.',
     duplicateTitle: 'Ese ciclo ya estaba guardado',
     duplicateBody:
       'La entrada había llegado al servidor en un intento anterior. Terminamos de subir la fotografía y no se duplicó nada.',

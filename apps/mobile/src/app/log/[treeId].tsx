@@ -102,7 +102,29 @@ export default function GrowthLogScreen() {
   }, [deadCause, heightNumber, isDead, nextCycle, photo]);
 
   const save = useCallback(async () => {
-    if (blocker !== null || photo === null || treeId === undefined || nextCycle === null) {
+    const written = notes.trim() === '' ? null : notes.trim();
+
+    /**
+     * What goes into `notes`, and on a death report the column
+     * `log_entries_cause_when_dead` will not accept blank.
+     *
+     * Composed before the guard rather than inside the payload so the rule the
+     * database holds is also one the compiler holds: a report with no chip
+     * yields null here, the guard below turns that into the same refusal the
+     * blocker already shows, and nothing that violates the constraint can be
+     * built. The cause is checked on the phone, not discovered from a rejected
+     * insert after a photograph has already been prepared.
+     */
+    const entryNotes =
+      isDead && deadCause !== null ? texts.growthLog.deadNotes(deadCause, written) : written;
+
+    if (
+      blocker !== null ||
+      photo === null ||
+      treeId === undefined ||
+      nextCycle === null ||
+      (isDead && entryNotes === null)
+    ) {
       setHasTriedToSave(true);
       return;
     }
@@ -115,13 +137,7 @@ export default function GrowthLogScreen() {
       heightCm: isDead ? null : heightNumber,
       visibleBranches: isDead ? null : visibleBranches,
       healthStatus,
-      // A death has to carry a cause: `log_entries_cause_when_dead` refuses a
-      // blank one, and the cause is a chip plus whatever else was written.
-      notes: isDead
-        ? [deadCause, notes.trim()].filter((part) => part !== null && part !== '').join('. ')
-        : notes.trim() === ''
-          ? null
-          : notes.trim(),
+      notes: entryNotes,
       photo,
     });
 
@@ -149,18 +165,29 @@ export default function GrowthLogScreen() {
       <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
         <View style={styles.centred}>
           <AppText variant="title" style={styles.centredText}>
-            {saved.wasAlreadyRecorded ? texts.growthLog.duplicateTitle : texts.growthLog.savedTitle}
+            {saved.wasAlreadyRecorded
+              ? texts.growthLog.duplicateTitle
+              : isDead
+                ? texts.growthLog.deadSavedTitle
+                : texts.growthLog.savedTitle}
           </AppText>
-          {/* The due date is read live rather than snapshotted when the entry
-              was saved. It is a generated column two months from the capture,
-              and the mutation invalidated this query, so what renders here is
-              the database's answer and not an arithmetic guess at it. */}
+          {/* A death report must not be answered with a next photo date. The
+              trigger has just moved the tree to `dead`, and the reminder sweep
+              skips it from here on, so naming a due date would promise the one
+              thing that has stopped happening.
+
+              For a living tree the date is read live rather than snapshotted
+              when the entry was saved. It is a generated column two months from
+              the capture, and the mutation invalidated this query, so what
+              renders is the database's answer and not an arithmetic guess. */}
           <AppText variant="bodyMuted" style={styles.centredText}>
             {saved.wasAlreadyRecorded
               ? texts.growthLog.duplicateBody
-              : card === null
-                ? texts.growthLog.savedTitle
-                : texts.growthLog.savedBody(formatDayAndMonth(card.nextReminderAt))}
+              : isDead
+                ? texts.growthLog.deadSavedBody
+                : card === null
+                  ? texts.growthLog.savedTitle
+                  : texts.growthLog.savedBody(formatDayAndMonth(card.nextReminderAt))}
           </AppText>
           <Button
             label={texts.planting.successOpenTree}
@@ -200,6 +227,17 @@ export default function GrowthLogScreen() {
         <View style={styles.column}>
           {isDead ? <Notice tone="error" message={texts.growthLog.deadWarning} /> : null}
 
+          {/* Named above the well rather than inside it, which is where the
+              canvas prints it: the canvas draws an empty placeholder and this
+              is a live viewfinder, so the two lines would sit over the picture
+              being framed. */}
+          {isDead ? (
+            <View style={styles.evidence}>
+              <AppText variant="label">{texts.growthLog.deadPhotoTitle}</AppText>
+              <AppText variant="caption">{texts.growthLog.deadPhotoHint}</AppText>
+            </View>
+          ) : null}
+
           <PhotoCapture
             photo={photo}
             onCaptured={setPhoto}
@@ -211,12 +249,6 @@ export default function GrowthLogScreen() {
             fallbackLocation={location.coordinates}
             height={isDead ? 220 : 320}
           />
-
-          {isDead ? (
-            <AppText variant="caption" style={styles.centredText}>
-              {texts.growthLog.deadPhotoTitle} · {texts.growthLog.deadPhotoHint}
-            </AppText>
-          ) : null}
 
           {!isDead ? (
             <View style={styles.measures}>
@@ -249,14 +281,19 @@ export default function GrowthLogScreen() {
             </View>
           ) : null}
 
-          <ChipGroup
-            label={texts.growthLog.healthLabel}
-            options={HEALTH_OPTIONS}
-            value={isDead ? null : healthStatus}
-            onChange={setHealthStatus}
-          />
-
-          {isDead ? (
+          {/* The health state and the cause are the same question asked of two
+              different trees, so only one of them is ever on screen. A report
+              of death has already answered «estado de salud», and leaving the
+              group up with nothing selected would invite an answer that
+              contradicts the one the screen is here to record. */}
+          {!isDead ? (
+            <ChipGroup
+              label={texts.growthLog.healthLabel}
+              options={HEALTH_OPTIONS}
+              value={healthStatus}
+              onChange={setHealthStatus}
+            />
+          ) : (
             <ChipGroup
               label={texts.growthLog.deadCauseLabel}
               options={texts.growthLog.deadCauses.map((cause) => ({ value: cause, label: cause }))}
@@ -267,7 +304,7 @@ export default function GrowthLogScreen() {
                 hasTriedToSave && deadCause === null ? texts.growthLog.deadCauseRequired : undefined
               }
             />
-          ) : null}
+          )}
 
           <TextField
             label={isDead ? texts.growthLog.deadStoryLabel : texts.growthLog.notesLabel}
@@ -279,19 +316,25 @@ export default function GrowthLogScreen() {
             }
           />
 
-          <View style={styles.captureRow}>
-            {/* Decorative on purpose: the sentence beside it already names what
-                the target marks, and announcing both would read the same thing
-                twice before the coordinate itself. */}
-            <Icon name="locate" size={14} color={colors.textMuted} />
-            <AppText variant="caption" style={styles.capture}>
-              {photo?.captureLocation == null
-                ? texts.growthLog.captureLocationMissing
-                : texts.growthLog.captureLocation(
-                    formatCoordinates(photo.captureLocation.lat, photo.captureLocation.lng),
-                  )}
-            </AppText>
-          </View>
+          {/* The coordinate is stamped into a death report exactly as it is into
+              any other entry; the canvas simply does not print it back on this
+              variant, where the line the guardian has to read is the one about
+              the coordinator, not a number to relay. */}
+          {!isDead ? (
+            <View style={styles.captureRow}>
+              {/* Decorative on purpose: the sentence beside it already names
+                  what the target marks, and announcing both would read the same
+                  thing twice before the coordinate itself. */}
+              <Icon name="locate" size={14} color={colors.textMuted} />
+              <AppText variant="caption" style={styles.capture}>
+                {photo?.captureLocation == null
+                  ? texts.growthLog.captureLocationMissing
+                  : texts.growthLog.captureLocation(
+                      formatCoordinates(photo.captureLocation.lat, photo.captureLocation.lng),
+                    )}
+              </AppText>
+            </View>
+          ) : null}
 
           {isDead ? (
             <AppText variant="caption" style={styles.centredText}>
@@ -318,32 +361,61 @@ export default function GrowthLogScreen() {
 
           {hasTriedToSave && blocker !== null ? <Notice tone="warning" message={blocker} /> : null}
 
-          <View style={styles.actions}>
-            <Button
-              label={texts.common.cancel}
-              onPress={() => router.back()}
-              variant="secondary"
-              style={styles.action}
-            />
-            <Button
-              label={isDead ? texts.growthLog.deadSubmit : texts.growthLog.save}
-              loadingLabel={texts.growthLog.saving}
-              isLoading={addEntry.isPending}
-              onPress={() => void save()}
-              style={styles.submit}
-            />
-          </View>
+          {/* One action across the width when reporting a death, which is how
+              the canvas draws it: there is nothing to weigh it against, and a
+              «Cancelar» of equal standing beside it would read as a choice
+              between two ways of finishing. The cross in the bar is the way out
+              of the screen, and the quieter button below the way back to a
+              living entry. */}
+          {isDead ? (
+            <>
+              <Button
+                label={texts.growthLog.deadSubmit}
+                loadingLabel={texts.growthLog.saving}
+                isLoading={addEntry.isPending}
+                onPress={() => void save()}
+                variant="dangerSolid"
+              />
+              <Button
+                label={texts.growthLog.deadBack}
+                variant="ghost"
+                onPress={() => {
+                  setHealthStatus('healthy');
+                  setDeadCause(null);
+                  setHasTriedToSave(false);
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <View style={styles.actions}>
+                <Button
+                  label={texts.common.cancel}
+                  onPress={() => router.back()}
+                  variant="secondary"
+                  style={styles.action}
+                />
+                <Button
+                  label={texts.growthLog.save}
+                  loadingLabel={texts.growthLog.saving}
+                  isLoading={addEntry.isPending}
+                  onPress={() => void save()}
+                  style={styles.submit}
+                />
+              </View>
 
-          {/* The way into the death report, and the way back out of it. Kept at
-              the bottom so it is never the first thing a hand lands on. */}
-          <Button
-            label={isDead ? texts.growthLog.health.healthy : texts.growthLog.reportDead}
-            variant={isDead ? 'ghost' : 'danger'}
-            onPress={() => {
-              setHealthStatus(isDead ? 'healthy' : 'dead');
-              setHasTriedToSave(false);
-            }}
-          />
+              {/* The way into the death report. Kept at the bottom so it is
+                  never the first thing a hand lands on. */}
+              <Button
+                label={texts.growthLog.reportDead}
+                variant="danger"
+                onPress={() => {
+                  setHealthStatus('dead');
+                  setHasTriedToSave(false);
+                }}
+              />
+            </>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -389,6 +461,23 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: MAX_CONTENT_WIDTH,
     gap: spacing[4],
+  },
+  /**
+   * The two lines that name the evidence photograph. The gap is smaller than
+   * the column's own, so they read as one label rather than two entries in the
+   * form, and the negative margin below pulls the well they belong to up
+   * against them instead of leaving it halfway to the warning above.
+   *
+   * Both lines keep the ink the type scale gives them. The canvas tints them
+   * `emerald400` `#3FB877`, which is 2.02:1 on white and carries neither: that
+   * green is the empty placeholder's own colour, not a decision about the
+   * words. So the title stays `textPrimary` at 16.74:1 and the hint
+   * `textSecondary` at 7.04:1 — the 12 point hint owes 4.5:1, which
+   * `textMuted`'s 4.43:1 would miss.
+   */
+  evidence: {
+    gap: spacing[1],
+    marginBottom: -spacing[2],
   },
   measures: {
     flexDirection: 'row',
