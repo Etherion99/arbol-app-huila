@@ -116,24 +116,38 @@ export default function SignInScreen() {
           isLoading={signIn.isPending || form.isSubmitting}
         />
 
+        {/* A link and not an outlined button, which is how the canvas ranks the
+            two ways out of this screen: creating an account is drawn as centred
+            link text under the primary, and exploring without one is the
+            bordered control at the foot. The ghost variant writes in `textLink`
+            #00753A at 5.60:1, so the quieter emphasis costs no legibility. */}
         <Button
           label={texts.signIn.noAccount}
           onPress={() => router.push('/sign-up')}
-          variant="secondary"
+          variant="ghost"
         />
 
         <View style={styles.divider}>
           <View style={styles.rule} />
-          <AppText variant="caption" style={styles.dividerLabel}>
-            {texts.signIn.or}
-          </AppText>
+          {/* The overline role, because the canvas sets this mark as a tracked
+              microlabel rather than as running text. It draws it in the mono
+              face at 10 points and neither survives here: the mono family is
+              reserved for coordinates and measurements, and body never drops
+              below 12. Open Sans at 12 with the same wide tracking keeps the
+              character of the mark inside both rules. */}
+          <AppText variant="overline">{texts.signIn.or}</AppText>
           <View style={styles.rule} />
         </View>
 
+        {/* Bordered, as the canvas draws the foot of this screen. The canvas
+            outlines it in `borderStrong`, and the catalogue's secondary uses
+            `accent` instead because #B9D4C1 measures 1.52:1 on the page and a
+            control boundary owes 3:1. That trade belongs to the catalogue and
+            is kept here rather than re-decided. */}
         <Button
           label={texts.signIn.exploreAsGuest}
           onPress={() => router.replace('/map')}
-          variant="ghost"
+          variant="secondary"
         />
 
         <Link href="/legal" style={styles.legalLink}>
@@ -148,10 +162,15 @@ export default function SignInScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    gap: spacing[1],
+    // The canvas sets the title 28 points below the wordmark, so the two read
+    // as a mark and a heading and not as one stacked block.
+    gap: spacing[6],
   },
   wordmark: {
-    color: colors.textSecondary,
+    // Verde Huilense, as the canvas draws it. `accent` #008D46 is 4.12:1 on the
+    // page and cannot carry small text, but this is the display face at 26
+    // points, which is large text and answers to 3:1.
+    color: colors.accent,
   },
   forgotLink: {
     alignSelf: 'flex-end',
@@ -171,9 +190,6 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.borderSubtle,
   },
-  dividerLabel: {
-    color: colors.textSecondary,
-  },
   form: {
     gap: spacing[4],
   },
@@ -185,6 +201,9 @@ const styles = StyleSheet.create({
     padding: spacing[2],
   },
   legalText: {
-    color: colors.accent,
+    // `textLink` #00753A and not `accent` #008D46: this is a 13 point caption,
+    // which is small text, and the accent green reaches only 4.12:1 on the page
+    // against the 4.5:1 it owes. The darker link green measures 5.60:1.
+    color: colors.textLink,
   },
 });
