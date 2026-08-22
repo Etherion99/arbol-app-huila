@@ -91,12 +91,17 @@ export default function ProfileScreen() {
     const failure = describeMaybeAuthError(profile.error);
     return (
       <Screen>
-        <AppText variant="display">{texts.profile.loadErrorTitle}</AppText>
-        <Notice
-          tone="error"
-          message={failure?.message ?? texts.authErrors.unknown}
-          onRetry={() => void profile.refetch()}
-        />
+        <View style={styles.centered}>
+          <Medallion tone="danger" />
+          <AppText variant="title" style={styles.centeredText}>
+            {texts.profile.loadErrorTitle}
+          </AppText>
+          <Notice
+            tone="error"
+            message={failure?.message ?? texts.authErrors.unknown}
+            onRetry={() => void profile.refetch()}
+          />
+        </View>
       </Screen>
     );
   }
@@ -109,10 +114,34 @@ export default function ProfileScreen() {
 }
 
 /**
+ * The round mark the canvas puts above both profile failures: a user glyph in a
+ * circle, red-washed when the read failed and neutral when the identity simply
+ * has no profile row.
+ *
+ * The canvas strikes the neutral one through with a red slash. The ported icon
+ * kit has no struck-through user, and a glyph is not something a screen may
+ * invent, so the circle carries the difference on its own here.
+ */
+function Medallion({ tone }: { tone: 'danger' | 'neutral' }) {
+  const isDanger = tone === 'danger';
+
+  return (
+    <View style={[styles.medallion, isDanger ? styles.medallionDanger : styles.medallionNeutral]}>
+      {/* Decorative: the heading right below says the same thing in words. */}
+      <Icon name="user" size={30} color={isDanger ? colors.danger : colors.textSecondary} />
+    </View>
+  );
+}
+
+/**
  * An identity with no profile row. The provisioning trigger makes this
  * impossible for anybody who signed up through the app, so it means the
  * identity was created some other way. Saying so with a way out beats an empty
  * form that saves nothing.
+ *
+ * The canvas gives this one running text rather than an error notice: nothing
+ * here failed and nothing is worth retrying, so the block that means «something
+ * broke, press again» would be the wrong shape.
  */
 function MissingProfile() {
   const router = useRouter();
@@ -120,16 +149,23 @@ function MissingProfile() {
 
   return (
     <Screen>
-      <AppText variant="display">{texts.profile.missingProfileTitle}</AppText>
-      <Notice tone="error" message={texts.profile.missingProfileBody} />
-      <Button
-        label={texts.profile.signOut}
-        variant="danger"
-        isLoading={signOut.isPending}
-        onPress={() => {
-          signOut.mutate(undefined, { onSettled: () => router.replace('/sign-in') });
-        }}
-      />
+      <View style={styles.centered}>
+        <Medallion tone="neutral" />
+        <AppText variant="title" style={styles.centeredText}>
+          {texts.profile.missingProfileTitle}
+        </AppText>
+        <AppText variant="bodyMuted" style={styles.centeredText}>
+          {texts.profile.missingProfileBody}
+        </AppText>
+        <Button
+          label={texts.profile.signOut}
+          variant="danger"
+          isLoading={signOut.isPending}
+          onPress={() => {
+            signOut.mutate(undefined, { onSettled: () => router.replace('/sign-in') });
+          }}
+        />
+      </View>
     </Screen>
   );
 }
@@ -536,6 +572,21 @@ const styles = StyleSheet.create({
   },
   centeredText: {
     textAlign: 'center',
+  },
+  medallion: {
+    width: 72,
+    height: 72,
+    borderRadius: radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  medallionDanger: {
+    backgroundColor: colors.dangerSoft,
+  },
+  medallionNeutral: {
+    backgroundColor: colors.surfaceCard,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
   },
   identity: {
     alignItems: 'center',
