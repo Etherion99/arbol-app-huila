@@ -182,7 +182,20 @@ export const texts = {
     title: 'Mi perfil',
     guardianRole: 'Guardián',
     coordinatorRole: 'Coordinación',
-    memberSince: (date: string) => `Guardián desde ${date}`,
+    /** The distinction pill of the profile card, which the canvas dates by year. */
+    memberSinceYear: (role: string, year: string) => `${role} desde ${year}`,
+    /** The line under the name. The role alone when nobody typed an institution. */
+    roleAndInstitution: (role: string, institution: string) => `${role} · ${institution}`,
+    avatarLabel: (fullName: string) => `Iniciales de ${fullName}`,
+    statTreesLabel: 'Árboles',
+    statUpToDateLabel: 'Al día',
+    statCyclesLabel: 'Ciclos',
+    /** Read aloud in place of the dash a figure with no source draws. */
+    statUnavailable: 'sin dato',
+    statsErrorMessage: 'No pudimos contar tus árboles. Puedes seguir usando el resto del perfil.',
+    editProfile: 'Editar perfil',
+    notificationSettings: 'Ajustes de notificaciones',
+    versionFooter: (version: string) => `v${version} · UN PROYECTO DE JUVENTUD EN LÍNEA`,
     emailLabel: 'Correo electrónico',
     emailHint:
       'El correo no se puede cambiar por ahora. Escribe a la coordinación si lo necesitas.',
