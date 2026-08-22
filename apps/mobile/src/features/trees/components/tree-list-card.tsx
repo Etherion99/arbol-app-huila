@@ -5,8 +5,9 @@ import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Icon } from '@/components/ui/icon';
 import { texts } from '@/constants/texts';
-import { colors, radii, spacing } from '@/constants/theme';
+import { colors, fontFace, radii, spacing } from '@/constants/theme';
 import type { GuardianTree } from '@/features/trees/use-guardian-trees';
 import { useTreeThumbnail } from '@/features/trees/use-guardian-trees';
 import { daysSince, formatDayAndMonth } from '@/lib/dates';
@@ -40,9 +41,8 @@ export function TreeListCard({ tree, onOpen, onUpdate }: TreeListCardProps) {
         tree.speciesRawText,
         texts.treeState[tree.trackingStatus],
       )}
-      style={styles.card}
     >
-      <View style={styles.row}>
+      <View style={[styles.row, !needsUpdate && styles.rowCentred]}>
         <View style={styles.thumbnail}>
           {thumbnail.data != null ? (
             <Image
@@ -53,7 +53,12 @@ export function TreeListCard({ tree, onOpen, onUpdate }: TreeListCardProps) {
               // photograph would only repeat it.
               accessibilityElementsHidden
             />
-          ) : null}
+          ) : (
+            // The tree the guardian has not photographed yet still has to look
+            // like a tree. `emerald700` reads 8.52:1 on the white well, far over
+            // the 3:1 an icon owes, where the canvas's palest greens draw nothing.
+            <Icon name="sprout" size={26} color={colors.emerald700} />
+          )}
         </View>
 
         <View style={styles.body}>
@@ -77,12 +82,18 @@ export function TreeListCard({ tree, onOpen, onUpdate }: TreeListCardProps) {
           <AppText variant="caption" style={dueStyles[tree.trackingStatus]}>
             {describeDue(tree)}
           </AppText>
+
+          {needsUpdate ? (
+            <Button
+              label={texts.growthLog.updateShort}
+              onPress={onUpdate}
+              size="md"
+              icon={<Icon name="camera" size={16} color={colors.onAccent} />}
+              style={styles.update}
+            />
+          ) : null}
         </View>
       </View>
-
-      {needsUpdate ? (
-        <Button label={texts.growthLog.updateShort} onPress={onUpdate} style={styles.update} />
-      ) : null}
     </Card>
   );
 }
@@ -109,17 +120,24 @@ function describeDue(tree: GuardianTree): string {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    gap: spacing[3],
-  },
   row: {
     flexDirection: 'row',
     gap: spacing[3],
+  },
+  /**
+   * A card with no update button is three short lines against a 64 point well,
+   * and the canvas centres those against each other. The cards that do carry a
+   * button stay top aligned, because there the column is taller than the well.
+   */
+  rowCentred: {
+    alignItems: 'center',
   },
   thumbnail: {
     width: 64,
     height: 64,
     overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.surfaceOverlay,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
@@ -148,11 +166,23 @@ const styles = StyleSheet.create({
   },
 });
 
-/** Never the only channel: it repeats what the badge and the sentence already say. */
+/**
+ * Never the only channel: it repeats what the badge and the sentence already
+ * say.
+ *
+ * The canvas sets the overdue line in `stateOverdue` `#F26522`, which measures
+ * 3.15:1 on the white card and 3.03:1 on the page. This line is 13 points, so
+ * WCAG counts it as small text and asks 4.5:1, and the orange is short of it on
+ * both grounds. The tree that is late is the reason the guardian opened this
+ * list, so the emphasis stays and moves off the hue: `textPrimary` at 17.40:1
+ * plus the medium face, against the `textSecondary` of the calm states. The
+ * orange itself is untouched and keeps carrying the state in the badge edge and
+ * the dot, where 3:1 is the bar it has to clear.
+ */
 const dueStyles = StyleSheet.create({
   up_to_date: { color: colors.textSecondary },
   due_soon: { color: colors.textSecondary },
-  overdue: { color: colors.stateOverdue },
+  overdue: { fontFamily: fontFace.bodyMedium, color: colors.textPrimary },
   dead: { color: colors.textSecondary },
   archived: { color: colors.textSecondary },
 });
