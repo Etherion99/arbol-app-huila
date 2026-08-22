@@ -44,6 +44,20 @@ export function Tag({ label, onRemove, isMono = false, style }: TagProps) {
 }
 
 const styles = StyleSheet.create({
+  /**
+   * The fill is opacity, not contrast. White on the page is 1.04:1 and white
+   * on a card is nothing at all, so no surface token can draw this pill; it
+   * stays opaque only so a tag laid over a photo or a map tile keeps its own
+   * ground.
+   *
+   * The outline is therefore the whole shape, and the shape of a dismissible
+   * control owes 3:1. `borderStrong` `#B9D4C1` measures 1.52:1 against the
+   * page and does not reach it — the same trap `IconButton` had to leave. The
+   * edge is `textSecondary` `#4A5A50` at 7.04:1: neutral, so it never borrows
+   * a state hue, and far from the grey of `stateArchived`, which a marker must
+   * not be mistaken for. The removable and the plain tag wear the same edge,
+   * because one component should not have two silhouettes.
+   */
   tag: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -51,9 +65,9 @@ const styles = StyleSheet.create({
     gap: spacing[1] + 2,
     paddingVertical: spacing[1],
     paddingHorizontal: spacing[2] + 2,
-    backgroundColor: colors.surfaceOverlay,
+    backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
-    borderColor: colors.borderStrong,
+    borderColor: colors.textSecondary,
     borderRadius: radii.full,
   },
   label: {
@@ -72,8 +86,8 @@ const styles = StyleSheet.create({
   removeGlyph: {
     fontFamily: fontFace.bodyMedium,
     fontSize: fontSize.xs,
-    // Muted is legal here: this is a glyph, not small text, and it carries an
-    // accessible label of its own.
+    // Muted reads 4.61:1 on the white the tag draws for itself, over the bar
+    // even for small text, and the glyph also carries a label of its own.
     color: colors.textMuted,
   },
   pressed: {

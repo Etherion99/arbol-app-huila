@@ -6,39 +6,81 @@ import { texts } from '@/constants/texts';
 import { colors, fontFace, fontSize, radii, spacing } from '@/constants/theme';
 
 type Tone = {
-  /** Carries the state: border, dot and — where contrast allows — the label. */
-  accent: string;
+  /** The dot, which is where the legend colour of the state lives untouched. */
+  dot: string;
+  /**
+   * The outline. The state colour wherever it clears 3:1 against the page, and
+   * a darker stand-in where it does not.
+   */
+  edge: string;
   /** The pill fill, always the state colour at low opacity. */
   fill: string;
-  /**
-   * The label. Normally the accent, but two tones cannot carry small text and
-   * fall back to a readable neutral. See the note below.
-   */
+  /** The label. Always a neutral ink; no soft fill can carry its own colour. */
   ink: string;
 };
 
+/**
+ * Every ratio below is measured against `surfacePage` `#F4FDF4`, which is the
+ * worst of the two grounds a badge sits on — the card is plain white and any
+ * dark ink reads higher there.
+ *
+ * **The label never takes the state colour.** Composited over the page, no soft
+ * fill carries its own tone as small text: `stateOkSoft` reaches 3.45:1 and
+ * `stateOverdueSoft` 2.55:1, and the canvas draws both of those wrong. A
+ * neutral ink over the same fill reads 13:1 or better, so the state is spoken
+ * by the dot, the fill and the outline, and the words are simply readable.
+ *
+ * `due_soon` is the exception the canvas already solved: `earthBrown`
+ * `#8B572A` is the standing ink of the yellow state across the whole app, and
+ * it reads 5.36:1 over `stateDueSoft`. It also has to carry the outline —
+ * `stateDue` `#FFD700` is 1.35:1 against the page, so a yellow edge would draw
+ * nothing at all.
+ */
 const TONES: Record<TrackingStatus | 'brand', Tone> = {
-  up_to_date: { accent: colors.stateOk, fill: colors.stateOkSoft, ink: colors.stateOk },
-  due_soon: { accent: colors.stateDue, fill: colors.stateDueSoft, ink: colors.stateDue },
-  overdue: {
-    accent: colors.stateOverdue,
-    fill: colors.stateOverdueSoft,
-    ink: colors.stateOverdue,
+  // 4.12:1 edge, 14.00:1 label.
+  up_to_date: {
+    dot: colors.stateOk,
+    edge: colors.stateOk,
+    fill: colors.stateOkSoft,
+    ink: colors.textPrimary,
   },
-  dead: { accent: colors.stateDead, fill: colors.stateDeadSoft, ink: colors.stateDead },
-  // The two exceptions. `stateArchived` reaches 3.44:1 on a card and
-  // `brandMagenta` 4.34:1, both under the 4.5:1 a 12px label needs, and this
-  // badge is read outdoors in direct sun. The state colour stays on the border
-  // and the dot, which is where it does its work; only the text steps back to
-  // a tone that can actually be read.
+  // 5.78:1 edge, 5.36:1 label. The dot keeps the legend yellow.
+  due_soon: {
+    dot: colors.stateDue,
+    edge: colors.earthBrown,
+    fill: colors.stateDueSoft,
+    ink: colors.earthBrown,
+  },
+  // 3.03:1 edge, 14.08:1 label.
+  overdue: {
+    dot: colors.stateOverdue,
+    edge: colors.stateOverdue,
+    fill: colors.stateOverdueSoft,
+    ink: colors.textPrimary,
+  },
+  // 4.54:1 edge, 13.34:1 label.
+  dead: {
+    dot: colors.stateDead,
+    edge: colors.stateDead,
+    fill: colors.stateDeadSoft,
+    ink: colors.textPrimary,
+  },
+  // 4.43:1 edge, 5.81:1 label. `textSecondary` rather than `textPrimary` on
+  // purpose: an archived tree is out of the active map and its pill should
+  // recede, and this is the quietest ink in the palette that still clears AA.
   archived: {
-    accent: colors.stateArchived,
+    dot: colors.stateArchived,
+    edge: colors.stateArchived,
     fill: colors.stateArchivedSoft,
     ink: colors.textSecondary,
   },
+  // 3.03:1 edge, 14.40:1 label. Naranja Plateño, never the Juventud en línea
+  // magenta: that palette is an affiliation mark and is not allowed to enter
+  // the interface, where it would compete with the five colours of the legend.
   brand: {
-    accent: colors.brandMagenta,
-    fill: colors.brandMagentaSoft,
+    dot: colors.accent2,
+    edge: colors.accent2,
+    fill: colors.accent2Soft,
     ink: colors.textPrimary,
   },
 };
@@ -57,7 +99,11 @@ export type BadgeProps = CommonProps &
         label?: string;
       }
     | {
-        /** Juventud en línea. A brand accent, never a claim about a tree. */
+        /**
+         * A distinction rather than a tracking state: the «Guardiana desde
+         * 2025» pill of the profile. It is drawn in the secondary accent so it
+         * cannot be mistaken for a claim about a tree.
+         */
         status: 'brand';
         label: string;
       }
@@ -67,6 +113,12 @@ export type BadgeProps = CommonProps &
  * The state pill: the most repeated piece of the canvas. It appears on the map
  * card, on every row of the tree list, on the detail header and on the public
  * web sheet, and in all four it has to read the same.
+ *
+ * The canvas draws it with no outline, soft fill and dot only. It keeps the
+ * outline here because the fill alone can no longer carry the state: a soft
+ * tone composited over the page separates from it by at most 1.2:1, far under
+ * the 3:1 that meaningful non-text content owes, and with the label neutral
+ * the outline is the only place left where the state is stated at strength.
  */
 export function Badge({ status, label, hasDot = true, style }: BadgeProps) {
   const tone = TONES[status];
@@ -76,9 +128,9 @@ export function Badge({ status, label, hasDot = true, style }: BadgeProps) {
     <View
       accessibilityRole="text"
       accessibilityLabel={shown}
-      style={[styles.pill, { backgroundColor: tone.fill, borderColor: tone.accent }, style]}
+      style={[styles.pill, { backgroundColor: tone.fill, borderColor: tone.edge }, style]}
     >
-      {hasDot ? <View style={[styles.dot, { backgroundColor: tone.accent }]} /> : null}
+      {hasDot ? <View style={[styles.dot, { backgroundColor: tone.dot }]} /> : null}
 
       <AppText style={[styles.label, { color: tone.ink }]} numberOfLines={1}>
         {shown}

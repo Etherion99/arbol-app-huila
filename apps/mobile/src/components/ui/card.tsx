@@ -21,8 +21,12 @@ export type CardProps = {
  * The container almost everything in the canvas sits in: the tree cards of the
  * list, the bitácora entries, the panels of the profile.
  *
- * It never carries a light background. The palette is dark first and a card is
- * one step above the page, never a hole cut into it.
+ * On leaf-white paper a card is not a lighter step: `surfaceCard` is plain
+ * white and the page is `#F4FDF4`, 1.04:1 apart, so a fill can no longer say
+ * «this is a card». What separates it from the page is the `borderSubtle`
+ * outline and `shadowCard`, exactly as the canvas draws it, and every state
+ * this component shows has to be drawn the same way — on the edge, not in the
+ * fill.
  */
 export function Card({
   children,
@@ -59,7 +63,28 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     boxShadow: effects.shadowCard,
   },
+  /**
+   * The canvas draws no pressed card anywhere, so the mechanism is decided
+   * here. It cannot be a step up in surface — that used to be `surfaceOverlay`
+   * over `surfaceCard` and both are now the same white, which is a state that
+   * compiles and cannot be seen.
+   *
+   * The signal moves to the outline, the only part of the card that already
+   * carries its shape: `accent` `#008D46` reads 4.12:1 against the page and
+   * 3.47:1 against the `borderSubtle` edge it replaces, so both the press and
+   * the change of press are above the 3:1 that a component state has to hold.
+   * It is also the colour of `borderFocus`, so being pressed and being focused
+   * speak with one voice.
+   *
+   * `accentSoft` only tints the fill by 1.17:1 and is reinforcement, never the
+   * signal. It is safe for the content: the lightest ink a card carries,
+   * `textSecondary`, still reads 6.07:1 over it. Dimming the card with opacity
+   * was the alternative and was rejected — at 0.7 the ink and the card fade
+   * together and the pair falls to 3.52:1, and a card must not become
+   * unreadable while a finger rests on it.
+   */
   pressed: {
-    backgroundColor: colors.surfaceOverlay,
+    borderColor: colors.accent,
+    backgroundColor: colors.accentSoft,
   },
 });
