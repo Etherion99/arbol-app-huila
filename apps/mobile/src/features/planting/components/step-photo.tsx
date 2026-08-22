@@ -156,7 +156,11 @@ const styles = StyleSheet.create({
   rowStrong: {
     fontFamily: fontFace.bodyMedium,
   },
+  // The one row that is still an errand, so it has to look unlike the rest. Not
+  // in the yellow the dark theme used: on the card's white that measures 1.40:1
+  // and the sentence disappears. `earthBrown` is the ink the design system
+  // already pairs with a yellow warning, at 6.01:1 here.
   rowMissing: {
-    color: colors.stateDue,
+    color: colors.earthBrown,
   },
 });

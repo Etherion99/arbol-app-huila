@@ -457,8 +457,11 @@ const styles = StyleSheet.create({
   successTitle: {
     textAlign: 'center',
   },
+  // The code is a 17px mono string, which is small text by the scale's own
+  // reckoning, and `accent` reads 4.12:1 on the page. `textLink` is the same
+  // green darkened for exactly this, at 5.60:1.
   successCode: {
     textAlign: 'center',
-    color: colors.accent,
+    color: colors.textLink,
   },
 });
