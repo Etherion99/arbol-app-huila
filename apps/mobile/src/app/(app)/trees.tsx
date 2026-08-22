@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ConnectionBanner } from '@/components/connection-banner';
 import { Icon } from '@/components/ui/icon';
 import { Notice } from '@/components/ui/notice';
+import { ScreenState } from '@/components/ui/screen-state';
 import { Tabs } from '@/components/ui/tabs';
 import { texts } from '@/constants/texts';
 import { MAX_CONTENT_WIDTH, colors, radii, spacing } from '@/constants/theme';
@@ -43,6 +44,21 @@ export default function MyTreesScreen() {
   );
 
   const shown = filter === 'pending' ? pending : all;
+
+  // The canvas draws the load failure as a whole screen, but only when there is
+  // nothing to fall back on. With trees already cached the list stays up and the
+  // failure stays a strip over it: in a vereda the last known list is worth more
+  // than a full screen apologising for a refetch that failed.
+  if (trees.error !== null && all.length === 0) {
+    return (
+      <ScreenState
+        icon="wifiOff"
+        title={texts.myTrees.errorTitle}
+        message={texts.myTrees.errorBody}
+        action={{ label: texts.common.retry, onPress: () => void trees.refetch() }}
+      />
+    );
+  }
 
   if (session === null) {
     return (
