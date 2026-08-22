@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { ConnectionBanner } from '@/components/connection-banner';
 import { Notice } from '@/components/ui/notice';
 import { texts } from '@/constants/texts';
-import { colors, spacing } from '@/constants/theme';
+import { colors, radii, spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
 import { useIsOnline } from '@/hooks/use-is-online';
 
@@ -274,8 +274,10 @@ export default function MapScreen() {
         <MapView
           ref={mapRef}
           style={StyleSheet.absoluteFill}
-          // Google on both platforms, which is what lets one dark style serve
-          // Android and iPhone and keeps the "points of light" motif on both.
+          // Google on both platforms, which is what lets one styler serve
+          // Android and iPhone: the leaf paper the app is printed on is the
+          // same ground on both, so a marker separates from it by the same
+          // measured amount whichever phone a guardian is holding.
           provider={PROVIDER_GOOGLE}
           customMapStyle={lightMapStyle}
           initialRegion={HUILA_FRAMING}
@@ -538,9 +540,10 @@ const styles = StyleSheet.create({
   mapArea: {
     flex: 1,
     overflow: 'hidden',
-    // Shows through only until the tiles arrive, and it is the same night the
-    // style paints, so the first frame is never a white flash.
-    backgroundColor: colors.green990,
+    // Shows through only until the tiles arrive, and it is the exact ground
+    // the styler paints under them, so the wait is an empty sheet of the same
+    // paper rather than a flash of a different colour.
+    backgroundColor: colors.surfacePage,
   },
   /**
    * A veil of the page colour under the control band, so the two darkest things
@@ -613,14 +616,34 @@ const styles = StyleSheet.create({
     top: 132,
     gap: spacing[3],
   },
+  /**
+   * The pill that says the trees are on their way.
+   *
+   * The catalogue does not draw this state, so it borrows the vocabulary the
+   * search row above it already settled: an opaque `surfaceRaised` lid rather
+   * than a translucent one, because tiles sliding under a label read in direct
+   * sun is worse than a corner of map hidden for a second.
+   *
+   * White on a leaf-white map separates by 1.04:1, so the border is the whole
+   * of what draws the pill. It is the neutral grey and not `borderSubtle`,
+   * which measures 1.19:1 against the ground and drew nothing at all: 4.43:1
+   * on the map ground and 4.61:1 on the fill, clear of the 3:1 SC 1.4.11 asks.
+   * Over the river the same edge falls to 1.41:1 — the one ground in the
+   * styler that no grey survives, and the trade every floating control on this
+   * map already takes.
+   *
+   * The label stays `textSecondary` and gains a ground it can be read on:
+   * 7.32:1 on the fill, where the tone it had over the old dark chip was ink
+   * on ink.
+   */
   loading: {
     alignSelf: 'flex-start',
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
-    backgroundColor: 'rgba(21, 37, 31, 0.92)',
-    borderRadius: 999,
+    backgroundColor: colors.surfaceRaised,
+    borderRadius: radii.full,
     borderWidth: 1,
-    borderColor: colors.borderSubtle,
+    borderColor: colors.slateGrey,
   },
   loadingLabel: {
     color: colors.textSecondary,
