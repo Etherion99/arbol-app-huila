@@ -186,7 +186,7 @@ export default function GrowthLogScreen() {
           </AppText>
         </Pressable>
 
-        <AppText variant="subtitle" numberOfLines={1} style={styles.barTitle}>
+        <AppText variant="headerTitle" numberOfLines={1} style={styles.barTitle}>
           {isDead
             ? texts.growthLog.reportDead
             : nextCycle === null
@@ -350,13 +350,18 @@ const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing[2],
-    paddingHorizontal: spacing[3],
+    gap: spacing[3],
+    paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],
   },
+  // The glyph keeps its drawn size and the target grows around it, then the
+  // negative margin pulls that box back so the cross still starts on the
+  // sixteen point gutter the rest of the form is set on. Same trade the
+  // catalogue's header bar makes with its chevron, so the two bars line up.
   close: {
     width: MIN_TOUCH_TARGET,
     height: MIN_TOUCH_TARGET,
+    marginLeft: -spacing[3],
     alignItems: 'center',
     justifyContent: 'center',
   },
