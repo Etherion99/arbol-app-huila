@@ -434,4 +434,17 @@ export const texts = {
     /** No table records an export, so the canvas's last line cannot be filled. */
     lastExportUnavailable: 'Las exportaciones no quedan registradas todavía.',
   },
+
+  /** E1 · Mapa público de árboles. */
+  publicMap: {
+    title: 'Mapa de árboles',
+    subtitle: 'Árboles del proyecto PRAE «De la pantalla a la realidad»',
+    mapUnavailable: 'Mapa no disponible',
+    mapUnavailableConfiguring:
+      'El mapa público está configurándose. Puedes ver los árboles en la lista a continuación.',
+    mapUnavailableError: 'No se pudo cargar el servicio de mapas.',
+    loadingMap: 'Cargando mapa…',
+    updatingTrees: 'Actualizando árboles…',
+    noMapKey: 'Clave de Google Maps no configurada.',
+  },
 } as const;
