@@ -16,6 +16,7 @@ import {
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { ConnectionBanner } from '@/components/connection-banner';
+import { Icon } from '@/components/ui/icon';
 import { Notice } from '@/components/ui/notice';
 import { texts } from '@/constants/texts';
 import { colors, radii, spacing } from '@/constants/theme';
@@ -425,6 +426,12 @@ export default function MapScreen() {
           <View style={styles.plantAction} pointerEvents="box-none">
             <Button
               label={texts.planting.start}
+              // The seedling the catalogue draws in front of this label, taken
+              // from the icon kit rather than drawn here. It is left unnamed on
+              // purpose: it repeats the label beside it, and announcing
+              // «sembrar, Sembrar» is worse than announcing it once. White on
+              // the primary fill, 5.82:1, well past the 3:1 a stroke owes.
+              icon={<Icon name="sprout" size={19} color={colors.onAccent} />}
               onPress={() => router.push('/plant')}
               accessibilityHint={texts.planting.locationHeading}
             />
