@@ -125,7 +125,7 @@ export const texts = {
     noAccount: 'Crear cuenta de guardián',
     /** Separates having an account from not needing one. */
     or: 'O',
-    exploreAsGuest: 'Explorar el mapa sin cuenta',
+    exploreAsGuest: 'Explorar sin cuenta',
     sessionExpired: 'Tu sesión se cerró por seguridad. Vuelve a entrar para continuar.',
     passwordUpdated: 'Contraseña actualizada. Entra con la nueva.',
   },
