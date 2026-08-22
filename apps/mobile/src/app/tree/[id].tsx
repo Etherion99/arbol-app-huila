@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import type { Uuid } from '@arbolapp/core';
 
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ import { lightMapStyle } from '@/features/map/map-style';
 import { markerSprite } from '@/features/map/marker-sprites';
 import { HeightChart } from '@/features/trees/components/height-chart';
 import { PhotoComparator } from '@/features/trees/components/photo-comparator';
+import { PhotoViewer } from '@/features/trees/components/photo-viewer';
 import { useTreeDetail, type TimelineEntry } from '@/features/trees/use-tree-detail';
 import { formatCoordinates, formatShortDate, formatYear } from '@/lib/dates';
 
@@ -48,10 +50,14 @@ export default function TreeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useSession();
   const detail = useTreeDetail(id ?? null);
-  const [viewing, setViewing] = useState<TimelineEntry | null>(null);
+  // Which entry the viewer is open on, held by id rather than by object: a
+  // retry signs the photographs again and hands back new rows, and a captured
+  // object would keep showing the expired link the retry was meant to replace.
+  const [viewingId, setViewingId] = useState<Uuid | null>(null);
 
   const card = detail.data?.card ?? null;
   const entries = useMemo(() => detail.data?.entries ?? [], [detail.data]);
+  const viewing = entries.find((entry) => entry.id === viewingId) ?? null;
 
   // Oldest first, and only the entries that were measured: a death report has a
   // null height by design and plotting it as zero would draw a cliff.
@@ -188,7 +194,11 @@ export default function TreeDetailScreen() {
             <AppText variant="bodyMuted">{texts.treeDetail.logEmpty}</AppText>
           ) : (
             entries.map((entry) => (
-              <TimelineRow key={entry.id} entry={entry} onOpenPhoto={() => setViewing(entry)} />
+              <TimelineRow
+                key={entry.id}
+                entry={entry}
+                onOpenPhoto={() => setViewingId(entry.id)}
+              />
             ))
           )}
 
@@ -238,7 +248,14 @@ export default function TreeDetailScreen() {
 
       <ConnectionBanner />
 
-      <PhotoViewer entry={viewing} code={card.code} onClose={() => setViewing(null)} />
+      {/* Retrying mints the signed links again, which is the only thing that
+          can fix a photograph that stopped loading part way through a visit. */}
+      <PhotoViewer
+        entry={viewing}
+        code={card.code}
+        onClose={() => setViewingId(null)}
+        onRetry={() => void detail.refetch()}
+      />
     </SafeAreaView>
   );
 }
@@ -367,66 +384,6 @@ function TimelineRow({ entry, onOpenPhoto }: { entry: TimelineEntry; onOpenPhoto
         </AppText>
       </View>
     </Card>
-  );
-}
-
-function PhotoViewer({
-  entry,
-  code,
-  onClose,
-}: {
-  entry: TimelineEntry | null;
-  code: string;
-  onClose: () => void;
-}) {
-  return (
-    <Modal
-      visible={entry !== null}
-      animationType="fade"
-      onRequestClose={onClose}
-      accessibilityViewIsModal
-    >
-      <View style={styles.viewer}>
-        {entry?.photoUrl != null ? (
-          <Image
-            source={{ uri: entry.photoUrl }}
-            style={StyleSheet.absoluteFill}
-            contentFit="contain"
-            accessibilityLabel={texts.treeDetail.viewerCaption(code, entry.cycle)}
-          />
-        ) : null}
-
-        <SafeAreaView style={styles.viewerBar} edges={['top', 'right']}>
-          <Pressable
-            onPress={onClose}
-            accessibilityRole="button"
-            accessibilityLabel={texts.treeDetail.viewerClose}
-            style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
-          >
-            <AppText variant="subtitle" style={styles.backGlyph}>
-              ✕
-            </AppText>
-          </Pressable>
-        </SafeAreaView>
-
-        {entry !== null ? (
-          <SafeAreaView style={styles.viewerCaption} edges={['bottom']}>
-            <AppText variant="label" style={styles.viewerInk}>
-              {texts.treeDetail.viewerCaption(code, entry.cycle)}
-            </AppText>
-            <AppText variant="caption" style={[styles.viewerMeasures, styles.viewerInk]}>
-              {entry.heightCm === null
-                ? texts.treeDetail.logNoMeasures(formatShortDate(entry.capturedAt))
-                : texts.treeDetail.logMeasures(
-                    formatShortDate(entry.capturedAt),
-                    entry.heightCm,
-                    entry.visibleBranches,
-                  )}
-            </AppText>
-          </SafeAreaView>
-        ) : null}
-      </View>
-    </Modal>
   );
 }
 
@@ -623,34 +580,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
-  },
-  viewer: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  viewerBar: {
-    position: 'absolute',
-    right: spacing[3],
-    top: 0,
-  },
-  viewerCaption: {
-    position: 'absolute',
-    left: spacing[4],
-    right: spacing[4],
-    bottom: spacing[4],
-    gap: spacing[1],
-  },
-  /**
-   * The one place in this screen where the ink stays pale, because the ground
-   * stays black: a photograph shown at full size is looked at against nothing,
-   * and the caption is the only thing on top of it. `textPrimary` would read
-   * 1.21:1 here and vanish; `textInverse` reads 20.20:1.
-   */
-  viewerInk: {
-    color: colors.textInverse,
-  },
-  viewerMeasures: {
-    fontFamily: fontFace.monoMedium,
   },
   frameBar: {
     padding: spacing[3],
