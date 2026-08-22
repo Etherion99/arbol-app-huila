@@ -20,6 +20,9 @@ export type StepperFieldProps = {
  * Branch counts are single digits and the form is filled in standing up, in the
  * sun, next to a tree. Two large targets beat a keyboard that covers half the
  * screen for a number that is almost always under ten.
+ *
+ * Three separate boxes rather than one pill with two ends, which is how the
+ * catalogue draws it: each box is its own target and reads as its own control.
  */
 export function StepperField({
   label,
@@ -113,6 +116,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing[3],
   },
+  // All three boxes are white on a near-white page, 1.06:1 apart, so the border
+  // is the whole of what says "control" — SC 1.4.11 territory and its 3:1.
+  // `borderStrong` measures 1.52:1 on the page and cannot hold a target a
+  // guardian has to hit in the sun; this grey measures 4.43:1 on the page and
+  // 4.61:1 against the box's own white.
   button: {
     width: MIN_TOUCH_TARGET + spacing[2],
     height: MIN_TOUCH_TARGET + spacing[2],
@@ -120,7 +128,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
-    borderColor: colors.borderStrong,
+    borderColor: colors.slateGrey,
     borderRadius: radii.md,
   },
   readout: {
@@ -130,7 +138,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
-    borderColor: colors.borderStrong,
+    borderColor: colors.slateGrey,
     borderRadius: radii.md,
   },
   sign: {
