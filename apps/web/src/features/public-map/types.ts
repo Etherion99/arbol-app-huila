@@ -8,13 +8,16 @@
 
 /**
  * Tree tracking status colors (5 distinct colors, not 4).
- * - updated: #008D46 (Verde Huilense)
+ * - up_to_date: #008D46 (Verde Huilense)
  * - due_soon: #FFD700 (Amarillo)
  * - overdue: #F26522 (Naranja Plateño)
  * - dead: #E31B23 (Rojo)
  * - archived: #757575 (Gris)
+ *
+ * These are the values returned by the public.tree_tracking view,
+ * not the tree.status field (which distinguishes alive vs at_risk vs dead vs replanted).
  */
-export type TreeStatus = 'updated' | 'due_soon' | 'overdue' | 'dead' | 'archived';
+export type TrackingStatus = 'up_to_date' | 'due_soon' | 'overdue' | 'dead' | 'archived';
 
 /**
  * Minimal tree marker for map display.
@@ -24,32 +27,40 @@ export interface TreeMarker {
   id: string;
   lat: number;
   lng: number;
-  status: TreeStatus;
+  status: TrackingStatus;
   species: string;
 }
 
 /**
  * Complete tree card data.
  * Retrieved from tree_card() SQL function on user tap/click.
+ *
+ * Note: The photograph travels as an object key (photo_path), not as a signed URL.
+ * The bucket is private, so the client must sign the URL once the card is open,
+ * which is also why the map viewport query never fetches these paths.
  */
 export interface TreeCard {
   id: string;
   code: string;
+  speciesId: string;
   species: string;
-  speciesOriginal: string; // Guardian's original handwritten text
-  status: TreeStatus;
+  speciesOriginal: string; // Guardian's original handwritten text, never modified
+  trackingStatus: TrackingStatus; // How close to the next due date
+  status: string; // Tree life cycle status (alive, at_risk, dead, replanted)
   plantedAt: string; // ISO date
-  lastUpdatedAt: string; // ISO date
+  lastUpdatedAt: string; // ISO date, capture time of the newest log entry
+  nextReminderAt: string; // ISO date
   location: {
     lat: number;
     lng: number;
-    vereda: string;
-    municipality: string;
+    vereda: string | null;
+    municipality: string | null;
   };
-  cycle: number;
-  guardianName: string; // short_display_name() from public_users, e.g. "Andrés C."
-  photoUrl: string | null;
-  thumbnailUrl: string | null;
+  cycle: number | null; // Latest cycle number, or null if no entries yet
+  guardianId: string | null; // Null if unassigned
+  guardianName: string | null; // short_display_name() from public_users, e.g. "Andrés C.", null if no guardian
+  photoPath: string | null; // Object key in storage, not a URL (bucket is private)
+  thumbnailPath: string | null; // Object key of the 300px thumbnail
 }
 
 /**

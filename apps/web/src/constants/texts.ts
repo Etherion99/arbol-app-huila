@@ -31,6 +31,50 @@ export const texts = {
   /** The five tracking states, for any surface that names one. */
   treeState: treeStateLabels,
 
+  /** E1 · Mapa público con ficha del árbol. */
+  publicMap: {
+    title: 'Mapa de árboles del PRAE Huila',
+    subtitle: 'Ubicación de los árboles sembrados',
+    legend: 'Leyenda de estados',
+    legendTitle: 'Estados de seguimiento',
+    filterSpecies: 'Filtrar por especie',
+    filterZone: 'Filtrar por zona',
+    noFiltersApplied: 'Mostrando todos los árboles',
+    loading: 'Cargando árboles…',
+    emptyMap: 'No hay árboles en esta zona',
+    mapError: 'No se pudo cargar el mapa',
+    mapErrorDetail: 'Revisa tu conexión e inténtalo de nuevo.',
+    mapKeyMissing: 'Clave de Google Maps no configurada',
+    mapKeyMissingDetail:
+      'El mapa público no se puede mostrar sin una clave válida. Los filtros y la información del árbol están listos para usarse.',
+    retry: 'Reintentar',
+    treeCard: {
+      title: 'Detalle del árbol',
+      code: 'Código',
+      species: 'Especie',
+      speciesOriginal: 'Como fue registrada',
+      status: 'Estado',
+      planted: 'Fecha de siembra',
+      lastUpdated: 'Última actualización',
+      location: 'Ubicación',
+      village: 'Vereda',
+      municipality: 'Municipio',
+      guardian: 'Guardián responsable',
+      cycle: 'Ciclo',
+      noCycle: 'Sin registros',
+      noGuardian: 'Sin asignar',
+      noPhoto: 'Sin fotografía',
+      close: 'Cerrar',
+    },
+    states: {
+      up_to_date: 'Al día',
+      due_soon: 'Por actualizar',
+      overdue: 'Vencido',
+      dead: 'Muerto',
+      archived: 'Archivado',
+    },
+  },
+
   common: {
     appName: 'ÁrbolApp Huila',
     panelName: 'Panel de coordinación',
