@@ -219,10 +219,20 @@ export const texts = {
   /** The notification settings, reached from the row of the same name in the profile. */
   notificationSettings: {
     title: 'Notificaciones',
-    hint: 'Los recordatorios llegan cada dos meses, cuando toca fotografiar un árbol. El envío se activa más adelante.',
+    /**
+     * Not in the canvas, which draws the screen as if it worked. Nothing is
+     * sent and nothing is stored yet, and a switch that silently forgets what
+     * the guardian chose has to say so before it is touched.
+     */
+    inactiveNotice:
+      'El envío de notificaciones todavía no está activo. Por ahora estos interruptores no cambian nada y lo que elijas no se guarda al salir.',
     comingSoon: 'Disponible próximamente',
-    remindersLabel: 'Recordatorios de actualización',
-    summaryLabel: 'Resumen mensual de mis árboles',
+    remindersLabel: 'Recordatorios de bitácora',
+    remindersDescription: 'Un aviso cuando a un árbol tuyo le toque su foto bimestral',
+    coordinatorLabel: 'Avisos del coordinador',
+    coordinatorDescription: 'Archivados, reasignaciones y mensajes del PRAE',
+    pendingFootnote:
+      'Aunque desactives los avisos, tus árboles seguirán apareciendo como pendientes en la app.',
   },
 
   map: {
