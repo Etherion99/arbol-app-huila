@@ -14,6 +14,7 @@ import { MAX_CONTENT_WIDTH, colors, spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
 import { useZones } from '@/features/map/use-zones';
 import { useUserLocation } from '@/features/map/use-user-location';
+import { PlantingSuccess } from '@/features/planting/components/planting-success';
 import { StepLocation } from '@/features/planting/components/step-location';
 import { StepPhoto } from '@/features/planting/components/step-photo';
 import { StepSpecies } from '@/features/planting/components/step-species';
@@ -185,6 +186,20 @@ export default function PlantTreeScreen() {
     setDone({ registration: result.registration, villageName: villageName ?? '' });
   }, [heightNumber, registerTree, stepBlocker, update, villageName, working]);
 
+  /**
+   * Back to a blank step one without leaving the route. Planting a second tree
+   * on the same walk is the common case, and sending the guardian out to the
+   * map only to have them press «Sembrar» again is a detour through a screen
+   * they did not ask for.
+   */
+  const plantAnother = useCallback(() => {
+    clearPlantingDraft();
+    setWorking(emptyDraft());
+    setHasResumed(true);
+    setHasTriedToAdvance(false);
+    setDone(null);
+  }, []);
+
   const leave = useCallback(() => {
     // The draft is already on disk, so leaving is genuinely free. It is only
     // confirmed at all so a mis-tap on the close control does not lose the
@@ -207,7 +222,14 @@ export default function PlantTreeScreen() {
   }
 
   if (done !== null) {
-    return <PlantingSuccess done={done} speciesRawText={working.speciesRawText} />;
+    return (
+      <PlantingSuccess
+        registration={done.registration}
+        villageName={done.villageName}
+        speciesRawText={working.speciesRawText}
+        onPlantAnother={plantAnother}
+      />
+    );
   }
 
   if (resumable !== null) {
@@ -374,48 +396,6 @@ export default function PlantTreeScreen() {
   );
 }
 
-/** The screen after a successful planting, which is the payoff of the whole flow. */
-function PlantingSuccess({
-  done,
-  speciesRawText,
-}: {
-  done: { registration: TreeRegistration; villageName: string };
-  speciesRawText: string;
-}) {
-  const router = useRouter();
-
-  return (
-    <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
-      <View style={styles.centred}>
-        <AppText variant="display" style={styles.successTitle}>
-          {texts.planting.successTitle}
-        </AppText>
-        <AppText variant="bodyMuted" style={styles.centredBody}>
-          {texts.planting.successBody(speciesRawText, done.villageName)}
-        </AppText>
-        <AppText variant="data" style={styles.successCode}>
-          {done.registration.code}
-        </AppText>
-
-        <Button
-          label={texts.planting.successOpenTree}
-          onPress={() =>
-            router.replace({
-              pathname: '/tree/[id]',
-              params: { id: done.registration.treeId },
-            })
-          }
-        />
-        <Button
-          label={texts.planting.successDone}
-          variant="secondary"
-          onPress={() => router.replace('/trees')}
-        />
-      </View>
-    </SafeAreaView>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -453,15 +433,5 @@ const styles = StyleSheet.create({
   },
   centredBody: {
     textAlign: 'center',
-  },
-  successTitle: {
-    textAlign: 'center',
-  },
-  // The code is a 17px mono string, which is small text by the scale's own
-  // reckoning, and `accent` reads 4.12:1 on the page. `textLink` is the same
-  // green darkened for exactly this, at 5.60:1.
-  successCode: {
-    textAlign: 'center',
-    color: colors.textLink,
   },
 });

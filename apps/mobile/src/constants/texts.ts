@@ -400,7 +400,35 @@ export const texts = {
 
     successTitle: 'Tu árbol ya está en el mapa',
     successBody: (species: string, village: string) => `${species} · vereda ${village}`,
+    /**
+     * The whole sentence, for a screen reader. The screen draws the label and
+     * the date as two pieces because the canvas sets the date in the mono face,
+     * and hearing «Próxima foto, dos puntos» then a bare date is worse than
+     * hearing it read once as one line.
+     */
     successNextPhoto: (date: string) => `Próxima foto: ${date}`,
+    successNextPhotoLabel: 'Próxima foto:',
+    successNextPhotoLoading: 'Consultando la próxima fecha…',
+    successNextPhotoFailed:
+      'No pudimos consultar la próxima fecha. La encuentras en la ficha del árbol.',
+    successCodeLabel: (code: string) => `Código del árbol: ${code}`,
+
+    successNotifyTitle: '¿Te avisamos cuando toque la próxima foto?',
+    successNotifyBody: 'Un solo aviso cada dos meses, por árbol. Nada más.',
+    successNotifyAccept: 'Activar recordatorios',
+    successNotifyDecline: 'Ahora no',
+    /**
+     * Not in the canvas, which draws the request as if pressing it armed
+     * something. Nothing is armed: there is no permission to ask for and no
+     * sender behind it, so the answer says so instead of pretending. The second
+     * sentence is the same promise the notification settings already make.
+     */
+    successNotifyPending:
+      'El envío de notificaciones todavía no está activo, así que este aviso no queda programado. Tu árbol seguirá apareciendo como pendiente en la app cuando le toque la foto.',
+    successNotifyDeclined:
+      'Sin problema. Tu árbol aparecerá como pendiente en la app cuando le toque la foto.',
+    successNotifySettings: 'Ajustes de notificaciones',
+
     successOpenTree: 'Ver el árbol',
     successPlantAnother: 'Sembrar otro',
     successDone: 'Listo',
