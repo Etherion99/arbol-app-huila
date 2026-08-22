@@ -13,7 +13,14 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/ui/screen-header';
 import { texts } from '@/constants/texts';
-import { MAX_CONTENT_WIDTH, MIN_TOUCH_TARGET, colors, radii, spacing } from '@/constants/theme';
+import {
+  MAX_CONTENT_WIDTH,
+  MIN_TOUCH_TARGET,
+  colors,
+  fontFace,
+  radii,
+  spacing,
+} from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
 import { darkMapStyle } from '@/features/map/map-style';
 import { markerSprite } from '@/features/map/marker-sprites';
@@ -452,15 +459,15 @@ const styles = StyleSheet.create({
     gap: spacing[2],
   },
   entryMeasures: {
-    fontFamily: 'IBMPlexMono_500Medium',
+    fontFamily: fontFace.monoMedium,
     color: colors.textSecondary,
   },
   onTime: {
-    fontFamily: 'IBMPlexMono_500Medium',
+    fontFamily: fontFace.monoMedium,
     color: colors.textSecondary,
   },
   late: {
-    fontFamily: 'IBMPlexMono_500Medium',
+    fontFamily: fontFace.monoMedium,
     color: colors.stateDue,
   },
   guardianCard: {

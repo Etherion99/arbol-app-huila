@@ -30,7 +30,7 @@ module.exports = () => {
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'arbolapp',
-    userInterfaceStyle: 'dark',
+    userInterfaceStyle: 'light',
     ios: {
       icon: './assets/expo.icon',
       bundleIdentifier: 'co.edu.iesansebastian.arbolapp',

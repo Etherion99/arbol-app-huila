@@ -5,7 +5,7 @@ import { Image } from 'expo-image';
 import { AppText } from '@/components/ui/app-text';
 import { OptionSheet, type SheetOption } from '@/components/ui/option-sheet';
 import { texts } from '@/constants/texts';
-import { MIN_TOUCH_TARGET, colors, radii, spacing } from '@/constants/theme';
+import { MIN_TOUCH_TARGET, colors, fontFace, radii, spacing } from '@/constants/theme';
 import type { TimelineEntry } from '@/features/trees/use-tree-detail';
 import { formatDayAndMonth } from '@/lib/dates';
 
@@ -239,14 +239,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: spacing[2],
     bottom: spacing[1],
-    fontFamily: 'IBMPlexMono_500Medium',
+    fontFamily: fontFace.monoMedium,
     color: colors.textPrimary,
   },
   afterLabel: {
     position: 'absolute',
     right: spacing[2],
     bottom: spacing[1],
-    fontFamily: 'IBMPlexMono_500Medium',
+    fontFamily: fontFace.monoMedium,
     color: colors.textPrimary,
   },
   controls: {

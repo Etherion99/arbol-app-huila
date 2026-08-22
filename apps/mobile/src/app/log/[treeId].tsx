@@ -12,7 +12,7 @@ import { Notice } from '@/components/ui/notice';
 import { StepperField } from '@/components/ui/stepper-field';
 import { TextField } from '@/components/ui/text-field';
 import { texts } from '@/constants/texts';
-import { MAX_CONTENT_WIDTH, MIN_TOUCH_TARGET, colors, spacing } from '@/constants/theme';
+import { MAX_CONTENT_WIDTH, MIN_TOUCH_TARGET, colors, fontFace, spacing } from '@/constants/theme';
 import { useAddLogEntry } from '@/features/growth-log/use-add-log-entry';
 import { useUserLocation } from '@/features/map/use-user-location';
 import { PhotoCapture } from '@/features/photos/components/photo-capture';
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   capture: {
-    fontFamily: 'IBMPlexMono_500Medium',
+    fontFamily: fontFace.monoMedium,
     color: colors.textSecondary,
   },
   actions: {

@@ -5,7 +5,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* The design system is dark first, so shadcn's semantic variables are bound to
+/* The design system is light first, so shadcn's semantic variables are bound to
    the ÁrbolApp tokens rather than to the greys the generator shipped with. The
    `.dark` block repeats the same bindings: there is one theme, and a `dark:`
    utility must not fall back to a palette nobody chose.
@@ -21,6 +21,10 @@
      the fallback. layout.tsx owns the face variables; the tokens own the names. */
   --font-sans: var(--font-body-face), var(--font-body);
   --font-heading: var(--font-display-face), var(--font-display);
+  /* `--font-subheading`, not `--font-subhead`: the token from design-tokens.css
+     already owns that name, and a theme key pointing at itself resolves to
+     nothing. Same reason `--font-mono` below spells its fallback out. */
+  --font-subheading: var(--font-subhead-face), var(--font-subhead);
   --font-mono: var(--font-mono-face), ui-monospace, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);

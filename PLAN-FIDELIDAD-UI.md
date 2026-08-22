@@ -127,11 +127,51 @@ una pantalla más adentro. El enlace es discreto, en `textSecondary`, para no co
 las dos acciones que la pantalla sí pide.
 
 **D-04 y D-09 son la misma regla aplicada dos veces**, y merece la pena decirla entera: el
-sistema de diseño usa `--text-muted` y `--state-archived` —el mismo gris `#66796F`— como
-texto pequeño en varios sitios, y ese gris llega como mucho a 4.01:1. El propio documento de
-fidelidad ya lo registra como una de las tres deudas de contraste del sistema. **En este
-proyecto el gris se queda en el borde, el punto y el icono; el texto pasa a
-`textSecondary`.**
+sistema de diseño usa `--text-muted` y `--state-archived` —el mismo gris— como texto pequeño
+en varios sitios, y ese gris no llega al 4.5:1. **En este proyecto el gris se queda en el
+borde, el punto y el icono; el texto pasa a `textSecondary`.**
+
+> **Remedido sobre el tema claro el 22 de agosto de 2026.** El gris ya no es `#66796F` a
+> 4.01:1 sino `#757575` a **4.43:1** sobre `surface-page`. La cifra cambia, la regla no: sigue
+> por debajo de 4.5 y sigue sin poder llevar texto pequeño. El detalle está en
+> «Contraste sobre el tema claro» más abajo.
+
+---
+
+## Contraste sobre el tema claro
+
+Medición del 22 de agosto de 2026, con `pnpm test:contrast`. El script lee los tokens de
+`packages/core/src/theme.ts` —no una copia— y falla si alguno deja de cumplir la regla que el
+docblock de ese archivo declara para él. Las reglas por token viven ahí, que es donde las
+busca quien va a elegir un color; aquí solo está el **veredicto de cada excepción que ya
+estaba escrita en el código**.
+
+Todas se razonaron sobre fondo oscuro y todas había que rehacerlas. Ninguna se toca en esta
+ola: reescribir componentes es R2 y R3.
+
+| # | Dónde | Excepción tal como está hoy | Veredicto |
+|---|---|---|---|
+| C-01 | `ui/badge.tsx` | «Archivado» y el rótulo de marca usan un neutro legible en vez de su color de estado. El comentario cita 3.44:1 y 4.34:1 sobre tarjeta oscura. | **Se mantiene y se extiende a los cinco tonos.** Las cifras cambian pero el sentido no: ningún tono llega a 4.5 sobre su propio relleno. Cifras nuevas en PD-07. |
+| C-02 | `ui/select.tsx` | El texto de sugerencia usa `textSecondary` en vez del gris del catálogo. Cita 3.4:1. | **Se mantiene.** El gris es ahora `#757575` a **4.43:1** sobre la página: sigue sin llegar a 4.5. Corregir solo la cifra del comentario. |
+| C-03 | `features/map/map-legend.tsx` | Las etiquetas de la leyenda en `textSecondary` a 12 px. | **Se mantiene, y deja de ser desviación.** El lienzo v2 dibuja esa misma leyenda con `--text-secondary` y el color solo en el punto. El código y el lienzo coinciden. |
+| C-04 | `features/map/tree-summary-sheet.tsx` | La línea de metadatos en `textSecondary` en vez del gris. Cita 3.44:1. | **Se mantiene.** Mismo caso que C-02: 4.43:1, sigue corto. Corregir la cifra. |
+| C-05 | `constants/theme.ts`, `bodyMuted` | `textSecondary` en vez del gris. Cita 4.01:1. | **Se mantiene.** La cifra correcta es **4.43:1**. |
+| C-06 | `ui/dialog.tsx` | El cuerpo se pone en `surfaceCard` y no en `surfaceOverlay` porque `danger` «solo llega a 4.31:1 sobre el overlay». | **Desaparece.** En la paleta v2 `surfaceCard` y `surfaceOverlay` son **el mismo `#FFFFFF`**, así que la elección ya no defiende nada: `danger` da 4.72:1 en las dos y 4.54:1 sobre la página. El componente puede quedarse donde está, pero el razonamiento de contraste se retira. |
+| C-07 | `ui/button.tsx`, rótulo `primary` | El comentario dice «tinta oscura sobre el relleno verde: el par supera AA de sobra, cosa que el blanco sobre ese mismo verde no hace». | **Se retira: hoy es falso en las dos direcciones.** El código ya usa `onAccent`, que en v2 es **blanco**, así que el comentario contradice a su propia línea. Y ninguna de las dos tintas supera AA: blanco 4.29:1, tinta oscura 4.06:1. Escala a **PD-07**. |
+| C-08 | `ui/button.tsx`, rótulo `ghost` | Usa `emerald400` porque «es un paso más brillante que el relleno del acento, y eso es lo que lo mantiene legible sin fondo». | **Cambia a `textLink` `#00753A`.** El razonamiento era de tema oscuro: sobre papel blanco `emerald400` `#3FB877` cae a **2.42:1**, por debajo incluso del 3:1. Es un rótulo prácticamente invisible. `textLink` da **5.60:1** y ya es el verde que la paleta reserva para texto. |
+| C-09 | `ui/status-dot.tsx` | El anillo del punto es `rgba(7, 14, 12, 0.9)` «contra el suelo nocturno, para que el punto siga legible sobre una teja pálida». | **El anillo se queda; el motivo se reescribe.** Ya no hay suelo nocturno, pero el anillo sigue haciendo falta y sigue funcionando: separa el punto de una teja clara a 14.86:1 y mantiene ≥3:1 con los cinco estados (el peor es `stateDead`, 3.27:1). Lo que caduca es la frase, no el valor. |
+
+### Dos hallazgos que la lista no traía
+
+- **`map-search-bar.tsx` tiene un fondo del tema oscuro sin migrar.** La barra se pinta con
+  `rgba(21, 37, 31, 0.92)`, que compuesto sobre la página da `#273630`, casi negro. Sobre él,
+  el `textSecondary` que el propio archivo eligió «porque supera AA en toda superficie» da
+  **1.73:1**, y el marcador de posición es ilegible. La excepción de C-02 es correcta; lo que
+  está roto es la superficie. **Es trabajo de R2 y merece prioridad**, porque es la primera
+  pantalla de la app.
+- **C-08 es el mismo tipo de resto**: un token pensado para brillar sobre negro que en papel
+  blanco desaparece. Conviene barrer `emerald300`, `emerald400`, `green700` y `green800` en
+  R2: los cuatro están por debajo de 3:1 y ninguno puede llevar texto ni icono.
 
 ---
 
@@ -148,6 +188,59 @@ Estado al 21 de agosto de 2026. Los copys citados son **literales verificados** 
 | PD-04 | Incoherencia A4 / A9 sobre confirmar contraseña | U3 | ✅ **resuelta** — sin confirmación en ninguna |
 | PD-05 | Enlace al aviso legal en la barra de A8 | — | 📤 redactada en U2 |
 | PD-06 | Qué opciones lleva el `Select` de «Rol o institución» de A4 | A4 | 📤 redactada en U3 |
+| PD-07 | Tinta blanca sobre `--accent` en el botón primario, y la insignia de estado | **R2 entera** | 📤 redactada el 22 de agosto de 2026 |
+
+### PD-07 · El botón primario y la insignia de estado no llegan a AA
+
+| | |
+|---|---|
+| **Bloque y posición** | No es pantalla nueva. Afecta al `Button` primario y al `Badge`, es decir a casi todos los artboards del lienzo v2. |
+| **Por qué hace falta** | `scripts/check-contrast.mjs` mide la paleta 2026 contra WCAG 2.1. El botón primario es `--on-accent` (blanco) sobre `--accent` `#008D46`: **4.29:1**, por debajo del 4.5:1 que exige el texto pequeño. El lienzo v2 lo dibuja así **35 veces**, a 13, 14, 15 y 16 px, todos tamaños pequeños. Invertir la tinta no salva nada: `--text-primary` sobre el mismo verde da **4.06:1**, peor. **Ninguna tinta de la paleta funciona sobre `--accent`**, así que la solución no está en el código. |
+| **Archivo del código** | `apps/mobile/src/components/ui/button.tsx` (variante `primary`), `apps/mobile/src/components/ui/badge.tsx` |
+| **Qué hace falta decidir** | Ver las cuatro opciones de abajo. |
+| **Qué NO cambiar** | El Verde Huilense `#008D46` **sigue siendo el primario de la marca** y el naranja `#F26522` el secundario. La petición no propone repintar la marca, sino decidir qué relleno lleva el control que se pulsa. |
+
+**Opciones para el botón primario, con la cifra de cada una:**
+
+| # | Propuesta | Ratio con blanco | Coste |
+|---|---|---|---|
+| A | Rellenar con `--accent-pressed` `#00753A` y dejar `--accent` para bordes, iconos y el punto de estado | **5.82:1** ✅ | El botón se oscurece un paso. `--accent-pressed` queda libre para otro valor. |
+| B | Oscurecer `--accent` mismo hasta cruzar 4.5:1 | — | Toca la marca. Es **nivel 3**: no lo decide un agente. |
+| C | Subir el rótulo a texto grande (≥20 px en negrita o ≥26 px normal) | 4.29:1 vale como texto grande | Rompe la escala del lienzo, que usa 13–16 px, y hace enormes todos los botones. |
+| D | Aceptar el 3:1 de gráficos y documentar la excepción | 4.29:1 la cumple | **Es la opción que más se paga aquí**: la app se lee a pleno sol, de pie, en una vereda, que es exactamente el escenario para el que existe el 4.5:1. |
+
+**Recomendación: la opción A.** Es la única que cruza AA sin tocar la marca ni la escala
+tipográfica, y `#00753A` ya está en la paleta como `--accent-pressed`, `--text-link`,
+`--green-900` y `--emerald-600`, así que no inventa ningún verde nuevo.
+
+**La insignia de estado es un problema aparte, y más grave.** Ninguno de los once rellenos
+`*-soft` puede llevar su propio color como rótulo una vez compuesto el alfa sobre la página:
+
+| Insignia | Su color como tinta | `--text-primary` | `--text-secondary` | `--earth-brown` |
+|---|---|---|---|---|
+| Al día | 3.45 ⛔ | 14.00 ✅ | 5.89 ✅ | 4.83 ✅ |
+| Por actualizar | **1.25** ⛔⛔ | 15.52 ✅ | 6.52 ✅ | 5.36 ✅ |
+| Vencido | 2.55 ⛔ | 14.08 ✅ | 5.92 ✅ | 4.86 ✅ |
+| Muerto | 3.62 ⛔ | 13.34 ✅ | 5.61 ✅ | 4.61 ✅ |
+| Archivado | 3.66 ⛔ | 13.82 ✅ | 5.81 ✅ | 4.77 ✅ |
+| Juventud en línea | 2.95 ⛔ | 13.96 ✅ | 5.87 ✅ | 4.82 ✅ |
+
+**Y aquí el lienzo v2 ya decidió, al menos para el amarillo.** «Por actualizar» se dibuja con
+relleno `--state-due-soft`, punto `--state-due` y **rótulo `--earth-brown` `#8B572A`**, que
+da 5.36:1 sobre ese relleno. Sin borde. Es exactamente el patrón que hace falta, y la guía
+`guidelines/colors-states.html` lo refuerza: dibuja los cinco estados como punto de color con
+la etiqueta en `--text-primary`.
+
+**Lo que falta decidir, entonces, no es el amarillo sino los otros cuatro.** El componente
+`components/display/Badge.jsx` del sistema de diseño sigue poniendo `color: var(--state-ok)`,
+`var(--state-overdue)`, `var(--state-archived)` y `var(--jil-magenta)` como tinta, y el lienzo
+v2 le hace caso en esos cuatro. Las tres fuentes no coinciden entre sí. La pregunta para
+diseño es: **¿se extiende el patrón de `--earth-brown` a los cinco estados —una tinta oscura
+propia de cada color— o los cinco pasan a `--text-primary` como ya hace la guía de estados?**
+
+> ⚠️ Mientras PD-07 no se resuelva, `Badge` **no puede** usar el color de estado como rótulo
+> en ningún tono. El color vive en el borde y el punto. Es la regla que D-04 ya aplicaba a dos
+> tonos y que la medición extiende a los cinco.
 
 ### PD-06 · Las opciones del select de A4
 

@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
   },
   label: {
-    fontFamily: fontFace.bodySemibold,
+    fontFamily: fontFace.bodyMedium,
     fontSize: fontSize.xs,
     lineHeight: fontSize.xs + 4,
   },

@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
 import { texts } from '@/constants/texts';
-import { MIN_TOUCH_TARGET, colors, radii, spacing } from '@/constants/theme';
+import { MIN_TOUCH_TARGET, colors, fontFace, radii, spacing } from '@/constants/theme';
 
 export type WizardHeaderProps = {
   /** Zero based, because the steps live in an array. */
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   stepLabel: {
-    fontFamily: 'IBMPlexMono_500Medium',
+    fontFamily: fontFace.monoMedium,
     color: colors.textSecondary,
   },
   title: {

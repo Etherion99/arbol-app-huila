@@ -50,7 +50,7 @@ es la **maquetación**, que es otra tarea y no debe mezclarse con la anterior:
 | Tipografía y efectos | `packages/core/src/theme.ts` | ✅ tamaños, interlineados, pesos, sombras y motion |
 | Variables CSS para la web | `apps/web/src/app/design-tokens.css` | ✅ generadas desde TypeScript con `pnpm tokens` |
 | Color del splash y del ícono adaptativo | `apps/mobile/app.config.js` | ✅ leído de los tokens; `app.json` ya no existe |
-| Fuentes | `apps/mobile`, `apps/web` | ✅ Bricolage Grotesque, Archivo e IBM Plex Mono cargadas en las dos plataformas |
+| Fuentes | `apps/mobile`, `apps/web` | ✅ Montserrat, Open Sans, Roboto y Roboto Mono cargadas en las dos plataformas |
 | **Componentes de interfaz** | `apps/mobile/src/components/ui/` | 🔧 pendiente — contrastar con `Button`, `Input`, `Checkbox`, `Card`, `Badge`, `Toast` y `Dialog` |
 | **Las 10 pantallas de autenticación** | `apps/mobile/src/app/(auth)/`, `onboarding/` | 🔧 pendiente — contrastar con `Pantallas v1.dc.html` |
 
