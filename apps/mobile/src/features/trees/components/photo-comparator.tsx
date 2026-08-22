@@ -3,6 +3,7 @@ import { LayoutChangeEvent, PanResponder, Pressable, StyleSheet, View } from 're
 import { Image } from 'expo-image';
 
 import { AppText } from '@/components/ui/app-text';
+import { Card } from '@/components/ui/card';
 import { OptionSheet, type SheetOption } from '@/components/ui/option-sheet';
 import { texts } from '@/constants/texts';
 import { MIN_TOUCH_TARGET, colors, fontFace, radii, spacing } from '@/constants/theme';
@@ -61,10 +62,10 @@ export function PhotoComparator({ entries, height = 200 }: PhotoComparatorProps)
 
   if (withPhotos.length < 2) {
     return (
-      <View style={styles.card}>
+      <Card padding={spacing[3]} style={styles.card}>
         <AppText variant="overline">{texts.treeDetail.compareHeading}</AppText>
         <AppText variant="caption">{texts.treeDetail.compareEmpty}</AppText>
-      </View>
+      </Card>
     );
   }
 
@@ -77,7 +78,7 @@ export function PhotoComparator({ entries, height = 200 }: PhotoComparatorProps)
   const nudge = (delta: number) => setRatio((current) => Math.min(1, Math.max(0, current + delta)));
 
   return (
-    <View style={styles.card}>
+    <Card padding={spacing[3]} style={styles.card}>
       <AppText variant="overline">{texts.treeDetail.compareHeading}</AppText>
 
       <View
@@ -111,15 +112,23 @@ export function PhotoComparator({ entries, height = 200 }: PhotoComparatorProps)
         </View>
 
         <View style={[styles.divider, { left: `${ratio * 100}%` }]} pointerEvents="none">
-          <View style={styles.handle} />
+          <View style={styles.handle}>
+            <AppText variant="caption" style={styles.handleGlyph}>
+              ⇄
+            </AppText>
+          </View>
         </View>
 
-        <AppText variant="caption" style={styles.beforeLabel}>
-          {formatDayAndMonth(before.capturedAt)}
-        </AppText>
-        <AppText variant="caption" style={styles.afterLabel}>
-          {formatDayAndMonth(after.capturedAt)}
-        </AppText>
+        <View style={[styles.stamp, styles.beforeStamp]} pointerEvents="none">
+          <AppText variant="caption" style={styles.stampLabel}>
+            {formatDayAndMonth(before.capturedAt)}
+          </AppText>
+        </View>
+        <View style={[styles.stamp, styles.afterStamp]} pointerEvents="none">
+          <AppText variant="caption" style={styles.stampLabel}>
+            {formatDayAndMonth(after.capturedAt)}
+          </AppText>
+        </View>
       </View>
 
       <View style={styles.controls}>
@@ -191,18 +200,15 @@ export function PhotoComparator({ entries, height = 200 }: PhotoComparatorProps)
         }}
         onClose={() => setOpenPicker(null)}
       />
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
+  // The surface, the outline and the shadow come from the catalogue's `Card`,
+  // which is the same container the height panel under this one sits in.
   card: {
     gap: spacing[2],
-    padding: spacing[3],
-    backgroundColor: colors.surfaceCard,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: radii.lg,
   },
   stage: {
     position: 'relative',
@@ -232,20 +238,38 @@ const styles = StyleSheet.create({
   handle: {
     width: 22,
     height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: radii.full,
     backgroundColor: colors.accent,
   },
-  beforeLabel: {
-    position: 'absolute',
-    left: spacing[2],
-    bottom: spacing[1],
-    fontFamily: fontFace.monoMedium,
-    color: colors.textPrimary,
+  handleGlyph: {
+    color: colors.onAccent,
   },
-  afterLabel: {
+  /**
+   * The two dates sit on a photograph, and a photograph can be any colour.
+   * The canvas sets them straight onto the picture, which only holds while the
+   * picture is the dark placeholder it draws: over a bright sky the ink falls
+   * to 1.21:1 and the date disappears. So each date gets its own ground, an
+   * opaque paper chip, exactly the way the map stopped relying on a wash and
+   * gave its controls a fill of their own. `textPrimary` on it reads 17.40:1
+   * whatever the guardian photographed.
+   */
+  stamp: {
     position: 'absolute',
-    right: spacing[2],
     bottom: spacing[1],
+    paddingVertical: 1,
+    paddingHorizontal: spacing[1] + 2,
+    backgroundColor: colors.surfaceRaised,
+    borderRadius: radii.sm,
+  },
+  beforeStamp: {
+    left: spacing[2],
+  },
+  afterStamp: {
+    right: spacing[2],
+  },
+  stampLabel: {
     fontFamily: fontFace.monoMedium,
     color: colors.textPrimary,
   },
@@ -271,7 +295,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[2],
     backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
-    borderColor: colors.borderStrong,
+    // The edge of a control, not a divider: `borderStrong` reads 1.58:1 on the
+    // white card and would draw nothing, so this takes the same `slateGrey`
+    // outline the catalogue's fields and selects carry, at 4.61:1.
+    borderColor: colors.slateGrey,
     borderRadius: radii.md,
   },
   pickerLabel: {

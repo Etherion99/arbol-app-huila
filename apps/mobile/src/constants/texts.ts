@@ -538,8 +538,16 @@ export const texts = {
     logOpenPhoto: (cycle: number) => `Ver la fotografía del ciclo ${cycle}`,
     logEmpty: 'Esta bitácora todavía no tiene entradas.',
 
+    // The whole sentence, which is what a screen reader is given. The four
+    // fragments below are the same sentence taken apart, because the canvas
+    // gives the name and the seniority their own tints and a tinted fragment
+    // has to be its own text node.
     guardianLine: (name: string, since: string) =>
       `Este árbol pertenece a ${name}, guardián desde ${since}.`,
+    guardianLineLead: 'Este árbol pertenece a ',
+    guardianLineJoin: ', ',
+    guardianLineSince: (since: string) => `guardián desde ${since}`,
+    guardianLineEnd: '.',
     guardianUnknown: 'Este árbol no tiene guardián asignado.',
     miniMapLabel: 'Ubicación del árbol en el mapa',
 

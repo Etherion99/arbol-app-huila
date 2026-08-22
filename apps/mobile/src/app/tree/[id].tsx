@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { ConnectionBanner } from '@/components/connection-banner';
 import { Notice } from '@/components/ui/notice';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Icon } from '@/components/ui/icon';
 import { ScreenHeader } from '@/components/ui/screen-header';
 import { texts } from '@/constants/texts';
 import {
@@ -28,6 +30,9 @@ import { HeightChart } from '@/features/trees/components/height-chart';
 import { PhotoComparator } from '@/features/trees/components/photo-comparator';
 import { useTreeDetail, type TimelineEntry } from '@/features/trees/use-tree-detail';
 import { formatCoordinates, formatShortDate, formatYear } from '@/lib/dates';
+
+/** How much paper the veil over the cover photograph ends up carrying. */
+const COVER_VEIL_ALPHA = 0.92;
 
 /**
  * Everything known about one tree.
@@ -113,11 +118,14 @@ export default function TreeDetailScreen() {
             />
           ) : (
             <View style={[StyleSheet.absoluteFill, styles.coverEmpty]}>
-              <AppText variant="caption">{texts.treeDetail.noCover}</AppText>
+              <Icon name="sprout" size={64} color={colors.emerald400} />
+              <AppText variant="caption" style={styles.noCover}>
+                {texts.treeDetail.noCover}
+              </AppText>
             </View>
           )}
 
-          <View style={styles.coverScrim} pointerEvents="none" />
+          <CoverVeil treeId={card.treeId} />
 
           <SafeAreaView style={styles.coverBar} edges={['top']}>
             <Pressable
@@ -126,9 +134,7 @@ export default function TreeDetailScreen() {
               accessibilityLabel={texts.common.back}
               style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
             >
-              <AppText variant="subtitle" style={styles.backGlyph}>
-                ‹
-              </AppText>
+              <Icon name="chevronLeft" size={22} color={colors.textPrimary} />
             </Pressable>
           </SafeAreaView>
 
@@ -137,7 +143,7 @@ export default function TreeDetailScreen() {
               <AppText variant="title" numberOfLines={1}>
                 {card.speciesRawText}
               </AppText>
-              <AppText variant="overline">
+              <AppText variant="overline" style={styles.coverMeta}>
                 {texts.treeDetail.header(
                   card.latestCycle === null
                     ? texts.myTrees.noCycle
@@ -187,14 +193,16 @@ export default function TreeDetailScreen() {
           )}
 
           <Card padding={spacing[3]} style={styles.guardianCard}>
-            <AppText variant="caption" style={styles.guardianLine}>
-              {card.guardianDisplayName === null
-                ? texts.treeDetail.guardianUnknown
-                : texts.treeDetail.guardianLine(
-                    card.guardianDisplayName,
-                    card.guardianSince === null ? '—' : formatYear(card.guardianSince),
-                  )}
-            </AppText>
+            {card.guardianDisplayName === null ? (
+              <AppText variant="caption" style={styles.guardianLine}>
+                {texts.treeDetail.guardianUnknown}
+              </AppText>
+            ) : (
+              <GuardianLine
+                name={card.guardianDisplayName}
+                since={card.guardianSince === null ? '—' : formatYear(card.guardianSince)}
+              />
+            )}
 
             <View style={styles.miniMap}>
               <MapView
@@ -235,6 +243,79 @@ export default function TreeDetailScreen() {
   );
 }
 
+/**
+ * Who looks after this tree, in the three tints the canvas gives the sentence:
+ * the running text quiet, the name in full ink, the seniority coloured.
+ *
+ * The colour is not the one drawn. The canvas tints the seniority in the
+ * Juventud en línea magenta, and that palette is an affiliation mark that is
+ * not allowed into the interface, where it would compete with the five colours
+ * of the map legend. `accentPressed` `#00753A` is the darkest step of Verde
+ * Huilense and the only tint in the primary ramp that carries a caption on a
+ * white card, at 5.82:1; the accent itself reads 4.29:1 and the secondary
+ * orange 3.15:1, both under the bar for text this size.
+ *
+ * The three nodes are read out as one sentence, because a screen reader that
+ * pauses at every change of colour turns a sentence into a list.
+ */
+function GuardianLine({ name, since }: { name: string; since: string }) {
+  return (
+    <AppText
+      variant="caption"
+      style={styles.guardianLine}
+      accessibilityLabel={texts.treeDetail.guardianLine(name, since)}
+    >
+      {texts.treeDetail.guardianLineLead}
+      <AppText variant="caption" style={styles.guardianName}>
+        {name}
+      </AppText>
+      {texts.treeDetail.guardianLineJoin}
+      <AppText variant="caption" style={styles.guardianSince}>
+        {texts.treeDetail.guardianLineSince(since)}
+      </AppText>
+      {texts.treeDetail.guardianLineEnd}
+    </AppText>
+  );
+}
+
+/**
+ * The wash the canvas lays over the foot of the cover.
+ *
+ * It runs the other way round from the one the dark theme had: the paper colour
+ * rises out of the photograph instead of a shadow falling onto it, and the
+ * caption is set in ordinary dark ink on top. Over the blackest photograph a
+ * guardian could take, the title reads 14.01:1 and the mono line under it
+ * 5.89:1; over the brightest, 16.78:1 and 7.06:1.
+ *
+ * The canvas holds the veil transparent for the first 35% and lets it climb to
+ * the bottom edge. It reaches full strength earlier here, at 65%, so the whole
+ * caption block stands on the finished wash rather than on the middle of the
+ * ramp — a gradient measured at its foot says nothing about the ink 60 points
+ * above it.
+ *
+ * A gradient needs SVG because the project has no gradient view, which is the
+ * same reason and the same shape as the veil at the foot of the onboarding
+ * block.
+ */
+function CoverVeil({ treeId }: { treeId: string }) {
+  // Gradient ids are looked up by name at paint time, so two covers alive at
+  // once during a push must not answer to the same one.
+  const veilId = `tree-cover-veil-${treeId}`;
+
+  return (
+    <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" pointerEvents="none">
+      <Defs>
+        <LinearGradient id={veilId} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0.35" stopColor={colors.surfacePage} stopOpacity={0} />
+          <Stop offset="0.65" stopColor={colors.surfacePage} stopOpacity={COVER_VEIL_ALPHA} />
+          <Stop offset="1" stopColor={colors.surfacePage} stopOpacity={COVER_VEIL_ALPHA} />
+        </LinearGradient>
+      </Defs>
+      <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${veilId})`} />
+    </Svg>
+  );
+}
+
 function TimelineRow({ entry, onOpenPhoto }: { entry: TimelineEntry; onOpenPhoto: () => void }) {
   const isPlanting = entry.cycle === 1;
 
@@ -253,7 +334,11 @@ function TimelineRow({ entry, onOpenPhoto }: { entry: TimelineEntry; onOpenPhoto
             contentFit="cover"
             accessibilityElementsHidden
           />
-        ) : null}
+        ) : (
+          // The canvas never leaves the slot blank: an entry with no picture
+          // still shows what it would have held.
+          <Icon name={isPlanting ? 'sprout' : 'camera'} color={colors.textMuted} />
+        )}
       </View>
 
       <View style={styles.entryBody}>
@@ -326,8 +411,10 @@ function PhotoViewer({
 
         {entry !== null ? (
           <SafeAreaView style={styles.viewerCaption} edges={['bottom']}>
-            <AppText variant="label">{texts.treeDetail.viewerCaption(code, entry.cycle)}</AppText>
-            <AppText variant="caption" style={styles.entryMeasures}>
+            <AppText variant="label" style={styles.viewerInk}>
+              {texts.treeDetail.viewerCaption(code, entry.cycle)}
+            </AppText>
+            <AppText variant="caption" style={[styles.viewerMeasures, styles.viewerInk]}>
               {entry.heightCm === null
                 ? texts.treeDetail.logNoMeasures(formatShortDate(entry.capturedAt))
                 : texts.treeDetail.logMeasures(
@@ -362,22 +449,36 @@ const styles = StyleSheet.create({
   scroll: {
     paddingBottom: spacing[6],
   },
+  /**
+   * The photographic well stays dark on purpose. Turning the whole app to
+   * paper did not turn the pictures to paper: the canvas still draws this one
+   * over a deep green, the same well the onboarding block keeps. What changed
+   * is which end of the ramp answers to which name — `green700` was the deepest
+   * green in the dark palette and is the palest wash in this one, so the name
+   * survived the rebrand and the colour inverted underneath it. `green990` is
+   * the token nearest the well the canvas draws, and a token is worth more here
+   * than a transcribed hex.
+   */
   cover: {
     position: 'relative',
     height: 230,
-    backgroundColor: colors.green700,
+    backgroundColor: colors.green990,
   },
   coverEmpty: {
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing[2],
   },
-  coverScrim: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(7, 14, 12, 0.45)',
+  // On the dark well, not on the page: `emerald400` reads 5.87:1 there and the
+  // caption 14.23:1.
+  noCover: {
+    color: colors.textInverse,
+  },
+  // The cycle, the vereda and the coordinates. Mono because the line ends in a
+  // pair of coordinates, and the design system keeps every measured figure on
+  // the mono face.
+  coverMeta: {
+    fontFamily: fontFace.monoMedium,
   },
   coverBar: {
     position: 'absolute',
@@ -398,14 +499,26 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing[1],
   },
+  /**
+   * A control on top of a photograph, so it carries its own ground rather than
+   * borrowing one: an opaque white disc, the way the map's controls stopped
+   * relying on a wash once the ground under them turned pale. The canvas draws
+   * it at 38 points and it is 44 here, which is the minimum side of anything
+   * tapped standing up with one hand holding a branch.
+   *
+   * The outline is not the one drawn either. `borderStrong` reads 13.25:1
+   * against a dark photograph and 1.58:1 against a bright one, so on a sky the
+   * disc would have no edge at all; `slateGrey` reads 4.56:1 and 4.61:1 and is
+   * the outline the catalogue already gives every field and select.
+   */
   backButton: {
     width: MIN_TOUCH_TARGET,
     height: MIN_TOUCH_TARGET,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(21, 37, 31, 0.85)',
+    backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
-    borderColor: colors.borderStrong,
+    borderColor: colors.slateGrey,
     borderRadius: radii.full,
   },
   backGlyph: {
@@ -421,6 +534,15 @@ const styles = StyleSheet.create({
   code: {
     color: colors.textSecondary,
   },
+  /**
+   * The canvas sets the comparator and the height panel side by side, half the
+   * width each. They are stacked here because the comparator is not a picture:
+   * it carries two step buttons and two entry pickers in a row, and four
+   * controls of 44 points do not fit into the 147 points a half column leaves
+   * once the card is padded. Half of them would have to shrink under the
+   * minimum side of a tappable control, which is the one thing that cannot be
+   * traded for fidelity on a screen used standing up in a grove.
+   */
   panels: {
     flexDirection: 'row',
     gap: spacing[3],
@@ -438,6 +560,8 @@ const styles = StyleSheet.create({
   entryThumb: {
     width: 56,
     height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
     overflow: 'hidden',
     backgroundColor: colors.surfaceOverlay,
     borderWidth: 1,
@@ -466,9 +590,16 @@ const styles = StyleSheet.create({
     fontFamily: fontFace.monoMedium,
     color: colors.textSecondary,
   },
+  /**
+   * The canvas draws no late entry, and the yellow the state uses elsewhere is
+   * `#FFD700` at 1.40:1 on the card, which is nothing at all — yellow is a
+   * fill, a dot or a rule in this palette and never a word. `earthBrown`
+   * `#8B572A` reads 6.01:1 and is already the standing ink of the yellow state
+   * across the app, which is how the badge sets «Por actualizar».
+   */
   late: {
     fontFamily: fontFace.monoMedium,
-    color: colors.stateDue,
+    color: colors.earthBrown,
   },
   guardianCard: {
     flexDirection: 'row',
@@ -477,6 +608,13 @@ const styles = StyleSheet.create({
   },
   guardianLine: {
     flex: 1,
+  },
+  guardianName: {
+    fontFamily: fontFace.bodyMedium,
+    color: colors.textPrimary,
+  },
+  guardianSince: {
+    color: colors.accentPressed,
   },
   miniMap: {
     width: 96,
@@ -501,6 +639,18 @@ const styles = StyleSheet.create({
     right: spacing[4],
     bottom: spacing[4],
     gap: spacing[1],
+  },
+  /**
+   * The one place in this screen where the ink stays pale, because the ground
+   * stays black: a photograph shown at full size is looked at against nothing,
+   * and the caption is the only thing on top of it. `textPrimary` would read
+   * 1.21:1 here and vanish; `textInverse` reads 20.20:1.
+   */
+  viewerInk: {
+    color: colors.textInverse,
+  },
+  viewerMeasures: {
+    fontFamily: fontFace.monoMedium,
   },
   frameBar: {
     padding: spacing[3],
