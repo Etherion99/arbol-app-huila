@@ -495,6 +495,7 @@ function MenuRow({
   tone?: 'default' | 'danger';
 }) {
   const isDisclosure = isExpanded !== undefined;
+  const isDanger = tone === 'danger';
 
   return (
     <Pressable
@@ -510,12 +511,17 @@ function MenuRow({
       style={({ pressed }) => [
         styles.menuRow,
         isLast ? null : styles.menuRowDivided,
-        pressed && !isLoading ? styles.menuRowPressed : null,
+        isDanger ? styles.menuRowDanger : null,
+        pressed && !isLoading
+          ? isDanger
+            ? styles.menuRowDangerPressed
+            : styles.menuRowPressed
+          : null,
       ]}
     >
       <AppText
         variant="label"
-        style={[styles.menuLabel, tone === 'danger' ? styles.menuLabelDanger : null]}
+        style={[styles.menuLabel, isDanger ? styles.menuLabelDanger : null]}
         numberOfLines={2}
       >
         {label}
@@ -523,7 +529,7 @@ function MenuRow({
 
       {isLoading ? <ActivityIndicator size="small" color={colors.danger} /> : null}
 
-      {!isLoading && tone === 'default' ? (
+      {!isLoading && !isDanger ? (
         <View style={isExpanded === true ? styles.chevronDown : styles.chevronRight}>
           <Icon name="chevronLeft" size={18} color={colors.textMuted} />
         </View>
@@ -606,7 +612,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   /**
-   * `accent` on the white circle is 4.19:1. That is under AA for small text and
+   * `accent` on the white circle is 4.29:1. That is under AA for small text and
    * fine here: the initials are 26pt on the bold display face, which is large
    * text, and they repeat a name written in full right underneath.
    */
@@ -646,14 +652,34 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.borderSubtle,
   },
   /**
-   * The canvas draws no pressed row. It borrows the mechanism the card already
-   * uses for its own press: the `accentSoft` wash, which tints the row by
-   * 1.17:1 without touching the ink — `textPrimary` still reads 14.44:1 over it
-   * and `danger` 4.11:1, and the press is confirmed by the panel that opens or
-   * the screen that follows.
+   * The canvas draws no pressed row. It borrows the wash the card already uses
+   * for its own press: `accentSoft` over the white card is `#e0f1e9`, which
+   * tints the row by 1.17:1 and leaves every ink where it was — `textPrimary`
+   * reads 14.86:1 over it and the `textMuted` chevron 3.93:1, over the 3:1 a
+   * drawn shape owes.
    */
   menuRowPressed: {
     backgroundColor: colors.accentSoft,
+  },
+  /**
+   * The sign out cannot take that wash. Its label is `danger` at 15 points,
+   * which is small text and needs 4.5:1: it holds 4.72:1 on the plain white
+   * card and falls to 3.91:1 over any soft fill in the palette, the red one
+   * included, because every wash darkens the ground under it.
+   *
+   * So the press moves off the fill and onto the edge, which is the other
+   * mechanism the card documents — `danger` outlines at 4.72:1 against the
+   * white, well over the 3:1 a control boundary owes, and the ink never moves.
+   * The border is reserved transparent so pressing does not shift the row, and
+   * it takes the card's own radius because this row is the whole card.
+   */
+  menuRowDanger: {
+    borderWidth: 1,
+    borderColor: 'transparent',
+    borderRadius: radii.lg,
+  },
+  menuRowDangerPressed: {
+    borderColor: colors.danger,
   },
   menuLabel: {
     flex: 1,
