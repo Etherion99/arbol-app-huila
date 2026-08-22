@@ -76,9 +76,12 @@ export default function ResetPasswordScreen() {
           />
         }
       >
-        <View style={styles.centered}>
+        <View style={styles.spinner}>
+          {/* Verde Huilense as a drawing rather than as text: `accent` is
+              4.12:1 on the page, which clears the 3:1 a graphic owes and not
+              the 4.5:1 a sentence would. */}
           <ActivityIndicator size="large" color={colors.accent} />
-          <AppText variant="body">{texts.common.loading}</AppText>
+          <AppText variant="bodyMuted">{texts.common.loading}</AppText>
         </View>
       </Screen>
     );
@@ -97,17 +100,29 @@ export default function ResetPasswordScreen() {
           />
         }
       >
-        <View style={styles.header}>
-          <AppText variant="title">{texts.resetPassword.linkExpiredTitle}</AppText>
-          <AppText variant="bodyMuted">
+        {/* Centred in the viewport, the way the canvas draws every dead end:
+            nothing here can be filled in, so the sentence and the way out sit
+            together in the middle instead of hanging off the bar.
+
+            The canvas opens it with an 88 point disc holding a broken link.
+            That glyph is not in the icon kit — it is open as PD-08 in
+            `PLAN-FIDELIDAD-UI.md` — and a disc filled with a stand-in
+            character would read as a settled piece of the design system. The
+            disc goes in with the glyph. */}
+        <View style={styles.centred}>
+          <AppText variant="title" style={styles.centredText}>
+            {texts.resetPassword.linkExpiredTitle}
+          </AppText>
+          <AppText variant="bodyMuted" style={styles.centredText}>
             {linkError?.message ?? texts.resetPassword.linkExpiredBody}
           </AppText>
-        </View>
 
-        <Button
-          label={texts.resetPassword.requestAnother}
-          onPress={() => router.replace('/forgot-password')}
-        />
+          <Button
+            label={texts.resetPassword.requestAnother}
+            onPress={() => router.replace('/forgot-password')}
+            style={styles.recovery}
+          />
+        </View>
       </Screen>
     );
   }
@@ -173,17 +188,28 @@ export default function ResetPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  centered: {
+  /** The spinner has an intrinsic size, so this column is the one that centres on both axes. */
+  spinner: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing[4],
   },
-  header: {
-    gap: spacing[1],
-  },
-  form: {
+  /**
+   * Centred down the page but stretched across it, so the button underneath
+   * still spans the column the way the canvas draws it. The text inside is
+   * centred by `centredText` rather than by the container.
+   */
+  centred: {
+    flex: 1,
+    justifyContent: 'center',
     gap: spacing[4],
+  },
+  centredText: {
+    textAlign: 'center',
+  },
+  recovery: {
+    marginTop: spacing[2],
   },
   actions: {
     gap: spacing[2],
