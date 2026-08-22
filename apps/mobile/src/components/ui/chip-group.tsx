@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
-import { MIN_TOUCH_TARGET, colors, radii, spacing } from '@/constants/theme';
+import { MIN_TOUCH_TARGET, colors, fontFace, radii, spacing } from '@/constants/theme';
 
 export type ChipOption<TValue extends string> = {
   value: TValue;
@@ -34,7 +34,6 @@ export function ChipGroup<TValue extends string>({
   error,
 }: ChipGroupProps<TValue>) {
   const selected = tone === 'danger' ? selectedStyles.danger : selectedStyles.accent;
-  const selectedText = tone === 'danger' ? textStyles.danger : textStyles.accent;
 
   return (
     <View style={styles.container}>
@@ -61,7 +60,10 @@ export function ChipGroup<TValue extends string>({
             >
               <AppText
                 variant="caption"
-                style={[styles.chipLabel, isSelected ? selectedText : styles.chipLabelIdle]}
+                style={[
+                  styles.chipLabel,
+                  isSelected ? styles.chipLabelSelected : styles.chipLabelIdle,
+                ]}
               >
                 {option.label}
               </AppText>
@@ -92,6 +94,8 @@ const styles = StyleSheet.create({
     gap: spacing[2],
   },
   chip: {
+    // The canvas draws these 38 tall. They are picked while standing in front
+    // of the tree, so they take the minimum target instead.
     minHeight: MIN_TOUCH_TARGET,
     justifyContent: 'center',
     paddingHorizontal: spacing[4],
@@ -106,6 +110,26 @@ const styles = StyleSheet.create({
   chipLabelIdle: {
     color: colors.textSecondary,
   },
+  /**
+   * Neutral ink, not the tone's own colour. `accent` on the composited
+   * `accentSoft` fill measures 3.56:1 and `stateDead` on its own fill 3.62:1,
+   * and this label is 13px, which owes 4.5:1. No soft fill in the palette can
+   * carry its own colour as a label, so the tone stays in the border and the
+   * fill and the word is set in ink: 14.44:1 on the green fill and 13.34:1 on
+   * the red one.
+   *
+   * `textLink` `#00753A` would clear the green fill at 4.83:1, but the red tone
+   * has no darker counterpart to match it with, and a selection that changes
+   * ink colour in one tone and not the other reads as two different controls.
+   *
+   * Going from `textSecondary` to `textPrimary` is itself part of the state:
+   * the chosen word darkens and thickens. The weight is the signal that does
+   * not depend on colour at all, which is why the catalogue adds it.
+   */
+  chipLabelSelected: {
+    fontFamily: fontFace.bodyMedium,
+    color: colors.textPrimary,
+  },
   pressed: {
     opacity: 0.7,
   },
@@ -114,6 +138,17 @@ const styles = StyleSheet.create({
   },
 });
 
+/**
+ * The border carries the choice, because the fills cannot: `accentSoft`
+ * composites to `#d7f0df` over the page and `stateDeadSoft` to `#f2ddd7`, only
+ * 1.21:1 and 1.30:1 away from the white of an unpicked chip.
+ *
+ * Against the `borderStrong` of an unpicked chip, `emerald600` separates at
+ * 3.67:1 and `stateDead` at 2.98:1. The red falls a hair under the 3:1 a state
+ * owes, and there is no darker red in the palette to reach it with — which is
+ * why the darker, heavier label above is not decoration but the second half of
+ * the signal in that tone.
+ */
 const selectedStyles = StyleSheet.create({
   accent: {
     backgroundColor: colors.accentSoft,
@@ -123,9 +158,4 @@ const selectedStyles = StyleSheet.create({
     backgroundColor: colors.stateDeadSoft,
     borderColor: colors.stateDead,
   },
-});
-
-const textStyles = StyleSheet.create({
-  accent: { color: colors.accent },
-  danger: { color: colors.stateDead },
 });
