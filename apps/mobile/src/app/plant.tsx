@@ -13,6 +13,7 @@ import { texts } from '@/constants/texts';
 import { MAX_CONTENT_WIDTH, colors, spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
 import { useZones } from '@/features/map/use-zones';
+import { useLocationPrimer } from '@/features/map/use-location-primer';
 import { useUserLocation } from '@/features/map/use-user-location';
 import { PlantingSuccess } from '@/features/planting/components/planting-success';
 import { StepLocation } from '@/features/planting/components/step-location';
@@ -63,6 +64,7 @@ export default function PlantTreeScreen() {
   const isOnline = useIsOnline();
   const zones = useZones();
   const location = useUserLocation();
+  const locationPrimer = useLocationPrimer(location);
   const registerTree = useRegisterTree();
 
   const stored = useStoredPlantingDraft();
@@ -267,6 +269,7 @@ export default function PlantTreeScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
       <ConnectionBanner />
+      {locationPrimer.primer}
 
       <WizardHeader
         step={working.step}
@@ -282,7 +285,7 @@ export default function PlantTreeScreen() {
               location={working.location}
               accuracyMetres={working.accuracyMetres}
               onChange={(next, accuracyMetres) => update({ location: next, accuracyMetres })}
-              onRequestLocation={() => location.request(true)}
+              onRequestLocation={() => locationPrimer.request(true)}
               permission={location.permission}
             />
           ) : null}

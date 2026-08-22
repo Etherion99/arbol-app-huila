@@ -41,6 +41,7 @@ import { useSpeciesCatalogue } from '@/features/map/use-species-catalogue';
 import { useTreeCard } from '@/features/map/use-tree-card';
 import type { TreeSearchResult } from '@/features/map/use-tree-search';
 import { useTreesInViewport } from '@/features/map/use-trees-in-viewport';
+import { useLocationPrimer } from '@/features/map/use-location-primer';
 import { useUserLocation } from '@/features/map/use-user-location';
 import { useMunicipalityCounts } from '@/features/map/use-municipality-counts';
 import { useZones, type ZoneOption } from '@/features/map/use-zones';
@@ -86,6 +87,10 @@ export default function MapScreen() {
   const zones = useZones();
   const species = useSpeciesCatalogue();
   const location = useUserLocation();
+  // Destructured so the callback below depends on the request itself. The
+  // hook returns a fresh object every render and depending on it would rebuild
+  // the handler on each frame.
+  const { request: requestLocation, primer: locationPrimer } = useLocationPrimer(location);
 
   // The narrowest zone chosen wins: a vereda already sits inside its
   // municipality, so sending both would be redundant.
@@ -136,7 +141,7 @@ export default function MapScreen() {
   }, [flyTo]);
 
   const handleLocationPress = useCallback(async () => {
-    const position = await location.request();
+    const position = await requestLocation();
 
     if (position === null) {
       setNotice(
@@ -157,7 +162,7 @@ export default function MapScreen() {
       },
       mapMotion.zoneFlightMs,
     );
-  }, [flyTo, location]);
+  }, [flyTo, location.permission, requestLocation]);
 
   /** Framing a zone uses its centroid and suggested zoom: no outlines exist. */
   const frameZone = useCallback(
@@ -270,6 +275,7 @@ export default function MapScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
       <ConnectionBanner />
+      {locationPrimer}
 
       <View style={styles.mapArea}>
         <MapView
