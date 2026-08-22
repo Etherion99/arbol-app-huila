@@ -142,12 +142,24 @@ export const texts = {
     title: 'Usuarios',
     countSuffix: (count: number) => (count === 1 ? '· 1 guardián' : `· ${count} guardianes`),
     searchPlaceholder: 'Buscar por nombre o correo…',
+    /** Named for assistive technology: the canvas shows only a placeholder. */
+    searchLabel: 'Buscar un usuario por nombre o correo',
     columns: {
       guardian: 'GUARDIÁN',
       role: 'ROL',
       trees: 'ÁRBOLES',
       upToDate: 'AL DÍA',
       status: 'ESTADO',
+      actions: 'ACCIONES',
+    },
+    /**
+     * The two roles the database actually stores. The canvas writes "Egresada",
+     * "Docente" and "Representante" in this column, and none of those is a
+     * value the schema can hold.
+     */
+    roles: {
+      guardian: 'Guardián',
+      coordinator: 'Coordinador',
     },
     /**
      * The reason the panel is the only surface with an email. Shown under the
@@ -161,6 +173,38 @@ export const texts = {
     view: 'Ver',
     deactivate: 'Desactivar',
     activate: 'Activar',
+    /** Said when the tree columns could not be aggregated but the list loaded. */
+    treeCountsUnavailable:
+      'No se pudieron contar los árboles de cada usuario. Los nombres y correos sí están al día.',
+    noResultsTitle: 'Ningún usuario coincide',
+    noResultsBody: 'Prueba con otra parte del nombre o del correo.',
+    emptyTitle: 'Todavía no hay usuarios registrados',
+    /** The deactivation dialog, which follows the same rule as archiving a tree. */
+    deactivateTitle: (name: string) => `Desactivar a ${name}`,
+    deactivateBody:
+      'La cuenta dejará de aparecer en las vistas públicas y de recibir recordatorios. Sus árboles y su bitácora se conservan y pueden reasignarse.',
+    deactivateBodyEmphasis: 'Nada se borra.',
+    deactivateReasonLabel: 'Motivo (obligatorio, queda en el registro)',
+    deactivateReasonPlaceholder: 'Explica por qué se desactiva esta cuenta.',
+    deactivateConfirm: 'Desactivar cuenta',
+    deactivating: 'Desactivando…',
+    activateTitle: (name: string) => `Reactivar a ${name}`,
+    activateBody:
+      'La cuenta vuelve a aparecer en las vistas públicas y a recibir recordatorios por sus árboles.',
+    activateConfirm: 'Reactivar cuenta',
+    activating: 'Reactivando…',
+    reasonRequired: 'El motivo es obligatorio: tiene que quedar por qué se desactivó la cuenta.',
+    reasonTooShort: 'Escribe un motivo que otra persona pueda entender más adelante.',
+    /** Screen reader name for the action controls, which repeat on every row. */
+    rowActionLabel: (action: string, name: string) => `${action} a ${name}`,
+    /** Marks the coordinator's own row, which has no action beside it. */
+    yourAccount: 'Tu cuenta',
+    errors: {
+      notAllowed: 'Tu cuenta no tiene permiso para cambiar el estado de un usuario.',
+      cannotDeactivateSelf:
+        'No puedes desactivar tu propia cuenta: te quedarías sin acceso al panel.',
+      unknown: 'No se pudo guardar el cambio. Inténtalo de nuevo.',
+    },
   },
 
   /** D4 · Moderación con archivado motivado. */
@@ -182,6 +226,32 @@ export const texts = {
     reasonTooShort: 'Escribe un motivo que el guardián pueda entender.',
     confirm: 'Archivar árbol',
     archiving: 'Archivando…',
+    /**
+     * Says out loud which signal the panel can really detect, so nobody reads
+     * an empty grid as "no hay nada que revisar".
+     */
+    intro:
+      'Aquí aparecen los árboles con la bitácora vencida, que es la única señal que la plataforma sabe detectar hoy. La comparación de coordenadas contra la foto y la detección de duplicados todavía no existen.',
+    /** The line under each card, naming why the tree is on this screen. */
+    reasonOverdue: (months: number) =>
+      months <= 1 ? 'sin bitácora hace 1 mes' : `sin bitácora hace ${months} meses`,
+    guardianLine: (name: string) => `Guardián: ${name}`,
+    noGuardian: 'Sin guardián asignado',
+    archiveAction: 'Archivar',
+    viewAction: 'Ver el árbol',
+    /** Said when the grid is showing only the head of a longer list. */
+    showingOldest: (shown: number, total: number) =>
+      `Se muestran los ${shown} árboles con la bitácora más atrasada, de ${total} en total.`,
+    /** The photo is not loaded here; the bucket is private and needs a signed URL. */
+    photoPlaceholderLabel: 'Sin fotografía cargada en esta vista',
+    emptyTitle: 'Ninguna bitácora está vencida',
+    emptyBody: 'Todos los árboles activos están dentro de su plazo de actualización.',
+    /** The canvas draws a moderation history; there is no table behind it. */
+    historyNote: 'historial de moderación',
+    errors: {
+      notAllowed: 'Tu cuenta no tiene permiso para archivar un árbol.',
+      unknown: 'No se pudo archivar el árbol. Inténtalo de nuevo.',
+    },
   },
 
   /** D5 · Fusión de especies. */
