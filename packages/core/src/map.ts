@@ -109,8 +109,12 @@ export function clusterCellSize(zoom: number): number {
  * the design system draws, so the silhouettes differ while the "points of
  * light" motif does not change.
  *
- * `glow` follows the design system's rule that the light belongs to the living:
- * a dead or an archived tree is drawn flat.
+ * `glow` marks the states the canvas lifts off the tiles with a bloom of their
+ * own colour. Only an archived tree goes without it, because it is out of the
+ * active map altogether; a dead tree is still a tree somebody has to find and
+ * visit, so it keeps the bloom and the rim like every other live state. This
+ * table and `StatusDot`, which draws the same mark as a view, must agree on
+ * that, and `StatusDot` gates both on `status !== 'archived'`.
  *
  * The colour is deliberately not repeated here. It already has exactly one
  * home, `colorByTrackingStatus`, and a second table carrying it would be a copy
@@ -125,20 +129,20 @@ export const markerShapeByTrackingStatus: Record<
   up_to_date: { shape: 'disc', glow: true },
   due_soon: { shape: 'diamond', glow: true },
   overdue: { shape: 'triangle', glow: true },
-  dead: { shape: 'cross', glow: false },
+  dead: { shape: 'cross', glow: true },
   archived: { shape: 'ring', glow: false },
 };
 
 /**
  * Marker geometry in density independent pixels, taken from the design system's
- * map motif: a 12 dp mark, a 2 dp dark rim so it reads against a pale tile, and
- * a 14 dp glow. The sprite is square and large enough to hold the glow without
+ * map motif: a 12 dp mark, a 2 dp white rim that cuts it out of the tile, and a
+ * 14 dp glow. The sprite is square and large enough to hold the glow without
  * clipping it.
  */
 export const MARKER_GEOMETRY = {
   /** Diameter of the circle every silhouette is inscribed in. */
   markSize: 12,
-  /** Dark rim, `rgba(7, 14, 12, 0.9)` in the design system. */
+  /** The cut-out rim, `2px solid var(--surface-raised)` in the design system. */
   rimWidth: 2,
   /** Blur radius of the glow. */
   glowRadius: 14,
@@ -160,8 +164,18 @@ export const MARKER_GEOMETRY = {
   scales: [1, 2, 3],
 } as const;
 
-/** The rim colour of every marker: the night behind the forest, at 90%. */
-export const MARKER_RIM_COLOR = 'rgba(7, 14, 12, 0.9)';
+/**
+ * The rim of every marker: `surfaceRaised`, opaque, so the mark is cut out of
+ * the map instead of sitting on it.
+ *
+ * The annotation is the point. The sprite generator and `StatusDot` both have
+ * to land on exactly this white, and the generator runs under Node's type
+ * stripping, which cannot follow an extensionless import into `theme` — so the
+ * value cannot simply be read from `colors` here. Typing it as the token
+ * instead makes a drift between the two a compile error rather than a marker
+ * that quietly stops matching the dot beside it in the legend.
+ */
+export const MARKER_RIM_COLOR: (typeof import('./theme').colors)['surfaceRaised'] = '#FFFFFF';
 
 /**
  * How long a signed photograph URL stays valid.

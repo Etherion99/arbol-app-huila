@@ -21,7 +21,11 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { colorByTrackingStatus } from '../packages/core/src/theme.ts';
-import { MARKER_GEOMETRY, markerShapeByTrackingStatus } from '../packages/core/src/map.ts';
+import {
+  MARKER_GEOMETRY,
+  MARKER_RIM_COLOR,
+  markerShapeByTrackingStatus,
+} from '../packages/core/src/map.ts';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const outputDir = join(repoRoot, 'apps', 'mobile', 'assets', 'markers');
@@ -32,9 +36,6 @@ const { markSize, rimWidth, glowRadius, selectedMarkSize, selectedRingWidth, sca
 /** Samples per axis inside one pixel. Four is enough to hide the staircase. */
 const SUPERSAMPLE = 4;
 
-/** The rim colour, `rgba(7, 14, 12, 0.9)`, as the components the blender needs. */
-const RIM = { r: 7, g: 14, b: 12, a: 0.9 };
-
 function parseHex(hex) {
   const value = hex.replace('#', '');
   return {
@@ -43,6 +44,9 @@ function parseHex(hex) {
     b: parseInt(value.slice(4, 6), 16),
   };
 }
+
+/** The rim token, as the components the blender needs. Opaque, as the canvas draws it. */
+const RIM_TINT = parseHex(MARKER_RIM_COLOR);
 
 // ---------------------------------------------------------------------------
 // Silhouettes
@@ -144,12 +148,22 @@ function blend(target, offset, colour, alpha) {
  * true gaussian blur: at these sizes the two are indistinguishable, and the
  * falloff needs no second buffer and no separable pass.
  */
-function renderSprite({ spriteSize, shape, colour, glow, glowSpread, markDiameter, ring, scale }) {
+function renderSprite({
+  spriteSize,
+  shape,
+  colour,
+  glow,
+  glowSpread,
+  hasRim,
+  markDiameter,
+  ring,
+  scale,
+}) {
   const side = spriteSize * scale;
   const pixels = new Uint8Array(side * side * 4);
   const centre = side / 2;
   const radius = (markDiameter / 2) * scale;
-  const rim = radius + rimWidth * scale;
+  const rim = radius + (hasRim ? rimWidth * scale : 0);
   const tint = parseHex(colour);
 
   for (let py = 0; py < side; py += 1) {
@@ -177,9 +191,11 @@ function renderSprite({ spriteSize, shape, colour, glow, glowSpread, markDiamete
         }
       }
 
-      // 3. The dark rim, so the mark holds against a pale tile.
-      const rimCoverage = coverage(shape, px, py, centre, rim);
-      blend(pixels, offset, RIM, rimCoverage * RIM.a);
+      // 3. The white rim, which cuts the mark out of whatever tile is under it.
+      if (hasRim) {
+        const rimCoverage = coverage(shape, px, py, centre, rim);
+        blend(pixels, offset, RIM_TINT, rimCoverage);
+      }
 
       // 4. The mark itself.
       const markCoverage = coverage(shape, px, py, centre, radius);
@@ -272,6 +288,13 @@ for (const [status, marker] of Object.entries(markerShapeByTrackingStatus)) {
   const colour = colorByTrackingStatus[status];
   const slug = status.replace(/_/g, '-');
 
+  /**
+   * The rim and the selection halo are both there to lift a live tree off the
+   * tiles, so an archived one takes neither. It is the same condition StatusDot
+   * draws the view version with, and the two marks have to match.
+   */
+  const isActive = status !== 'archived';
+
   const variants = [
     {
       name: slug,
@@ -285,7 +308,7 @@ for (const [status, marker] of Object.entries(markerShapeByTrackingStatus)) {
       spriteSize: MARKER_GEOMETRY.selectedSpriteSize,
       glowSpread: MARKER_GEOMETRY.selectedGlowRadius,
       markDiameter: selectedMarkSize,
-      ring: { width: selectedRingWidth, alpha: 0.18 },
+      ring: isActive ? { width: selectedRingWidth, alpha: 0.18 } : undefined,
     },
   ];
 
@@ -297,6 +320,7 @@ for (const [status, marker] of Object.entries(markerShapeByTrackingStatus)) {
         colour,
         glow: marker.glow,
         glowSpread: variant.glowSpread,
+        hasRim: isActive,
         markDiameter: variant.markDiameter,
         ring: variant.ring,
         scale,
