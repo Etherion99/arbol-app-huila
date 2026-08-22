@@ -66,6 +66,15 @@ export default function AppLayout() {
         />
 
         <Tabs.Screen
+          name="activity"
+          options={{
+            title: texts.activity.tabLabel,
+            tabBarAccessibilityLabel: texts.activity.title,
+            tabBarIcon: tabIcon('clock'),
+          }}
+        />
+
+        <Tabs.Screen
           name="profile"
           options={{
             title: texts.map.profileTabLabel,
