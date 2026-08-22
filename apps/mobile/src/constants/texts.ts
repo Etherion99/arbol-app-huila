@@ -504,6 +504,74 @@ export const texts = {
     signedOutBody: 'Los árboles que siembras quedan asociados a tu cuenta de Guardián.',
   },
 
+  /**
+   * The activity tab: what a tree is still waiting for, and what has already
+   * been dealt with.
+   *
+   * The two sections date themselves differently on purpose, and the canvas
+   * draws them that way. A pending item is measured against today, because the
+   * question it answers is "how late am I"; a past one carries its calendar
+   * date, because by then the distance from today has stopped meaning anything.
+   */
+  activity: {
+    tabLabel: 'Actividad',
+    title: 'Actividad',
+
+    /**
+     * Push delivery is not built yet: nothing in the app registers a device or
+     * sends anything. The box says so rather than offering a switch that would
+     * quietly do nothing, and points at the profile, which is where the
+     * notification settings live.
+     */
+    notificationsOffTitle: 'Notificaciones desactivadas',
+    notificationsOffBody:
+      'Las notificaciones están desactivadas. Actívalas para no perder el ciclo de tus árboles.',
+    notificationsOffAction: 'Activar',
+
+    pendingSection: 'Pendientes',
+    previousSection: 'Anteriores',
+
+    /** The sentence a pending row makes: species, where it stands, which cycle. */
+    pendingRow: (species: string, place: string, cycle: number) =>
+      `Tu ${species} de ${place} espera su foto del ciclo ${cycle}`,
+    /** The same sentence for a tree whose vereda nobody recorded. */
+    pendingRowNoPlace: (species: string, cycle: number) =>
+      `Tu ${species} espera su foto del ciclo ${cycle}`,
+    pendingRowHint: 'Abre la bitácora para subir la fotografía',
+
+    /** A cycle already closed. `on_time` is decided in the database, never here. */
+    resolvedOnTime: (species: string, cycle: number) =>
+      `${species} · ciclo ${cycle} resuelto a tiempo`,
+    resolvedLate: (species: string, cycle: number) =>
+      `${species} · ciclo ${cycle} resuelto con retraso`,
+
+    // Relative dates, for the pending section only.
+    daysAgo: (days: number) => (days === 1 ? 'hace 1 día' : `hace ${days} días`),
+    today: 'hoy',
+    inDays: (days: number) => (days === 1 ? 'mañana' : `en ${days} días`),
+
+    loading: 'Cargando tu actividad…',
+    errorTitle: 'No pudimos cargar tu actividad',
+    errorBody: 'Revisa tu conexión. Tus datos guardados no se pierden.',
+    /**
+     * Only the closed cycles failed. Named apart from the whole-screen error so
+     * the guardian is not told that everything is broken when the half that
+     * matters, what they still owe, is on screen and up to date.
+     */
+    historyErrorTitle: 'No pudimos cargar tus ciclos cerrados',
+    historyErrorBody: 'Lo que tienes pendiente sí está al día. Revisa tu conexión y reintenta.',
+    offlineCached: 'Sin conexión. Estás viendo la última actividad guardada.',
+
+    emptyPending: 'No tienes nada pendiente. Todos tus árboles están al día.',
+    emptyPrevious: 'Todavía no has cerrado ningún ciclo.',
+    emptyTitle: 'Aquí verás lo que te toca',
+    emptyBody:
+      'Cuando siembres tu primer árbol, sus recordatorios y sus ciclos cerrados aparecerán en esta lista.',
+
+    signedOutTitle: 'Entra para ver tu actividad',
+    signedOutBody: 'Los recordatorios de tus árboles quedan asociados a tu cuenta de Guardián.',
+  },
+
   /** The tree detail: timeline, before and after, height curve and guardian. */
   treeDetail: {
     title: 'Detalle del árbol',
