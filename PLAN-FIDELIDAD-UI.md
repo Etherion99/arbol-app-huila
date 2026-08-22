@@ -189,6 +189,49 @@ Estado al 21 de agosto de 2026. Los copys citados son **literales verificados** 
 | PD-05 | Enlace al aviso legal en la barra de A8 | — | 📤 redactada en U2 |
 | PD-06 | Qué opciones lleva el `Select` de «Rol o institución» de A4 | A4 | 📤 redactada en U3 |
 | PD-07 | Tinta blanca sobre `--accent` en el botón primario, y la insignia de estado | **R2 entera** | 📤 redactada el 22 de agosto de 2026 |
+| PD-08 | Ocho iconos que el kit del sistema de diseño no cubre | **R4**, y hoy `Notice`, `Select`, `Dialog`, `Tag`, `Checkbox`, `OptionSheet` y la barra de búsqueda | 📤 redactada el 22 de agosto de 2026 |
+
+### PD-08 · Al kit de iconos le faltan ocho piezas que la app ya usa
+
+| | |
+|---|---|
+| **Bloque y posición** | No es pantalla nueva. Afecta al catálogo entero: los ocho glifos aparecen en **doce archivos** —seis componentes de `ui/`, cuatro componentes de `features/` y dos pantallas. |
+| **Por qué hace falta** | `ui_kits/mobile/Icons.jsx` trae **once** iconos —`map`, `sprout`, `camera`, `user`, `ruler`, `locate`, `chevL`, `plus`, `wifiOff`, `calendar`, `clock`— y ninguno de ellos es cerrar, buscar, desplegar ni comprobar. Son de las piezas más repetidas de cualquier interfaz, así que la ausencia parece un hueco del kit y no una decisión. Mientras tanto el código los resuelve con **caracteres de texto**, que heredan la métrica de la fuente en vez del trazo de 2 del kit: no se alinean con los once portados, no escalan igual y en Android cambian de forma según la fuente del sistema. |
+| **Archivo del código** | `apps/mobile/src/components/ui/icon.tsx` es donde entrarían. Los consumidores están en la tabla de abajo. |
+| **Qué hace falta decidir** | Los ocho trazos, dibujados en la misma rejilla de 24×24 con trazo 2, extremos y uniones redondeados, para que convivan con los once que ya existen. |
+| **Qué NO cambiar** | La forma de los once iconos ya portados, que el código transcribe literalmente. Y el criterio de tamaño: el catálogo los dibuja a 20 pt salvo el chevrón de la cabecera, que va a 22. |
+
+**Los ocho, con el apaño que los sustituye hoy:**
+
+| # | Falta | Glifo actual | Dónde se necesita |
+|---|---|---|---|
+| 1 | cerrar | `✕` | `ui/dialog.tsx` (cerrar el modal), `ui/tag.tsx` (quitar la etiqueta), `features/map/components/tree-summary-sheet.tsx`, `features/map/components/filter-chip.tsx` (filtro activo), `features/planting/components/wizard-header.tsx` (abandonar el asistente), `app/tree/[id].tsx`, `app/log/[treeId].tsx` |
+| 2 | buscar | `⌕` | `features/map/components/map-search-bar.tsx` |
+| 3 | chevrón abajo | `⌄` | `ui/select.tsx` (desplegar la lista) |
+| 4 | chevrón abajo, variante | `▾` | `features/map/components/filter-chip.tsx` (filtro inactivo). **Si el 3 sirve para los dos, sobra**: la pregunta es si el sistema quiere un chevrón de campo y otro de chip o uno solo. |
+| 5 | comprobar | `✓` | `ui/checkbox-field.tsx` (casilla marcada), `ui/option-sheet.tsx` (opción elegida) |
+| 6 | marca de error | `✕` | `ui/notice.tsx`, tono `error` |
+| 7 | marca de aviso | `!` | `ui/notice.tsx`, tono `warning` |
+| 8 | marca de información | `i` | `ui/notice.tsx`, tono `info` |
+
+> El cuarto tono de `Notice`, `success`, se resuelve con el mismo trazo del punto 5 si el
+> dibujo de «comprobar» admite ir dentro de un círculo. Si diseño prefiere una marca propia
+> para el tono, son nueve y no ocho.
+
+**Por qué no los dibujamos aquí.** Inventar ocho iconos es escribir una parte del sistema de
+diseño desde el código, que es exactamente lo que el protocolo reserva a diseño. Un `✕` de
+texto es visiblemente un apaño y se lee como tal; un `✕` dibujado a mano con trazo 2 se lee
+como sistema de diseño y nadie vuelve a preguntar de dónde salió.
+
+**Consecuencia técnica.** Hasta que lleguen, los doce archivos de la tabla siguen con glifos
+de texto y el catálogo convive con dos estrategias de icono. Es el motivo por el que la adopción
+del kit en esos componentes queda apartada a R4 en vez de cerrarse en R2.
+
+**Además, un icono que sí existe pero no dice lo que se llama.** `wifiOff` son tres arcos y un
+punto, es decir **exactamente el dibujo de «con señal»**: el trazo no lleva tachadura ni ninguna
+otra marca de negación. Renderizado al lado de un `wifi` normal no se distinguiría. Todavía no lo
+consume nadie —el modo sin conexión se anuncia con texto—, así que no bloquea, pero en cuanto se
+use va a decir lo contrario de lo que pasa. **¿Le falta la barra diagonal o el nombre está mal?**
 
 ### PD-07 · El botón primario y la insignia de estado no llegan a AA
 
