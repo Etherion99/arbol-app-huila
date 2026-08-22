@@ -3,16 +3,18 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Switch, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { texts } from '@/constants/texts';
-import { MIN_TOUCH_TARGET, colors, radii, spacing } from '@/constants/theme';
+import { MIN_TOUCH_TARGET, colors, fontFace, radii, spacing } from '@/constants/theme';
 import { profileSchema, type ProfileInput, type ProfileValues } from '@/features/auth/auth-schemas';
 import { describeMaybeAuthError } from '@/features/auth/auth-messages';
 import { useSignOut } from '@/features/auth/use-auth-mutations';
 import { useProfile, useUpdateProfile, type GuardianProfile } from '@/features/auth/use-profile';
+import { useGuardianTrees } from '@/features/trees/use-guardian-trees';
 import { useIsOnline } from '@/hooks/use-is-online';
 import { useZodForm } from '@/hooks/use-zod-form';
 
@@ -22,8 +24,46 @@ const dateFormatter = new Intl.DateTimeFormat('es-CO', {
   timeZone: 'America/Bogota',
 });
 
+/** The distinction pill is dated by year alone, so it needs its own formatter. */
+const yearFormatter = new Intl.DateTimeFormat('es-CO', {
+  year: 'numeric',
+  timeZone: 'America/Bogota',
+});
+
 function formatDate(value: string): string {
   return dateFormatter.format(new Date(value));
+}
+
+function formatYear(value: string): string {
+  return yearFormatter.format(new Date(value));
+}
+
+/** The drawn side of the avatar circle. */
+const AVATAR_SIZE = 84;
+
+/** Stands in for a figure the app cannot compute yet. */
+const NO_FIGURE = '—';
+
+/**
+ * First and last initial, which is what the avatar circle carries while there
+ * is no photograph in the profile. A single word gives a single letter rather
+ * than a doubled one, and a name that is only whitespace still has to draw
+ * something, so it falls back to a mark.
+ */
+function initialsOf(fullName: string): string {
+  const words = fullName
+    .trim()
+    .split(/\s+/)
+    .filter((word) => word.length > 0);
+
+  if (words.length === 0) {
+    return '·';
+  }
+
+  const first = words[0]?.charAt(0) ?? '';
+  const last = words.length > 1 ? (words[words.length - 1]?.charAt(0) ?? '') : '';
+
+  return (first + last).toLocaleUpperCase('es-CO');
 }
 
 export default function ProfileScreen() {
@@ -93,6 +133,10 @@ function ProfileEditor({ profile }: { profile: GuardianProfile }) {
   const updateProfile = useUpdateProfile();
   const signOut = useSignOut();
 
+  // The same cached query the tree list reads, reused here only to count. The
+  // figures are derived during render; nothing new is asked of the server.
+  const trees = useGuardianTrees();
+
   // Interface only. The reminder engine is a later delivery, so the switches
   // say what they will do and stay disabled rather than pretending to work.
   const [wantsReminders, setWantsReminders] = useState(true);
@@ -115,6 +159,15 @@ function ProfileEditor({ profile }: { profile: GuardianProfile }) {
 
   const failure = describeMaybeAuthError(updateProfile.error);
 
+  const roleLabel =
+    profile.role === 'coordinator' ? texts.profile.coordinatorRole : texts.profile.guardianRole;
+
+  const treeCount = trees.data === undefined ? null : trees.data.length;
+  const upToDateCount =
+    trees.data === undefined
+      ? null
+      : trees.data.filter((tree) => tree.trackingStatus === 'up_to_date').length;
+
   function confirmSignOut() {
     Alert.alert(texts.profile.signOutTitle, texts.profile.signOutBody, [
       { text: texts.common.cancel, style: 'cancel' },
@@ -130,14 +183,55 @@ function ProfileEditor({ profile }: { profile: GuardianProfile }) {
 
   return (
     <Screen>
-      <View style={styles.header}>
-        <AppText variant="display">{texts.profile.title}</AppText>
-        <AppText variant="caption">
-          {profile.role === 'coordinator'
-            ? texts.profile.coordinatorRole
-            : texts.profile.memberSince(formatDate(profile.createdAt))}
-        </AppText>
+      <View style={styles.identity}>
+        <View style={styles.avatar}>
+          <AppText
+            variant="title"
+            style={styles.avatarInitials}
+            accessibilityLabel={texts.profile.avatarLabel(profile.fullName)}
+          >
+            {initialsOf(profile.fullName)}
+          </AppText>
+        </View>
+
+        <View style={styles.identityNames}>
+          <AppText variant="title" style={[styles.boldFace, styles.centeredText]}>
+            {profile.fullName}
+          </AppText>
+          <AppText variant="caption" style={styles.centeredText}>
+            {profile.institution === null || profile.institution === ''
+              ? roleLabel
+              : texts.profile.roleAndInstitution(roleLabel, profile.institution)}
+          </AppText>
+        </View>
+
+        {/* Naranja Plateño, not the Juventud en línea magenta the canvas fills
+            this pill with: that palette is an affiliation mark and does not
+            enter the interface. The catalogue's `brand` tone already resolves
+            it, so the pill is not deciding anything on its own here. */}
+        <Badge
+          status="brand"
+          label={texts.profile.memberSinceYear(roleLabel, formatYear(profile.createdAt))}
+        />
+
+        <View style={styles.stats}>
+          <Stat value={treeCount} label={texts.profile.statTreesLabel} />
+          <Stat value={upToDateCount} label={texts.profile.statUpToDateLabel} isAccented />
+          {/* No source. A cycle count needs the guardian's bitácora entries,
+              which no hook reads, and the newest cycle a tree reached is not
+              the number of entries behind it. It draws its empty state rather
+              than a figure nobody can stand behind. */}
+          <Stat value={null} label={texts.profile.statCyclesLabel} />
+        </View>
       </View>
+
+      {trees.isError ? (
+        <Notice
+          tone="warning"
+          message={texts.profile.statsErrorMessage}
+          onRetry={() => void trees.refetch()}
+        />
+      ) : null}
 
       {failure !== null ? (
         <Notice
@@ -237,6 +331,47 @@ function ProfileEditor({ profile }: { profile: GuardianProfile }) {
   );
 }
 
+/**
+ * One of the three figures over the identity block.
+ *
+ * `null` is «there is no source for this», not «zero»: a guardian with no trees
+ * has to read 0, and a figure the app cannot compute has to read as absent. The
+ * dash is drawn and the screen reader is told in words, because a dash on its
+ * own is announced as a hyphen or as nothing at all.
+ */
+function Stat({
+  value,
+  label,
+  isAccented = false,
+}: {
+  value: number | null;
+  label: string;
+  /** The canvas greens the «al día» figure. It is 26pt bold, so `accent` may set it. */
+  isAccented?: boolean;
+}) {
+  const shown = value === null ? NO_FIGURE : String(value);
+  const spoken = value === null ? texts.profile.statUnavailable : String(value);
+
+  return (
+    <View accessible accessibilityLabel={`${label}: ${spoken}`} style={styles.stat}>
+      <AppText
+        variant="title"
+        style={[styles.boldFace, isAccented ? styles.statAccented : null]}
+        accessibilityElementsHidden
+      >
+        {shown}
+      </AppText>
+      {/* `overline` rather than the canvas's 10px muted grey: `textMuted` is
+          4.43:1 on the page and cannot set small text, and 10px is under the
+          floor of the scale. `overline` keeps the uppercase microlabel shape at
+          12px in `textSecondary`, which reads 7.04:1. */}
+      <AppText variant="overline" accessibilityElementsHidden>
+        {label}
+      </AppText>
+    </View>
+  );
+}
+
 function NotificationToggle({
   label,
   value,
@@ -272,8 +407,52 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing[4],
   },
-  header: {
-    gap: spacing[1],
+  centeredText: {
+    textAlign: 'center',
+  },
+  identity: {
+    alignItems: 'center',
+    gap: spacing[2] + 2,
+  },
+  identityNames: {
+    gap: 2,
+  },
+  avatar: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: radii.full,
+    backgroundColor: colors.surfaceOverlay,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  /**
+   * `accent` on the white circle is 4.19:1. That is under AA for small text and
+   * fine here: the initials are 26pt on the bold display face, which is large
+   * text, and they repeat a name written in full right underneath.
+   */
+  avatarInitials: {
+    fontFamily: fontFace.displayBold,
+    color: colors.accent,
+  },
+  /** The canvas sets the name and the figures heavier than the display semibold. */
+  boldFace: {
+    fontFamily: fontFace.displayBold,
+  },
+  stats: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing[6],
+    marginTop: spacing[1],
+  },
+  stat: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  /** `accent` at 4.12:1 on the page: large text only, which 26pt bold is. */
+  statAccented: {
+    color: colors.accent,
   },
   section: {
     gap: spacing[4],
