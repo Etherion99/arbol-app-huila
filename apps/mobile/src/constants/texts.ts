@@ -519,7 +519,14 @@ export const texts = {
     ready: (kilobytes: number) => `Lista · ${kilobytes} KB`,
     permissionTitle: 'La cámara está desactivada',
     permissionBody:
-      'La fotografía es la evidencia del árbol, y por eso la pedimos desde la cámara. Actívala en los ajustes del teléfono para poder tomarla.',
+      'La foto en vivo es la evidencia de tu siembra, por eso no se puede elegir de la galería. Activa la cámara en los ajustes del teléfono.',
+    /**
+     * The same rule, for the dead end the system can still undo on its own.
+     * Sending somebody to the settings app when a dialog would do it in one
+     * tap is how a guardian gives up on the step.
+     */
+    permissionAskBody:
+      'La foto en vivo es la evidencia de tu siembra, por eso no se puede elegir de la galería. Permite el acceso a la cámara para tomarla.',
     permissionAllow: 'Permitir la cámara',
     permissionSettings: 'Abrir ajustes del teléfono',
     required: 'Falta la fotografía.',

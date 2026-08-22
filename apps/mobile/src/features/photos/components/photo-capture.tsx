@@ -6,6 +6,7 @@ import { Image } from 'expo-image';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { Notice } from '@/components/ui/notice';
+import { StateMedallion } from '@/components/ui/screen-state';
 import { texts } from '@/constants/texts';
 import {
   MIN_TOUCH_TARGET,
@@ -108,23 +109,34 @@ export function PhotoCapture({
 
   if (!permission.granted) {
     return (
-      <View style={[styles.panel, styles.centred, { height }]}>
+      <View
+        style={[styles.panel, styles.centred, { height }]}
+        accessibilityRole="alert"
+        accessibilityLiveRegion="polite"
+      >
+        {/* The medallion of the full screen states, because the canvas draws
+            this refusal exactly like one — it only happens to sit inside a step
+            of the wizard rather than on a screen of its own. */}
+        <StateMedallion icon="camera" tone="neutral" />
+
         <AppText variant="subtitle" style={styles.deniedTitle}>
           {texts.photo.permissionTitle}
         </AppText>
-        <AppText variant="bodyMuted" style={styles.deniedBody}>
-          {texts.photo.permissionBody}
-        </AppText>
 
         {/* Two different dead ends need two different ways out: the system will
-            still ask, or it will not and only the settings app can undo it. */}
+            still ask, or it will not and only the settings app can undo it. The
+            sentence changes with the way out, because sending somebody to the
+            settings app when a dialog would do is how a step gets abandoned. */}
+        <AppText variant="bodyMuted" style={styles.deniedBody}>
+          {permission.canAskAgain ? texts.photo.permissionAskBody : texts.photo.permissionBody}
+        </AppText>
+
         {permission.canAskAgain ? (
           <Button label={texts.photo.permissionAllow} onPress={() => void requestPermission()} />
         ) : (
           <Button
             label={texts.photo.permissionSettings}
             onPress={() => void Linking.openSettings()}
-            variant="secondary"
           />
         )}
       </View>
