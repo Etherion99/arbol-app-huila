@@ -76,6 +76,56 @@
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
+
+  /* The rest of the palette the admin panel actually reaches for. Without
+     these a screen has to write `bg-[var(--accent-soft)]`, and the first time
+     somebody is in a hurry it becomes `bg-[#008D46]` instead. */
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-pressed: var(--accent-pressed);
+  --color-on-accent: var(--on-accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-2-soft: var(--accent-2-soft);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-border-focus: var(--border-focus);
+  --color-text-inverse: var(--text-inverse);
+  --color-text-link: var(--text-link);
+  --color-text-link-hover: var(--text-link-hover);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  /* Affiliation only. The 2026 guide keeps these two out of the interface, but
+     the sign in eyebrow and the "Juventud en línea" badge do carry them. */
+  --color-jil-magenta: var(--jil-magenta);
+  --color-jil-magenta-soft: var(--jil-magenta-soft);
+  --color-jil-yellow-soft: var(--jil-yellow-soft);
+  /* Reads a badge label that its own state colour is too pale to carry. See
+     the note on `ink` in components/ui/badge.tsx. */
+  --color-earth-brown: var(--earth-brown);
+  --color-green-950: var(--green-950);
+}
+
+/* The two shadows the design system defines, as utilities rather than theme
+   entries. Tailwind's shadow namespace is `--shadow-*`, which is exactly what
+   design-tokens.css already calls them, so a `@theme` entry would resolve to
+   itself and produce nothing -- the same trap the `--font-subhead` note above
+   describes. */
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+@utility shadow-overlay {
+  box-shadow: var(--shadow-overlay);
+}
+
+/* The minimum touch target the accessibility rule sets. Applied to every
+   control in the catalogue so no screen has to remember the number. */
+@utility min-h-hit {
+  min-height: var(--hit-target);
 }
 
 /* The radius scale is deliberately absent from the block above. Tailwind's
