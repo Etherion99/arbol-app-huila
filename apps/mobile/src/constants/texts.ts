@@ -127,8 +127,13 @@ export const texts = {
 
   verifyEmail: {
     title: 'Revisa tu correo',
-    body: (email: string) =>
-      `Enviamos un enlace de verificación a ${email}. Ábrelo desde este teléfono.`,
+    /**
+     * Split around the address rather than interpolated into one string, so the
+     * address can be set apart from the sentence around it: it is the one thing
+     * on this screen a guardian has to check against the inbox in front of them.
+     */
+    bodyBeforeEmail: 'Enviamos un enlace de verificación a ',
+    bodyAfterEmail: '. Ábrelo desde este teléfono.',
     checkSpam: 'Si no lo ves, revisa la carpeta de correo no deseado.',
     resend: 'Reenviar correo',
     resendCountdown: (seconds: number) => `Reenviar en 0:${String(seconds).padStart(2, '0')}`,
