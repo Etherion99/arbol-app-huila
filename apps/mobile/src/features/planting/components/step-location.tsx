@@ -9,7 +9,7 @@ import { Notice } from '@/components/ui/notice';
 import { TextField } from '@/components/ui/text-field';
 import { texts } from '@/constants/texts';
 import { colors, effects, fontFace, radii, spacing } from '@/constants/theme';
-import { darkMapStyle } from '@/features/map/map-style';
+import { lightMapStyle } from '@/features/map/map-style';
 import type { UserFix } from '@/features/map/use-user-location';
 import { mapMotion } from '@/features/map/map-motion';
 import { formatCoordinates } from '@/lib/dates';
@@ -125,7 +125,7 @@ export function StepLocation({
           ref={mapRef}
           style={StyleSheet.absoluteFill}
           provider={PROVIDER_GOOGLE}
-          customMapStyle={darkMapStyle}
+          customMapStyle={lightMapStyle}
           initialRegion={region}
           showsUserLocation={permission === 'granted'}
           showsMyLocationButton={false}

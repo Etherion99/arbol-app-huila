@@ -33,7 +33,7 @@ import { SelectedMarker } from '@/features/map/components/selected-marker';
 import { TreeSummarySheet } from '@/features/map/components/tree-summary-sheet';
 import { clusterMarkers } from '@/features/map/clustering';
 import { mapMotion } from '@/features/map/map-motion';
-import { darkMapStyle } from '@/features/map/map-style';
+import { lightMapStyle } from '@/features/map/map-style';
 import { markerSprite } from '@/features/map/marker-sprites';
 import { useDebouncedRegion } from '@/features/map/use-debounced-region';
 import { useSpeciesCatalogue } from '@/features/map/use-species-catalogue';
@@ -277,7 +277,7 @@ export default function MapScreen() {
           // Google on both platforms, which is what lets one dark style serve
           // Android and iPhone and keeps the "points of light" motif on both.
           provider={PROVIDER_GOOGLE}
-          customMapStyle={darkMapStyle}
+          customMapStyle={lightMapStyle}
           initialRegion={HUILA_FRAMING}
           onMapReady={handleMapReady}
           onRegionChangeComplete={setRegion}

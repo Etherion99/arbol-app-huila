@@ -22,7 +22,7 @@ import {
   spacing,
 } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
-import { darkMapStyle } from '@/features/map/map-style';
+import { lightMapStyle } from '@/features/map/map-style';
 import { markerSprite } from '@/features/map/marker-sprites';
 import { HeightChart } from '@/features/trees/components/height-chart';
 import { PhotoComparator } from '@/features/trees/components/photo-comparator';
@@ -200,7 +200,7 @@ export default function TreeDetailScreen() {
               <MapView
                 style={StyleSheet.absoluteFill}
                 provider={PROVIDER_GOOGLE}
-                customMapStyle={darkMapStyle}
+                customMapStyle={lightMapStyle}
                 initialRegion={{
                   latitude: card.lat,
                   longitude: card.lng,
