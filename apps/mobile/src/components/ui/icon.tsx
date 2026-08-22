@@ -25,6 +25,12 @@ const PATHS = {
   // `chevL` in the design system. Spelled out here because the name is the API
   // the screens read, and the shorthand only saved bytes in a minified kit.
   chevronLeft: 'M15 6l-6 6 6 6',
+  /** The affordance at the end of a row that opens something. */
+  chevronRight: 'M9 6l6 6-6 6',
+  /** A reminder. Drawn with its clapper, so it reads as a bell at 22 points. */
+  bell: 'M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9M10 21h4',
+  /** Something already dealt with, beside a resolved entry of the activity list. */
+  check: 'M5 13l4 4 10-10',
   plus: 'M12 5v14M5 12h14',
   wifiOff: 'M2 7c6-5 14-5 20 0M6 11c4-3 8-3 12 0M10 15c1.5-1 2.5-1 4 0M12 19v.5',
   calendar:
