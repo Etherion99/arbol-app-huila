@@ -1,9 +1,18 @@
+import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { texts } from '@/constants/texts';
-import { MIN_TOUCH_TARGET, colors, fontSize, radii, spacing } from '@/constants/theme';
+import {
+  MIN_TOUCH_TARGET,
+  colors,
+  effects,
+  fontFace,
+  fontSize,
+  radii,
+  spacing,
+} from '@/constants/theme';
 import { isoDateToParts, partsToIsoDate, todayInColombia, type DateParts } from '@/lib/dates';
 
 export type DateFieldProps = {
@@ -29,6 +38,7 @@ export type DateFieldProps = {
  */
 export function DateField({ label, value, onChange, hint, error }: DateFieldProps) {
   const parts = isoDateToParts(value);
+  const [isFocused, setIsFocused] = useState(false);
   const hasError = error !== undefined;
 
   const update = (field: keyof DateParts, raw: string) => {
@@ -51,12 +61,13 @@ export function DateField({ label, value, onChange, hint, error }: DateFieldProp
         />
       </View>
 
-      <View style={[styles.row, hasError && styles.rowError]}>
+      <View style={[styles.row, isFocused && styles.rowFocused, hasError && styles.rowError]}>
         <Part
           label={texts.planting.plantedAtDay}
           value={parts.day}
           maxLength={2}
           onChangeText={(next) => update('day', next)}
+          onFocusChange={setIsFocused}
         />
         <AppText variant="data" style={styles.separator} accessibilityElementsHidden>
           /
@@ -66,6 +77,7 @@ export function DateField({ label, value, onChange, hint, error }: DateFieldProp
           value={parts.month}
           maxLength={2}
           onChangeText={(next) => update('month', next)}
+          onFocusChange={setIsFocused}
         />
         <AppText variant="data" style={styles.separator} accessibilityElementsHidden>
           /
@@ -76,6 +88,7 @@ export function DateField({ label, value, onChange, hint, error }: DateFieldProp
           maxLength={4}
           isWide
           onChangeText={(next) => update('year', next)}
+          onFocusChange={setIsFocused}
         />
       </View>
 
@@ -95,12 +108,15 @@ function Part({
   value,
   maxLength,
   onChangeText,
+  onFocusChange,
   isWide = false,
 }: {
   label: string;
   value: string;
   maxLength: number;
   onChangeText: (value: string) => void;
+  /** The three boxes share one border, so they share one focus state too. */
+  onFocusChange: (isFocused: boolean) => void;
   isWide?: boolean;
 }) {
   return (
@@ -113,6 +129,8 @@ function Part({
       accessibilityLabel={label}
       placeholder={label}
       placeholderTextColor={colors.textSecondary}
+      onFocus={() => onFocusChange(true)}
+      onBlur={() => onFocusChange(false)}
       style={[styles.part, isWide && styles.partWide]}
     />
   );
@@ -140,8 +158,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[3],
     backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
-    borderColor: colors.borderStrong,
+    // Same reasoning as every other input edge: white on a near-white page is
+    // 1.06:1, so the border alone identifies the control and owes 3:1 under
+    // SC 1.4.11. `borderStrong` gives 1.52:1; this grey gives 4.43:1 on the
+    // page and 4.61:1 on the field's own white.
+    borderColor: colors.slateGrey,
     borderRadius: radii.md,
+  },
+  // Three inputs share one box, so any of them taking the keyboard lights the
+  // whole box; which digit group has the caret is the caret's job to say.
+  // Without this the date field was the one input in the app with no focus
+  // signal at all.
+  rowFocused: {
+    borderColor: colors.borderFocus,
+    boxShadow: effects.focusRing,
   },
   rowError: {
     borderColor: colors.danger,
@@ -150,6 +180,10 @@ const styles = StyleSheet.create({
     minHeight: MIN_TOUCH_TARGET,
     minWidth: 44,
     textAlign: 'center',
+    // A TextInput inherits no typeface, and a date is a measured value, which
+    // the design system sets in mono. Without this the digits fell back to the
+    // system font while the slashes beside them were already mono.
+    fontFamily: fontFace.monoMedium,
     fontSize: fontSize.md,
     color: colors.textPrimary,
   },
