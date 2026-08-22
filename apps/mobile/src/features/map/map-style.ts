@@ -106,16 +106,37 @@ export const lightMapStyle = [
     stylers: [{ color: colors.borderSubtle }, { visibility: 'on' }],
   },
 
-  // White roads on leaf paper, with the highways a step down instead of a step
-  // up: on a light ground a road is read by being paler than the land around
-  // it, and the only band that has to carry across a zoomed-out view is the
-  // highway.
+  // White roads on leaf paper, drawn by their casing and not by their fill. A
+  // white ribbon on white land measures 1.00:1 and is simply not there; what
+  // makes a road read on any light basemap, Google's own default included, is
+  // the darker hairline around it rather than the pale fill inside. So the fill
+  // stays white and `borderStrong` outlines it at 1.58:1 against that fill and
+  // 1.52:1 against the leaf ground, with the highway taking a heavier casing
+  // because it is the one band that has to carry across a zoomed-out view.
+  //
+  // A casing is a line, not an area. Nothing is planted on a road, so none of
+  // the state ratios in the table above move.
   { featureType: 'road', elementType: 'geometry', stylers: [{ color: colors.surfaceRaised }] },
+  {
+    featureType: 'road',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: colors.borderStrong }],
+  },
   { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
   {
     featureType: 'road.highway',
     elementType: 'geometry',
     stylers: [{ color: colors.borderStrong }],
+  },
+  // Grey rather than a green, at 2.91:1 against the highway's own fill. Every
+  // green dark enough to case a highway lands within 1.36:1 of `stateOk`, and a
+  // dark green line running past a green pin is the landscape competing with
+  // the legend. `textMuted` shares its hex with `stateArchived`, which never
+  // reaches the map, and a hairline is not a pin.
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: colors.textMuted }],
   },
   {
     featureType: 'road.local',
