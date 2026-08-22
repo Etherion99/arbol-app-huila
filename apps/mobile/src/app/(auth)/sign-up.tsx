@@ -9,7 +9,7 @@ import { Screen } from '@/components/ui/screen';
 import { ScreenHeader } from '@/components/ui/screen-header';
 import { TextField } from '@/components/ui/text-field';
 import { texts } from '@/constants/texts';
-import { colors, spacing } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
 import { signUpSchema, type SignUpInput, type SignUpValues } from '@/features/auth/auth-schemas';
 import { describeMaybeAuthError } from '@/features/auth/auth-messages';
 import { useSignUp } from '@/features/auth/use-auth-mutations';
@@ -165,7 +165,15 @@ export default function SignUpScreen() {
           error={form.errorFor('termsAccepted')}
         />
 
-        <AppText variant="caption" style={hasBothConsents ? undefined : styles.consentPending}>
+        {/* Quiet and centred, which is the state the canvas actually draws:
+            one box unchecked, the button blocked, and this line in a receding
+            grey rather than in red. It explains a precondition, not a mistake —
+            nothing has been submitted yet — and the two boxes carry their own
+            validation errors once they are revealed. The canvas sets it in
+            `text-muted` #757575, which is 4.43:1 on the page and short of the
+            4.5:1 a 13 point caption owes, so it is set in `textSecondary`
+            #4A5A50 at 7.04:1 instead. */}
+        <AppText variant="caption" style={styles.consentHelper}>
           {texts.signUp.consentHelper}
         </AppText>
       </View>
@@ -200,8 +208,8 @@ const styles = StyleSheet.create({
   declarations: {
     gap: spacing[2],
   },
-  consentPending: {
-    color: colors.danger,
+  consentHelper: {
+    textAlign: 'center',
   },
   actions: {
     gap: spacing[2],
