@@ -125,16 +125,40 @@ export const texts = {
   /** D2 · Tablero de estadísticas. */
   dashboard: {
     title: 'Tablero',
-    filterMunicipality: 'Municipio: todos',
+    /** Read out by the filter, whose visible text is the chosen option. */
+    municipalityLabel: 'Municipio',
+    allMunicipalities: 'Todos los municipios',
     metrics: {
       planted: 'SEMBRADOS',
       alive: 'VIVOS',
       survival: 'TASA DE SUPERVIVENCIA',
       punctuality: 'PUNTUALIDAD',
     },
+    /** Under VIVOS. The archived are not counted: they leave the statistics. */
+    deadCount: (count: number) => (count === 1 ? '1 muerto' : `${count} muertos`),
+    /** Under la tasa: says what the percentage is a percentage of. */
+    survivalBase: (count: number) =>
+      count === 1 ? 'sobre 1 árbol sembrado' : `sobre ${count} árboles sembrados`,
+    /** Under PUNTUALIDAD, the figure that explains the one above it. */
+    overdueCount: (count: number) =>
+      count === 1 ? '1 bitácora vencida' : `${count} bitácoras vencidas`,
     byVillage: 'POR VEREDA',
+    byVillageIn: (municipality: string) => `POR VEREDA · ${municipality.toUpperCase()}`,
+    /** The bar that gathers every village outside the four largest. */
+    otherVillages: 'Otras',
+    /** A tree whose zone has no village level recorded. */
+    unknownVillage: 'Sin vereda',
+    villageEmpty: 'Todavía no hay árboles sembrados en este municipio.',
     bySpecies: 'POR ESPECIE',
-    allSpecies: (count: number) => `Ver las ${count} especies`,
+    speciesEmpty: 'Todavía no hay especies registradas.',
+    /**
+     * Shown only while a municipality is chosen. The per species aggregate has
+     * no municipality column, so the list keeps counting the whole project and
+     * has to say it instead of looking filtered.
+     */
+    speciesWholeProject: 'Conteo de todo el proyecto: por especie no hay desglose por municipio.',
+    allSpecies: (count: number) =>
+      count === 1 ? 'Ver la única especie' : `Ver las ${count} especies`,
   },
 
   /** D3 · Gestión de usuarios. */
