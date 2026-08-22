@@ -205,6 +205,33 @@ export const texts = {
     singleOccurrenceTitle: 'Especies con una sola ocurrencia:',
     singleOccurrenceHint: 'probables errores de digitación.',
     undo: 'Revertir la fusión',
+    /** Names the checkbox list for a screen reader; the canvas shows no title. */
+    variantsLegend: 'Variantes de especie registradas',
+    variantsEmpty: 'Todavía no hay especies registradas.',
+    selectHint: 'Marca dos o más variantes para poder fusionarlas.',
+    /**
+     * The merge function accepts a surviving name that is none of the merged
+     * ones -- "cinco mandarinos y seis mandarinas pueden acabar como once
+     * árboles llamados «Árboles de mandarina»". The canvas only draws the
+     * existing names, so the free-text option is one extra radio.
+     */
+    customNameOption: 'Otro nombre',
+    customNameLabel: 'Nombre oficial nuevo',
+    customNamePlaceholder: 'Ej.: Árboles de mandarina',
+    customNameHint: 'El nombre oficial no tiene que ser ninguno de los que fusionas.',
+    merged: (variants: number, name: string) =>
+      variants === 1
+        ? `Se fusionó 1 variante en «${name}».`
+        : `Se fusionaron ${variants} variantes en «${name}».`,
+    reverting: 'Revirtiendo…',
+    reverted: 'La fusión se revirtió: cada variante recuperó su nombre y sus árboles.',
+    errors: {
+      selectTwo: 'Marca al menos dos variantes para fusionarlas.',
+      customNameRequired: 'Escribe el nombre oficial nuevo.',
+      notCoordinator: 'Solo el rol de coordinador puede fusionar especies.',
+      merge: 'No se pudo completar la fusión. Inténtalo de nuevo.',
+      revert: 'No se pudo revertir la fusión. Inténtalo de nuevo.',
+    },
   },
 
   /** D6 · Detalle de árbol (admin) y reasignación. */
@@ -221,10 +248,47 @@ export const texts = {
     moderationHistory: 'HISTORIAL DE MODERACIÓN',
     reassignHeader: 'REASIGNAR GUARDIÁN',
     reassignSearch: 'Buscar guardián activo…',
+    /**
+     * The canvas promises "el ciclo se reinicia desde hoy". Restarting it would
+     * mean writing `trees.last_updated_at`, which the schema documents as the
+     * capture time of the newest log entry -- moving it would invent a
+     * measurement that never happened and inflate the punctuality rate. So the
+     * reassignment moves the guardian and nothing else, and the sentence says
+     * what actually happens.
+     */
     reassignNotice:
-      'El guardián nuevo recibirá el árbol con su bitácora completa y el ciclo se reinicia desde hoy.',
+      'El guardián nuevo recibirá el árbol con su bitácora completa. Los recordatorios siguen contando desde la última entrada registrada.',
     reassignTo: (name: string) => `Reasignar a ${name}`,
     reassigning: 'Reasignando…',
+    guardian: 'Guardián',
+    back: 'Volver a Moderación',
+    /** Said when `tree_card` returns nothing: no such tree, or it is archived. */
+    notFoundTitle: 'No se encontró el árbol',
+    notFoundBody:
+      'El identificador no corresponde a ningún árbol activo. Un árbol archivado tampoco aparece aquí.',
+    noGuardianNotice:
+      'Este árbol no tiene guardián asignado y no genera recordatorios hasta que se le asigne uno.',
+    guardianDeactivatedNotice: (name: string, date: string) =>
+      `${name}, su guardián, fue desactivado el ${date}. El árbol no genera recordatorios hasta tener guardián nuevo.`,
+    guardianDeactivatedReason: (reason: string) => `Motivo: ${reason}`,
+    logbookEmpty: 'Sin entradas',
+    /** Why the mini map is a placeholder and not a map. */
+    miniMapNote: 'El mapa web llega en una fase posterior.',
+    /**
+     * There is no moderation history table, and there is no record of when a
+     * guardian was deactivated beyond `users.archived_at`. Saying so beats
+     * showing two invented lines.
+     */
+    moderationHistoryNote: 'No existe un registro de moderación por árbol.',
+    candidateTrees: (count: number) => (count === 1 ? '1 árbol' : `${count} árboles`),
+    candidateAllUpToDate: 'todos al día',
+    candidatePending: (count: number) => (count === 1 ? '1 pendiente' : `${count} pendientes`),
+    candidatesEmpty: 'Ningún guardián activo coincide con la búsqueda.',
+    reassigned: (name: string) => `El árbol quedó a cargo de ${name}.`,
+    errors: {
+      reassign: 'No se pudo reasignar el árbol. Inténtalo de nuevo.',
+      notCoordinator: 'Solo el rol de coordinador puede reasignar un árbol.',
+    },
   },
 
   /** D7 · Exportación de reportes PRAE. */
@@ -248,5 +312,24 @@ export const texts = {
     preparing: 'Preparando…',
     lastExport: (date: string, fileName: string, author: string) =>
       `Última exportación: ${date} · ${fileName} · ${author}`,
+    /** Read out on the download link, which otherwise says only "CSV". */
+    csvLabel: (report: string) => `Descargar ${report} en CSV`,
+    /**
+     * Excel needs a spreadsheet writer, which is a dependency nobody has
+     * justified yet. The button stays visible because the canvas shows it, and
+     * disabled with the reason underneath, because a button that looks alive
+     * and does nothing is worse than one that explains itself.
+     */
+    excelUnavailable:
+      'La descarga en Excel todavía no está disponible. El CSV abre en Excel y en LibreOffice.',
+    /**
+     * The coordinates come from the map function, which caps its answer at a
+     * thousand trees. Below that ceiling the export is complete; the day it is
+     * crossed the coordinator has to know why some cells are empty.
+     */
+    coordinateLimitNotice:
+      'Las coordenadas del inventario se leen de la consulta del mapa, que devuelve como máximo 1000 árboles. Por encima de esa cifra las celdas de coordenadas quedan vacías, nunca con un valor aproximado.',
+    /** No table records an export, so the canvas's last line cannot be filled. */
+    lastExportUnavailable: 'Las exportaciones no quedan registradas todavía.',
   },
 } as const;
