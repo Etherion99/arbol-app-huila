@@ -20,6 +20,7 @@ import { AppText } from '@/components/ui/app-text';
 import { texts } from '@/constants/texts';
 import { colors, spacing } from '@/constants/theme';
 import { AuthLinkProvider } from '@/features/auth/auth-link-provider';
+import { SessionExpiredDialog } from '@/features/auth/components/session-expired-dialog';
 import { SessionProvider, useSession } from '@/features/auth/session-provider';
 import { loadOnboardingState, useOnboardingState } from '@/features/onboarding/onboarding-store';
 import { loadPlantingDraft } from '@/features/planting/planting-draft';
@@ -71,48 +72,55 @@ function RootNavigator() {
   const hasSession = session !== null;
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: colors.surfacePage },
-      }}
-    >
-      {/* The intro is only in the way of somebody who has never seen it and is
+    <>
+      {/* Beside the navigator rather than in a route: a session can run out on
+          any screen, and the overlay has to reach the guardian on the one they
+          are standing on. */}
+      <SessionExpiredDialog />
+
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.surfacePage },
+        }}
+      >
+        {/* The intro is only in the way of somebody who has never seen it and is
           not signed in; a returning guardian goes straight to the map. */}
-      <Stack.Protected guard={!onboarding.hasCompleted && !hasSession}>
-        <Stack.Screen name="onboarding" />
-      </Stack.Protected>
+        <Stack.Protected guard={!onboarding.hasCompleted && !hasSession}>
+          <Stack.Screen name="onboarding" />
+        </Stack.Protected>
 
-      {/* Signed out area. It stays reachable during a password recovery, where
+        {/* Signed out area. It stays reachable during a password recovery, where
           a session exists but only so the password can be replaced. */}
-      <Stack.Protected guard={!hasSession || isRecoveringPassword}>
-        <Stack.Screen name="(auth)" />
-      </Stack.Protected>
+        <Stack.Protected guard={!hasSession || isRecoveringPassword}>
+          <Stack.Screen name="(auth)" />
+        </Stack.Protected>
 
-      {/* The map is open to visitors without an account, so this group is not
+        {/* The map is open to visitors without an account, so this group is not
           guarded. What needs a session is protected inside its tab layout. */}
-      <Stack.Screen name="(app)" />
-      <Stack.Screen name="auth" />
-      {/* Three tasks rather than three places, so they cover the tab bar
+        <Stack.Screen name="(app)" />
+        <Stack.Screen name="auth" />
+        {/* Three tasks rather than three places, so they cover the tab bar
           instead of living inside it. Planting and the growth log need a
           session: without one there is no guardian to own a tree. */}
-      <Stack.Protected guard={hasSession}>
-        <Stack.Screen name="plant" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="log/[treeId]" options={{ presentation: 'modal' }} />
+        <Stack.Protected guard={hasSession}>
+          <Stack.Screen name="plant" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="log/[treeId]" options={{ presentation: 'modal' }} />
 
-        {/* Settings belong to an account, so they sit behind the same guard.
+          {/* Settings belong to an account, so they sit behind the same guard.
             A modal rather than a tab: it is opened from a row of the profile
             and closed again, not a fifth place to navigate to. */}
-        <Stack.Screen name="settings/notifications" options={{ presentation: 'modal' }} />
-      </Stack.Protected>
+          <Stack.Screen name="settings/notifications" options={{ presentation: 'modal' }} />
+        </Stack.Protected>
 
-      {/* The detail is readable without an account, exactly like the map. */}
-      <Stack.Screen name="tree/[id]" />
+        {/* The detail is readable without an account, exactly like the map. */}
+        <Stack.Screen name="tree/[id]" />
 
-      {/* The bar is the design system's, drawn inside the screen, so the modal
+        {/* The bar is the design system's, drawn inside the screen, so the modal
           keeps the app's typography instead of the platform's. */}
-      <Stack.Screen name="legal" options={{ presentation: 'modal' }} />
-    </Stack>
+        <Stack.Screen name="legal" options={{ presentation: 'modal' }} />
+      </Stack>
+    </>
   );
 }
 

@@ -216,6 +216,17 @@ export const texts = {
     loadErrorTitle: 'No pudimos cargar tu perfil',
   },
 
+  /**
+   * The session running out is the one departure nobody asked for, so it is
+   * announced where the guardian is standing rather than on the sign in screen
+   * they were silently dropped onto.
+   */
+  sessionExpiry: {
+    title: 'Tu sesión venció',
+    body: 'Por seguridad debes entrar de nuevo. Tus registros pendientes de enviar se conservan en este teléfono.',
+    signInAgain: 'Entrar de nuevo',
+  },
+
   /** The notification settings, reached from the row of the same name in the profile. */
   notificationSettings: {
     title: 'Notificaciones',
