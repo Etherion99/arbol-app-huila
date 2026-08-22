@@ -6,10 +6,11 @@ import { useRouter } from 'expo-router';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { ConnectionBanner } from '@/components/connection-banner';
+import { Icon } from '@/components/ui/icon';
 import { Notice } from '@/components/ui/notice';
 import { Tabs } from '@/components/ui/tabs';
 import { texts } from '@/constants/texts';
-import { MAX_CONTENT_WIDTH, colors, spacing } from '@/constants/theme';
+import { MAX_CONTENT_WIDTH, colors, radii, spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
 import { TreeListCard } from '@/features/trees/components/tree-list-card';
 import { useGuardianTrees } from '@/features/trees/use-guardian-trees';
@@ -63,9 +64,17 @@ export default function MyTreesScreen() {
     <Frame>
       <View style={styles.header}>
         <AppText variant="display">{texts.myTrees.title}</AppText>
-        {trees.data !== undefined ? (
+        {all.length > 0 ? (
           <AppText variant="data" style={styles.summary}>
-            {texts.myTrees.summary(all.length, pending.length)}
+            {texts.myTrees.summaryCount(all.length)}
+            {texts.myTrees.summarySeparator}
+            {pending.length === 0 ? (
+              texts.myTrees.summaryAllUpToDate
+            ) : (
+              <AppText variant="data" style={styles.summaryPending}>
+                {texts.myTrees.summaryPending(pending.length)}
+              </AppText>
+            )}
           </AppText>
         ) : null}
       </View>
@@ -98,14 +107,21 @@ export default function MyTreesScreen() {
           {texts.myTrees.loading}
         </AppText>
       ) : all.length === 0 && trees.error === null ? (
-        <View style={styles.centred}>
+        <View style={styles.empty}>
+          <View style={styles.medallion}>
+            <Icon name="sprout" size={42} color={colors.emerald600} />
+          </View>
           <AppText variant="title" style={styles.centredText}>
             {texts.myTrees.emptyTitle}
           </AppText>
           <AppText variant="bodyMuted" style={styles.centredText}>
             {texts.myTrees.emptyBody}
           </AppText>
-          <Button label={texts.planting.startFirst} onPress={() => router.push('/plant')} />
+          <Button
+            label={texts.planting.startFirst}
+            onPress={() => router.push('/plant')}
+            icon={<Icon name="sprout" size={17} color={colors.onAccent} />}
+          />
         </View>
       ) : (
         <FlatList
@@ -169,6 +185,15 @@ const styles = StyleSheet.create({
   summary: {
     color: colors.textSecondary,
   },
+  /**
+   * The one tinted fragment of the header. `earthBrown` `#8B572A` reads 5.78:1
+   * on the page, and it is already the ink the badge gives the yellow state, so
+   * "por actualizar" says the same thing in both places. The yellow itself is
+   * 1.35:1 and could not set a word here.
+   */
+  summaryPending: {
+    color: colors.earthBrown,
+  },
   list: {
     gap: spacing[3],
     paddingBottom: spacing[4],
@@ -181,6 +206,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing[3],
     padding: spacing[4],
+  },
+  empty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[3],
+    paddingHorizontal: spacing[5],
+  },
+  /**
+   * The round well the canvas puts the sprout in. On leaf paper a white disc is
+   * 1.04:1 against the page, so the shape is carried by the `borderSubtle` ring
+   * exactly as a card is. `emerald600` `#00753A` draws the sprout at 5.82:1 on
+   * that white, well over the 3:1 an icon owes.
+   */
+  medallion: {
+    width: 96,
+    height: 96,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceCard,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+    borderRadius: radii.full,
   },
   centredText: {
     textAlign: 'center',

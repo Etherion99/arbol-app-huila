@@ -459,10 +459,13 @@ export const texts = {
   myTrees: {
     tabLabel: 'Mis árboles',
     title: 'Mis árboles',
-    summary: (total: number, pending: number) =>
-      pending === 0
-        ? `${total === 1 ? '1 árbol' : `${total} árboles`} · todos al día`
-        : `${total === 1 ? '1 árbol' : `${total} árboles`} · ${pending} por actualizar`,
+    // The summary is four pieces rather than one sentence because the canvas
+    // tints only the pending fragment, and a tinted fragment has to be its own
+    // text node.
+    summaryCount: (total: number) => (total === 1 ? '1 árbol' : `${total} árboles`),
+    summarySeparator: ' · ',
+    summaryAllUpToDate: 'todos al día',
+    summaryPending: (pending: number) => `${pending} por actualizar`,
     tabAll: (count: number) => `Todos (${count})`,
     tabPending: (count: number) => `Pendientes (${count})`,
     cardLabel: (species: string, state: string) => `Árbol de ${species}, ${state}`,
