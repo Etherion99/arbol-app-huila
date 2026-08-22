@@ -34,10 +34,16 @@ export type OptionSheetProps = {
 /**
  * The list behind every filter chip.
  *
- * It is an opaque sheet rather than a translucent one on purpose: the design
- * system's rule for a screen read in direct sun is that anything covering the
- * map stops being see through, because a list of vereda names over a moving
- * map is a list nobody can read outdoors.
+ * The catalogue never draws this sheet open — every select it shows is closed —
+ * so the shape here is the app's own and the rules it follows are stated below
+ * rather than cited.
+ *
+ * It is an opaque sheet rather than a translucent one on purpose: the sheet
+ * opens over the map and over a form, and anything covering the map stops being
+ * see through, because a list of vereda names over a moving map is a list
+ * nobody can read outdoors in direct sun. That reason holds on light paper
+ * exactly as it held on dark: it is about what is moving behind the list, not
+ * about how bright the sheet is.
  */
 export function OptionSheet({
   isVisible,
@@ -152,6 +158,10 @@ function Row({
 }
 
 const styles = StyleSheet.create({
+  // The scrim stays a dark wash even though the app is light: its job is to
+  // push the screen behind it back, and on light paper only a darker scrim can
+  // do that. A pale one over a pale map would leave the sheet floating on top
+  // of a page that still competes with it for attention.
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -192,6 +202,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSubtle,
   },
+  // The selected row is tinted, the way the catalogue tints a chosen row in the
+  // species merge panel. `accentSoft` is translucent, so what a reader actually
+  // sees is the blend: #e0f1e9 over the white sheet. The row keeps its label in
+  // `textPrimary` (14.86:1) and its detail in `textSecondary` (6.25:1), both
+  // comfortable on that blend.
   rowSelected: {
     backgroundColor: colors.accentSoft,
   },
@@ -201,8 +216,13 @@ const styles = StyleSheet.create({
   rowDetail: {
     color: colors.textSecondary,
   },
+  // The tick cannot take `accent`: on the tinted row it lands at 3.66:1, and it
+  // is drawn as a character rather than as a path, so it is measured as text
+  // and needs 4.5:1. `accentPressed` on the same blend is 4.97:1. It is also
+  // the only thing besides the tint that marks the row, so it may not be
+  // colour on colour that a reader has to squint at.
   tick: {
-    color: colors.accent,
+    color: colors.accentPressed,
   },
   pressed: {
     opacity: 0.7,

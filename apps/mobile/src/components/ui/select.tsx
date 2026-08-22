@@ -120,7 +120,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[3],
     backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
-    borderColor: colors.borderStrong,
+    // The same boundary rule the text fields follow, and the same measurement
+    // behind it: white on a near-white page separates by 1.06:1, so this edge
+    // is what says "control", and SC 1.4.11 asks it for 3:1. `borderStrong`
+    // reaches 1.52:1 on the page; the neutral grey reaches 4.43:1 there and
+    // 4.61:1 on the field's own white. A select stands beside text fields in
+    // the same form, so it cannot wear a fainter edge than they do.
+    borderColor: colors.slateGrey,
     borderRadius: radii.md,
   },
   fieldError: {
@@ -132,11 +138,16 @@ const styles = StyleSheet.create({
   value: {
     flex: 1,
   },
-  // Secondary rather than the catalogue's muted grey: at this size muted only
-  // reaches 3.4:1 on a raised surface, and a placeholder still has to be read.
+  // Secondary rather than the catalogue's muted grey: `textMuted` reaches only
+  // 4.43:1 against the page, short of the 4.5:1 small text needs, and a
+  // placeholder still has to be read. `textSecondary` is 7.32:1 on the field.
   placeholder: {
     color: colors.textSecondary,
   },
+  // The catalogue strokes the chevron in `textMuted`, which is fair for the SVG
+  // path it draws there — 4.43:1 clears the 3:1 a graphic needs. Here the
+  // chevron is a character, so it is measured as text and stays on
+  // `textSecondary`.
   chevron: {
     color: colors.textSecondary,
   },
