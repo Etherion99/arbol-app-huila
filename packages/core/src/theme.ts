@@ -20,31 +20,76 @@
  *
  * ## Contrast
  *
- * Text is read on two surfaces, not four: `surfacePage` is `#F4FDF4` and the
- * raised, card and overlay surfaces are all plain white, so a ratio that holds
- * on the page holds everywhere else by a slightly wider margin. Measured with
- * the app held at arm's length in direct sun, these are the restrictions this
- * file imposes on its own tokens:
+ * Every number below is measured, not estimated: `pnpm test:contrast` reads this
+ * file and prints the whole table, and it fails the moment a token stops
+ * matching the rule written here. If you change a hex, run it.
  *
- * - `textPrimary` clears 16.7:1 and `textSecondary` 7.0:1, so both carry small
- *   text anywhere. Anything that should recede and still be read uses
- *   `textSecondary`.
- * - `textMuted` and `stateArchived` are the same grey `#757575`. It reaches
- *   4.61:1 on white but only 4.43:1 on the page, just under the 4.5:1 small
- *   text needs. Legal as a dot, a rule, an icon or large text, and never as
- *   small text on `surfacePage`.
- * - `accent` as ink reaches 4.12:1 on the page. That is why `textLink` is the
- *   darker `#00753A` at 5.6:1: the green that fills a button is not the green
- *   that sets a sentence.
- * - `onAccent` is white over `accent` at 4.29:1. It clears AA for large text
- *   (3:1) but not for small, so a label on a primary fill is set bold at `md`
- *   or larger, never at `xs`.
- * - `warning` and `stateDue` are `#FFD700` at 1.35:1. Yellow is only ever a
- *   fill, a dot or a rule, with `textPrimary` on top of it at 12.4:1.
- * - `stateOverdue` (3.03:1) and `info` (3.14:1) are large text, icons and dots
- *   only.
- * - `danger` clears 4.54:1 on the page and 4.72:1 on white, so unlike the dark
- *   palette it now carries error text on every surface.
+ * Text is read on two surfaces, not four. `surfacePage` is `#F4FDF4` and the
+ * raised, card and overlay surfaces are all plain white, so the page is always
+ * the worst case and a ratio that holds there holds everywhere. The figures
+ * below are that worst case.
+ *
+ * ### What "large text" means in this scale
+ *
+ * WCAG's 3:1 concession starts at 24px regular or 18.66px bold. In the scale
+ * below that is `fontSize.xl` (26) regular, or `fontSize.lg` (20) bold. Nothing
+ * smaller qualifies — in particular `fontSize.md` (17) bold does **not**, and
+ * neither does `base` (15). Treat everything from `md` down as small text.
+ *
+ * ### Tokens that carry small text anywhere
+ *
+ * `textPrimary` (16.74:1), `textSecondary` (7.04:1), `textLink` (5.60:1),
+ * `earthBrown` (5.78:1), `danger` and `stateDead` (4.54:1), `accentPressed` and
+ * `emerald600` (5.60:1), `emerald700`, `emerald900`, `green950`, `green990`.
+ *
+ * When a text should recede and still be read, use `textSecondary`. It is the
+ * only quiet tone in the palette that clears AA, and that is what it is for.
+ *
+ * ### Tokens for large text, icons, dots, rules and borders only
+ *
+ * `accent`, `stateOk`, `success`, `textLinkHover`, `borderFocus`, `huilaGreen`
+ * and `emerald500` are all `#008D46` at 4.12:1 — a hair under. `textMuted` and
+ * `stateArchived` are `#757575` at 4.43:1, also under. `accent2`,
+ * `stateOverdue` and `platenoOrange` reach 3.03:1, `info` 3.14:1,
+ * `accentStrong` 3.11:1, `brandMagenta` 3.54:1.
+ *
+ * The green ones are the trap, because 4.12 looks like it passes and does not.
+ * `accent` fills a button; it does not set a sentence. That is exactly why
+ * `textLink` is the darker `#00753A`.
+ *
+ * ### Tokens that must never carry text
+ *
+ * `stateDue`, `warning`, `brandYellow` and `sunYellow` are `#FFD700` at
+ * **1.35:1** — below even the 3:1 bar, so not large text either. Yellow is a
+ * fill, a dot or a rule, and nothing else. `emerald300`/`green700` (1.63:1),
+ * `emerald400`/`green800` (2.42:1), `borderSubtle` (1.19:1) and `borderStrong`
+ * (1.52:1) are likewise decoration only; the two borders do not even reach the
+ * 3:1 that SC 1.4.11 asks of a control boundary, which is fine for a divider
+ * and not fine for the edge of an input.
+ *
+ * ### Ink on a fill
+ *
+ * - `onAccent` (white) on `accent` is **4.29:1**. It clears large text and
+ *   fails small, and flipping to `textPrimary` does not rescue it (4.06:1).
+ *   Neither ink works at the size the primary button actually uses. This is
+ *   open as **PD-07** in `PLAN-FIDELIDAD-UI.md`; until design rules on it, do
+ *   not invent a third green.
+ * - `onAccent2` (white) on `accent2` is 3.15:1, but `textPrimary` on the same
+ *   orange is **5.52:1**. Dark ink is the correct ink for Naranja Plateño.
+ * - `accentPressed` takes white at 5.82:1, `accentStrong` takes `textPrimary`
+ *   at 5.39:1. The two press states want opposite inks.
+ * - A solid state chip: `stateDue` takes `textPrimary` (12.41:1),
+ *   `stateOverdue` takes `textPrimary` (5.52:1), `stateDead` (4.72:1) and
+ *   `stateArchived` (4.61:1) take white, `stateOk` clears neither.
+ *
+ * ### Ink on a soft fill
+ *
+ * **No `*Soft` fill can carry its own colour as a label.** All eleven fail once
+ * the alpha is composited over the page: the best of them, `dangerSoft`,
+ * reaches 3.75:1 and `stateDueSoft` reaches 1.25:1. A badge keeps its colour in
+ * the border and the dot and sets its label in `textPrimary` or
+ * `textSecondary`, both of which clear AA over every soft fill in the palette.
+ * The v2 canvas already draws the yellow badge this way, with `earthBrown` ink.
  */
 
 export const colors = {
