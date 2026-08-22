@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
@@ -135,7 +136,7 @@ function MissingProfile() {
 
 /**
  * The profile as the canvas composes it: an identity block, three figures, a
- * list of options and the sign out.
+ * list of options, the sign out and the affiliation footer.
  *
  * ## Why the editor and the notification switches live inside the list
  *
@@ -192,6 +193,10 @@ function ProfileCard({ profile }: { profile: GuardianProfile }) {
     trees.data === undefined
       ? null
       : trees.data.filter((tree) => tree.trackingStatus === 'up_to_date').length;
+
+  // Read from the manifest rather than typed here, so the footer cannot go on
+  // claiming a version the build stopped being.
+  const appVersion = Constants.expoConfig?.version ?? NO_FIGURE;
 
   function confirmSignOut() {
     Alert.alert(texts.profile.signOutTitle, texts.profile.signOutBody, [
@@ -370,6 +375,15 @@ function ProfileCard({ profile }: { profile: GuardianProfile }) {
             {texts.profile.adultConfirmed}
           </AppText>
         ) : null}
+
+        {/* The canvas sets this line at 11px and writes «JUVENTUD EN LÍNEA» in
+            the affiliation magenta. Both are refused here: 11px is under the
+            12px floor of the type scale, and the magenta is a filiation colour
+            that does not enter the interface — and at that size it would be
+            small text over the page, which no version of that pink can carry. */}
+        <AppText variant="caption" style={[styles.version, styles.centeredText]}>
+          {texts.profile.versionFooter(appVersion)}
+        </AppText>
       </View>
     </Screen>
   );
@@ -630,5 +644,8 @@ const styles = StyleSheet.create({
     gap: spacing[1],
     paddingTop: spacing[2],
     paddingBottom: spacing[4],
+  },
+  version: {
+    fontFamily: fontFace.monoMedium,
   },
 });
