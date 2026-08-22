@@ -21,12 +21,18 @@ export type DialogProps = {
  * It replaces `Alert.alert`, which cannot carry the design system at all — the
  * native alert is the operating system's, not this project's.
  *
- * ## The contrast trap
+ * ## What separates it from the screen behind it
  *
- * The dialog body sits on `surfaceCard`, not on `surfaceOverlay`. That is not
- * arbitrary: `danger` reaches only 4.31:1 over the overlay and clears AA over
- * the card. An error message inside a dialog is exactly the text nobody can
- * afford to misread, so the card is the surface it gets.
+ * Not the surface. `surfaceRaised`, `surfaceCard` and `surfaceOverlay` are all
+ * plain `#FFFFFF`, so stacking one on another expresses nothing, and white on
+ * the `#F4FDF4` page is 1.04:1. The dialog names `surfaceOverlay` because that
+ * is what it is, and the scrim below does the separating.
+ *
+ * The border does not help either: `borderStrong` #B9D4C1 is *lighter* than
+ * the darkened ground it would have to cut against, at 2.16:1. It stays
+ * because the catalogue draws it and because it is the edge on a screenshot or
+ * a print where the scrim is flattened away, but the edge a guardian reads is
+ * the white body against the scrim, at 3.43:1.
  */
 export function Dialog({ isVisible, title, children, footer, onClose }: DialogProps) {
   return (
@@ -66,12 +72,24 @@ export function Dialog({ isVisible, title, children, footer, onClose }: DialogPr
 }
 
 const styles = StyleSheet.create({
+  /**
+   * `colors.ink` #1A1A1A over the page, which is the derivation the catalogue
+   * uses — the bottle green this used to be belonged to a palette that no
+   * longer exists.
+   *
+   * The catalogue draws it at 45 % with a `backdrop-filter: blur(4px)`. React
+   * Native has no backdrop filter, and `expo-blur` is a native dependency
+   * whose cost lands on the cheapest phone in the vereda, so the separation
+   * the blur was carrying is paid in alpha instead: at 45 % the white dialog
+   * reads 2.97:1 against the scrim, under the 3:1 a boundary needs, and at
+   * 50 % it reads 3.43:1.
+   */
   scrim: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing[5],
-    backgroundColor: 'rgba(7, 14, 12, 0.7)',
+    backgroundColor: 'rgba(26, 26, 26, 0.5)',
   },
   dismissArea: {
     position: 'absolute',
@@ -83,7 +101,7 @@ const styles = StyleSheet.create({
   dialog: {
     width: '100%',
     maxWidth: 440,
-    backgroundColor: colors.surfaceCard,
+    backgroundColor: colors.surfaceOverlay,
     borderWidth: 1,
     borderColor: colors.borderStrong,
     borderRadius: radii.xl,
@@ -120,6 +138,12 @@ const styles = StyleSheet.create({
     gap: spacing[3],
     padding: spacing[5],
   },
+  /**
+   * The rule is the whole band. Tinting it `surfaceRaised` used to set the
+   * actions apart from the body; both are `#FFFFFF` now, so the fill drew
+   * nothing and only claimed to, and the divider is what actually separates
+   * them.
+   */
   footer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -128,6 +152,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[5],
     borderTopWidth: 1,
     borderTopColor: colors.borderSubtle,
-    backgroundColor: colors.surfaceRaised,
   },
 });
