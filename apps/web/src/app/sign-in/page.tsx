@@ -64,7 +64,11 @@ export default async function SignInPage({ searchParams }: PageProps<'/sign-in'>
 
         <SignInForm next={next} />
 
-        <p className="font-sans text-[13px] text-text-link">{texts.signIn.forgotPassword}</p>
+        {/* `text-text-secondary` and not `text-text-muted`: at 13px this is
+            small text, and muted measures under 4.5:1 on this surface. */}
+        <p className="font-sans text-[13px] leading-relaxed text-text-secondary">
+          {texts.signIn.forgotPassword}
+        </p>
       </div>
     </div>
   );

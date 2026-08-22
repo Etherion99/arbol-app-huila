@@ -86,7 +86,15 @@ export const texts = {
     passwordLabel: 'Contraseña',
     submit: 'Entrar al panel',
     submitting: 'Entrando…',
-    forgotPassword: '¿Olvidaste tu contraseña?',
+    /**
+     * Deliberately not a link. There is no web recovery flow yet, and the
+     * recovery email the mobile app sends returns to `arbolapp://reset-password`,
+     * a deep link that only resolves on a phone with the app installed -- so
+     * pointing the coordinator there would strand anyone who does not have it.
+     * Until `/forgot-password` exists, the honest route is a person.
+     */
+    forgotPassword:
+      '¿Olvidaste tu contraseña? Escribe a la coordinación del PRAE para que la restablezcan.',
     /** Why the gate sent them back, one line per reason. */
     denied: {
       'no-session': 'Tu sesión terminó. Vuelve a entrar para continuar.',
