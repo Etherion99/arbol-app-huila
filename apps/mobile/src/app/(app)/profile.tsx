@@ -10,10 +10,9 @@ import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
-import { Switch } from '@/components/ui/switch';
 import { TextField } from '@/components/ui/text-field';
 import { texts } from '@/constants/texts';
-import { MIN_TOUCH_TARGET, colors, fontFace, radii, spacing } from '@/constants/theme';
+import { colors, fontFace, radii, spacing } from '@/constants/theme';
 import { profileSchema, type ProfileInput, type ProfileValues } from '@/features/auth/auth-schemas';
 import { describeMaybeAuthError } from '@/features/auth/auth-messages';
 import { useSignOut } from '@/features/auth/use-auth-mutations';
@@ -174,13 +173,13 @@ function MissingProfile() {
  * The profile as the canvas composes it: an identity block, three figures, a
  * list of options, the sign out and the affiliation footer.
  *
- * ## Why the editor and the notification switches live inside the list
+ * ## Why the editor still unfolds in place
  *
- * The canvas puts editing behind an «Editar perfil» row and the switches on a
- * settings screen of their own. Neither destination exists as a route, and a
- * screen may not conjure one, so both open in place: the row is the disclosure
- * and the panel unfolds under it, inside the same card. That keeps the shape of
- * the canvas and keeps every action the guardian could already perform.
+ * The canvas puts editing behind an «Editar perfil» row and gives no screen for
+ * it, so that row is a disclosure: it unfolds the form under itself, inside the
+ * same card, rather than leading to a destination the canvas never drew. The
+ * notification switches are the other way round — the canvas does give them a
+ * screen, so the row beside them navigates.
  */
 function ProfileCard({ profile }: { profile: GuardianProfile }) {
   const router = useRouter();
@@ -193,12 +192,6 @@ function ProfileCard({ profile }: { profile: GuardianProfile }) {
   const trees = useGuardianTrees();
 
   const [isEditorExpanded, setIsEditorExpanded] = useState(false);
-  const [areNotificationsExpanded, setAreNotificationsExpanded] = useState(false);
-
-  // Interface only. The reminder engine is a later delivery, so the switches
-  // say what they will do and stay disabled rather than pretending to work.
-  const [wantsReminders, setWantsReminders] = useState(true);
-  const [wantsSummary, setWantsSummary] = useState(false);
 
   const initialValues: ProfileInput = {
     fullName: profile.fullName,
@@ -368,26 +361,8 @@ function ProfileCard({ profile }: { profile: GuardianProfile }) {
 
         <MenuRow
           label={texts.profile.notificationSettings}
-          isExpanded={areNotificationsExpanded}
-          onPress={() => setAreNotificationsExpanded((wasExpanded) => !wasExpanded)}
+          onPress={() => router.push('/settings/notifications')}
         />
-
-        {areNotificationsExpanded ? (
-          <MenuPanel>
-            <AppText variant="caption">{texts.profile.notificationsHint}</AppText>
-
-            <NotificationToggle
-              label={texts.profile.remindersLabel}
-              value={wantsReminders}
-              onChange={setWantsReminders}
-            />
-            <NotificationToggle
-              label={texts.profile.summaryLabel}
-              value={wantsSummary}
-              onChange={setWantsSummary}
-            />
-          </MenuPanel>
-        ) : null}
 
         <MenuRow label={texts.profile.legalLink} onPress={() => router.push('/legal')} isLast />
       </Card>
@@ -543,32 +518,6 @@ function MenuPanel({ children }: { children: ReactNode }) {
   return <View style={styles.menuPanel}>{children}</View>;
 }
 
-function NotificationToggle({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: boolean;
-  onChange: (value: boolean) => void;
-}) {
-  return (
-    <View style={styles.toggleRow}>
-      <View style={styles.toggleLabel}>
-        <AppText variant="body">{label}</AppText>
-        <AppText variant="caption">{texts.profile.notificationsComingSoon}</AppText>
-      </View>
-
-      <Switch
-        isChecked={value}
-        onChange={onChange}
-        accessibilityLabel={label}
-        accessibilityHint={texts.profile.notificationsComingSoon}
-      />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   centered: {
     flex: 1,
@@ -705,16 +654,6 @@ const styles = StyleSheet.create({
   },
   readOnlyField: {
     gap: spacing[1],
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing[4],
-    minHeight: MIN_TOUCH_TARGET,
-  },
-  toggleLabel: {
-    flex: 1,
   },
   footer: {
     alignItems: 'center',

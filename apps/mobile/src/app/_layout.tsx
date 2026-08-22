@@ -99,6 +99,11 @@ function RootNavigator() {
       <Stack.Protected guard={hasSession}>
         <Stack.Screen name="plant" options={{ presentation: 'modal' }} />
         <Stack.Screen name="log/[treeId]" options={{ presentation: 'modal' }} />
+
+        {/* Settings belong to an account, so they sit behind the same guard.
+            A modal rather than a tab: it is opened from a row of the profile
+            and closed again, not a fifth place to navigate to. */}
+        <Stack.Screen name="settings/notifications" options={{ presentation: 'modal' }} />
       </Stack.Protected>
 
       {/* The detail is readable without an account, exactly like the map. */}

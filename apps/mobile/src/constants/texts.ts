@@ -205,12 +205,6 @@ export const texts = {
     adultConfirmed: 'Mayoría de edad declarada',
     termsAcceptedAt: (date: string) => `Términos aceptados el ${date}`,
     saved: 'Tus datos quedaron guardados.',
-    notificationsTitle: 'Notificaciones',
-    notificationsHint:
-      'Los recordatorios llegan cada dos meses, cuando toca fotografiar un árbol. El envío se activa más adelante.',
-    notificationsComingSoon: 'Disponible próximamente',
-    remindersLabel: 'Recordatorios de actualización',
-    summaryLabel: 'Resumen mensual de mis árboles',
     legalLink: 'Política de privacidad y términos',
     signOut: 'Cerrar sesión',
     signOutTitle: '¿Cerrar sesión?',
@@ -220,6 +214,15 @@ export const texts = {
     missingProfileBody:
       'Tu cuenta existe pero no tiene perfil de Guardián. Cierra sesión y vuelve a entrar; si sigue igual, escribe a la coordinación del PRAE.',
     loadErrorTitle: 'No pudimos cargar tu perfil',
+  },
+
+  /** The notification settings, reached from the row of the same name in the profile. */
+  notificationSettings: {
+    title: 'Notificaciones',
+    hint: 'Los recordatorios llegan cada dos meses, cuando toca fotografiar un árbol. El envío se activa más adelante.',
+    comingSoon: 'Disponible próximamente',
+    remindersLabel: 'Recordatorios de actualización',
+    summaryLabel: 'Resumen mensual de mis árboles',
   },
 
   map: {
