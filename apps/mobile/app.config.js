@@ -53,6 +53,16 @@ module.exports = () => {
     plugins: [
       'expo-router',
       [
+        // The splash the canvas draws is typeset, not drawn: the wordmark is
+        // Montserrat, with a subtitle under it and the affiliation microlabel
+        // below that. This plugin renders a background colour and one bitmap
+        // and nothing else, so none of that composition can be reproduced here.
+        //
+        // `splash-icon.png` is therefore still byte for byte the Expo logo the
+        // template shipped. It is not a placeholder somebody forgot: the 2026
+        // branding guide exists only as a photograph of a printed page, so
+        // there is no vector and no exported mark to put in its place. This
+        // stays wrong on screen until a logotype asset lands in the repository.
         'expo-splash-screen',
         {
           backgroundColor: colors.surfacePage,
