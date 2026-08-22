@@ -16,7 +16,9 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" block disabled={pending} className="mt-1.5">
+    // 48px, the height the canvas gives the primary action and the same one
+    // the fields above it already have.
+    <Button type="submit" size="lg" block disabled={pending} className="mt-1.5">
       {pending ? texts.signIn.submitting : texts.signIn.submit}
     </Button>
   );

@@ -36,7 +36,7 @@ export default async function SignInPage({ searchParams }: PageProps<'/sign-in'>
       >
         <div className="absolute inset-0 opacity-50 [background-image:linear-gradient(var(--border-strong)_1px,transparent_1px),linear-gradient(90deg,var(--border-strong)_1px,transparent_1px)] [background-size:52px_52px]" />
         <span className="absolute top-[30%] left-[24%] size-3 rounded-full bg-state-ok shadow-[0_0_14px_var(--state-ok)]" />
-        <span className="absolute top-[48%] left-[52%] size-4 rounded-full bg-state-ok shadow-[0_0_0_6px_rgba(0,141,70,.2),0_0_20px_var(--state-ok)]" />
+        <span className="absolute top-[48%] left-[52%] size-4 rounded-full bg-state-ok shadow-[0_0_0_6px_var(--accent-soft),0_0_20px_var(--state-ok)]" />
         <span className="absolute top-[64%] left-[38%] size-3 rounded-full bg-state-due shadow-[0_0_14px_var(--state-due)]" />
         <span className="absolute top-[26%] left-[66%] size-3 rounded-full bg-state-ok shadow-[0_0_14px_var(--state-ok)]" />
         <div className="absolute bottom-9 left-10 max-w-[380px]">
@@ -49,7 +49,7 @@ export default async function SignInPage({ searchParams }: PageProps<'/sign-in'>
         </div>
       </div>
 
-      <div className="flex w-full shrink-0 flex-col justify-center gap-4 border-l border-border-subtle px-14 lg:w-[460px]">
+      <div className="flex w-full shrink-0 flex-col justify-center gap-4 border-l border-border-subtle px-6 sm:px-14 lg:w-[460px]">
         <p className="font-heading text-[19px] font-extrabold text-accent">
           ÁrbolApp <span className="text-accent-2">Huila</span>
         </p>
