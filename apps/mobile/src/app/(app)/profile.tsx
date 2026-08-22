@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
+import { ScreenState } from '@/components/ui/screen-state';
 import { TextField } from '@/components/ui/text-field';
 import { texts } from '@/constants/texts';
 import { colors, fontFace, radii, spacing } from '@/constants/theme';
@@ -89,19 +90,12 @@ export default function ProfileScreen() {
   if (profile.isError) {
     const failure = describeMaybeAuthError(profile.error);
     return (
-      <Screen>
-        <View style={styles.centered}>
-          <Medallion tone="danger" />
-          <AppText variant="title" style={styles.centeredText}>
-            {texts.profile.loadErrorTitle}
-          </AppText>
-          <Notice
-            tone="error"
-            message={failure?.message ?? texts.authErrors.unknown}
-            onRetry={() => void profile.refetch()}
-          />
-        </View>
-      </Screen>
+      <ScreenState
+        icon="user"
+        title={texts.profile.loadErrorTitle}
+        detail={failure?.message ?? texts.authErrors.unknown}
+        action={{ label: texts.common.retry, onPress: () => void profile.refetch() }}
+      />
     );
   }
 
@@ -113,59 +107,36 @@ export default function ProfileScreen() {
 }
 
 /**
- * The round mark the canvas puts above both profile failures: a user glyph in a
- * circle, red-washed when the read failed and neutral when the identity simply
- * has no profile row.
- *
- * The canvas strikes the neutral one through with a red slash. The ported icon
- * kit has no struck-through user, and a glyph is not something a screen may
- * invent, so the circle carries the difference on its own here.
- */
-function Medallion({ tone }: { tone: 'danger' | 'neutral' }) {
-  const isDanger = tone === 'danger';
-
-  return (
-    <View style={[styles.medallion, isDanger ? styles.medallionDanger : styles.medallionNeutral]}>
-      {/* Decorative: the heading right below says the same thing in words. */}
-      <Icon name="user" size={30} color={isDanger ? colors.danger : colors.textSecondary} />
-    </View>
-  );
-}
-
-/**
  * An identity with no profile row. The provisioning trigger makes this
  * impossible for anybody who signed up through the app, so it means the
  * identity was created some other way. Saying so with a way out beats an empty
  * form that saves nothing.
  *
- * The canvas gives this one running text rather than an error notice: nothing
+ * The canvas gives this one running text rather than a framed error: nothing
  * here failed and nothing is worth retrying, so the block that means «something
- * broke, press again» would be the wrong shape.
+ * broke, press again» would be the wrong shape. It also strikes the medallion
+ * through with a red slash; the ported icon kit has no struck-through user and
+ * a screen does not invent a glyph, so the neutral wash carries the difference.
  */
 function MissingProfile() {
   const router = useRouter();
   const signOut = useSignOut();
 
   return (
-    <Screen>
-      <View style={styles.centered}>
-        <Medallion tone="neutral" />
-        <AppText variant="title" style={styles.centeredText}>
-          {texts.profile.missingProfileTitle}
-        </AppText>
-        <AppText variant="bodyMuted" style={styles.centeredText}>
-          {texts.profile.missingProfileBody}
-        </AppText>
-        <Button
-          label={texts.profile.signOut}
-          variant="danger"
-          isLoading={signOut.isPending}
-          onPress={() => {
-            signOut.mutate(undefined, { onSettled: () => router.replace('/sign-in') });
-          }}
-        />
-      </View>
-    </Screen>
+    <ScreenState
+      icon="user"
+      tone="neutral"
+      title={texts.profile.missingProfileTitle}
+      message={texts.profile.missingProfileBody}
+      action={{
+        label: texts.profile.signOut,
+        variant: 'danger',
+        isLoading: signOut.isPending,
+        onPress: () => {
+          signOut.mutate(undefined, { onSettled: () => router.replace('/sign-in') });
+        },
+      }}
+    />
   );
 }
 
@@ -527,21 +498,6 @@ const styles = StyleSheet.create({
   },
   centeredText: {
     textAlign: 'center',
-  },
-  medallion: {
-    width: 72,
-    height: 72,
-    borderRadius: radii.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  medallionDanger: {
-    backgroundColor: colors.dangerSoft,
-  },
-  medallionNeutral: {
-    backgroundColor: colors.surfaceCard,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
   },
   identity: {
     alignItems: 'center',

@@ -225,6 +225,17 @@ export const texts = {
     loadErrorTitle: 'No pudimos cargar tu perfil',
   },
 
+  /**
+   * The session running out is the one departure nobody asked for, so it is
+   * announced where the guardian is standing rather than on the sign in screen
+   * they were silently dropped onto.
+   */
+  sessionExpiry: {
+    title: 'Tu sesión venció',
+    body: 'Por seguridad debes entrar de nuevo. Tus registros pendientes de enviar se conservan en este teléfono.',
+    signInAgain: 'Entrar de nuevo',
+  },
+
   /** The notification settings, reached from the row of the same name in the profile. */
   notificationSettings: {
     title: 'Notificaciones',
@@ -329,12 +340,13 @@ export const texts = {
     locationHeading: '¿Dónde quedó sembrado?',
     locationHint: 'Arrastra el pin al punto exacto',
     locationAccuracy: (metres: number) => `±${Math.round(metres)} m`,
+    /** Between the coordinate and its radius, so the readout is one reading. */
+    locationReadoutSeparator: ' · ',
     locationAccuracyLabel: (metres: number) => `Precisión del GPS: ${Math.round(metres)} metros`,
     locationNoFix: 'Sin lectura del GPS',
     locationUseGps: 'Usar mi ubicación',
-    locationPoorTitle: 'Señal de GPS débil',
     locationPoorBody: (metres: number) =>
-      `Bajo los árboles el GPS pierde precisión (±${Math.round(metres)} m). Ajusta el pin al punto exacto de la siembra antes de continuar.`,
+      `Señal de GPS débil (±${Math.round(metres)} m). Ajusta el pin al punto exacto de la siembra.`,
     locationDeniedTitle: 'Tu ubicación pone el árbol en su sitio',
     locationDeniedBody:
       'Usamos el GPS solo para ubicar los árboles que siembras y centrar el mapa. Funciona sin señal de datos.',
@@ -517,7 +529,14 @@ export const texts = {
     ready: (kilobytes: number) => `Lista · ${kilobytes} KB`,
     permissionTitle: 'La cámara está desactivada',
     permissionBody:
-      'La fotografía es la evidencia del árbol, y por eso la pedimos desde la cámara. Actívala en los ajustes del teléfono para poder tomarla.',
+      'La foto en vivo es la evidencia de tu siembra, por eso no se puede elegir de la galería. Activa la cámara en los ajustes del teléfono.',
+    /**
+     * The same rule, for the dead end the system can still undo on its own.
+     * Sending somebody to the settings app when a dialog would do it in one
+     * tap is how a guardian gives up on the step.
+     */
+    permissionAskBody:
+      'La foto en vivo es la evidencia de tu siembra, por eso no se puede elegir de la galería. Permite el acceso a la cámara para tomarla.',
     permissionAllow: 'Permitir la cámara',
     permissionSettings: 'Abrir ajustes del teléfono',
     required: 'Falta la fotografía.',

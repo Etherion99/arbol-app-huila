@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Circle, Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { LA_PLATA_FRAMING, type MapRegion } from '@arbolapp/core';
 
 import { AppText } from '@/components/ui/app-text';
@@ -139,6 +139,26 @@ export function StepLocation({
             onChange({ lat: latitude, lng: longitude }, null);
           }}
         >
+          {/* The radius the phone reported, drawn to scale, and only while it
+              is wide enough to be worth arguing with. It is the same figure the
+              warning below already gives in words, so it adds a picture and is
+              never the only place the number appears — which is what lets it be
+              a wash rather than an ink.
+
+              Both values are `colors.warning` #FFD700 at the alphas the canvas
+              draws the circle with, and the map is the one ground in the app
+              whose colour is not the palette's to know, so they are written as
+              alphas here for the same reason the chips above them are. */}
+          {location !== null && isAccuracyPoor ? (
+            <Circle
+              center={{ latitude: location.lat, longitude: location.lng }}
+              radius={accuracyMetres}
+              fillColor="rgba(255, 215, 0, 0.16)"
+              strokeColor="rgba(255, 215, 0, 0.55)"
+              strokeWidth={1}
+            />
+          ) : null}
+
           {location !== null ? (
             <Marker
               coordinate={{ latitude: location.lat, longitude: location.lng }}
@@ -175,25 +195,31 @@ export function StepLocation({
               : formatCoordinates(location.lat, location.lng)}
           </AppText>
           {accuracyMetres !== null ? (
-            <AppText
-              variant="caption"
-              style={isAccuracyPoor ? styles.accuracyPoor : styles.accuracyGood}
-              accessibilityLabel={texts.planting.locationAccuracyLabel(accuracyMetres)}
-            >
-              {texts.planting.locationAccuracy(accuracyMetres)}
-            </AppText>
+            <>
+              {/* The canvas joins the coordinate and its radius with a middle
+                  dot rather than with whitespace, so the two read as one
+                  reading and not as two chips that happen to touch. */}
+              <AppText variant="caption" style={styles.readoutLabel} accessibilityElementsHidden>
+                {texts.planting.locationReadoutSeparator}
+              </AppText>
+              <AppText
+                variant="caption"
+                style={isAccuracyPoor ? styles.accuracyPoor : styles.accuracyGood}
+                accessibilityLabel={texts.planting.locationAccuracyLabel(accuracyMetres)}
+              >
+                {texts.planting.locationAccuracy(accuracyMetres)}
+              </AppText>
+            </>
           ) : null}
         </View>
       </View>
 
       {/* A weak fix is the normal case under a canopy, so it is a warning with
-          an instruction attached, never a wall. */}
+          an instruction attached, never a wall. One sentence and no heading,
+          the way the canvas writes it: the figure and what to do about it are
+          the whole message, and a title above them only repeats the first half. */}
       {isAccuracyPoor ? (
-        <Notice
-          tone="warning"
-          title={texts.planting.locationPoorTitle}
-          message={texts.planting.locationPoorBody(accuracyMetres)}
-        />
+        <Notice tone="warning" message={texts.planting.locationPoorBody(accuracyMetres)} />
       ) : null}
 
       {wasRefused ? (
@@ -319,7 +345,8 @@ const styles = StyleSheet.create({
     left: spacing[3],
     bottom: spacing[3],
     flexDirection: 'row',
-    gap: spacing[2],
+    // No gap: the middle dot is what separates the coordinate from its radius,
+    // and a gap on top of it would space the dot away from both.
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
     backgroundColor: 'rgba(255, 255, 255, 0.92)',
