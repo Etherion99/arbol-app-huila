@@ -1,12 +1,15 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Switch, View } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Icon } from '@/components/ui/icon';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
+import { Switch } from '@/components/ui/switch';
 import { TextField } from '@/components/ui/text-field';
 import { texts } from '@/constants/texts';
 import { MIN_TOUCH_TARGET, colors, fontFace, radii, spacing } from '@/constants/theme';
@@ -37,6 +40,9 @@ function formatDate(value: string): string {
 function formatYear(value: string): string {
   return yearFormatter.format(new Date(value));
 }
+
+/** The height the canvas gives every row of the options list. */
+const MENU_ROW_HEIGHT = 52;
 
 /** The drawn side of the avatar circle. */
 const AVATAR_SIZE = 84;
@@ -98,7 +104,7 @@ export default function ProfileScreen() {
     return <MissingProfile />;
   }
 
-  return <ProfileEditor profile={profile.data} />;
+  return <ProfileCard profile={profile.data} />;
 }
 
 /**
@@ -127,7 +133,19 @@ function MissingProfile() {
   );
 }
 
-function ProfileEditor({ profile }: { profile: GuardianProfile }) {
+/**
+ * The profile as the canvas composes it: an identity block, three figures, a
+ * list of options and the sign out.
+ *
+ * ## Why the editor and the notification switches live inside the list
+ *
+ * The canvas puts editing behind an «Editar perfil» row and the switches on a
+ * settings screen of their own. Neither destination exists as a route, and a
+ * screen may not conjure one, so both open in place: the row is the disclosure
+ * and the panel unfolds under it, inside the same card. That keeps the shape of
+ * the canvas and keeps every action the guardian could already perform.
+ */
+function ProfileCard({ profile }: { profile: GuardianProfile }) {
   const router = useRouter();
   const isOnline = useIsOnline();
   const updateProfile = useUpdateProfile();
@@ -136,6 +154,9 @@ function ProfileEditor({ profile }: { profile: GuardianProfile }) {
   // The same cached query the tree list reads, reused here only to count. The
   // figures are derived during render; nothing new is asked of the server.
   const trees = useGuardianTrees();
+
+  const [isEditorExpanded, setIsEditorExpanded] = useState(false);
+  const [areNotificationsExpanded, setAreNotificationsExpanded] = useState(false);
 
   // Interface only. The reminder engine is a later delivery, so the switches
   // say what they will do and stay disabled rather than pretending to work.
@@ -152,12 +173,16 @@ function ProfileEditor({ profile }: { profile: GuardianProfile }) {
     initialValues,
     onSubmit: async (values: ProfileValues) => {
       await updateProfile.mutateAsync(values).catch(() => {
-        // Reported from the mutation below.
+        // Reported from the notice inside the editor panel.
       });
     },
   });
 
   const failure = describeMaybeAuthError(updateProfile.error);
+
+  // A save that failed must never end up hidden behind a collapsed row, so the
+  // panel is forced open while there is something to report inside it.
+  const isEditorOpen = isEditorExpanded || updateProfile.isError;
 
   const roleLabel =
     profile.role === 'coordinator' ? texts.profile.coordinatorRole : texts.profile.guardianRole;
@@ -233,99 +258,118 @@ function ProfileEditor({ profile }: { profile: GuardianProfile }) {
         />
       ) : null}
 
-      {failure !== null ? (
-        <Notice
-          tone="error"
-          message={failure.message}
-          onRetry={failure.isRetryable ? () => void form.submit() : undefined}
-        />
-      ) : null}
-
-      {updateProfile.isSuccess && failure === null ? (
-        <Notice tone="success" message={texts.profile.saved} />
-      ) : null}
-
       {!isOnline ? <Notice tone="warning" message={texts.common.offlineHint} /> : null}
 
-      <View style={styles.section}>
-        <TextField
-          label={texts.profile.fullNameLabel}
-          value={form.values.fullName}
-          onChangeText={(value) => form.setValue('fullName', value)}
-          onBlur={() => form.reveal('fullName')}
-          error={form.errorFor('fullName')}
-          textContentType="name"
-          autoComplete="name"
-          autoCapitalize="words"
+      <Card padding={0}>
+        <MenuRow
+          label={texts.profile.editProfile}
+          isExpanded={isEditorOpen}
+          onPress={() => setIsEditorExpanded((wasExpanded) => !wasExpanded)}
         />
 
-        <TextField
-          label={texts.profile.institutionLabel}
-          placeholder={texts.profile.institutionPlaceholder}
-          value={form.values.institution}
-          onChangeText={(value) => form.setValue('institution', value)}
-          onBlur={() => form.reveal('institution')}
-          error={form.errorFor('institution')}
-          autoCapitalize="words"
+        {isEditorOpen ? (
+          <MenuPanel>
+            {failure !== null ? (
+              <Notice
+                tone="error"
+                message={failure.message}
+                onRetry={failure.isRetryable ? () => void form.submit() : undefined}
+              />
+            ) : null}
+
+            {updateProfile.isSuccess && failure === null ? (
+              <Notice tone="success" message={texts.profile.saved} />
+            ) : null}
+
+            <TextField
+              label={texts.profile.fullNameLabel}
+              value={form.values.fullName}
+              onChangeText={(value) => form.setValue('fullName', value)}
+              onBlur={() => form.reveal('fullName')}
+              error={form.errorFor('fullName')}
+              textContentType="name"
+              autoComplete="name"
+              autoCapitalize="words"
+            />
+
+            <TextField
+              label={texts.profile.institutionLabel}
+              placeholder={texts.profile.institutionPlaceholder}
+              value={form.values.institution}
+              onChangeText={(value) => form.setValue('institution', value)}
+              onBlur={() => form.reveal('institution')}
+              error={form.errorFor('institution')}
+              autoCapitalize="words"
+            />
+
+            {/* Read only: changing a login address needs a confirmation on both
+                the old and the new one, which is not part of this delivery.
+                The address is only ever shown to the session that owns it. */}
+            <View style={styles.readOnlyField}>
+              <AppText variant="label">{texts.profile.emailLabel}</AppText>
+              <AppText
+                variant="body"
+                accessibilityLabel={`${texts.profile.emailLabel}: ${profile.email}`}
+              >
+                {profile.email}
+              </AppText>
+              <AppText variant="caption">{texts.profile.emailHint}</AppText>
+            </View>
+
+            <Button
+              label={texts.common.save}
+              loadingLabel={texts.common.saving}
+              onPress={() => void form.submit()}
+              isLoading={updateProfile.isPending || form.isSubmitting}
+            />
+          </MenuPanel>
+        ) : null}
+
+        <MenuRow
+          label={texts.profile.notificationSettings}
+          isExpanded={areNotificationsExpanded}
+          onPress={() => setAreNotificationsExpanded((wasExpanded) => !wasExpanded)}
         />
 
-        {/* Read only: changing a login address needs a confirmation on both
-            the old and the new one, which is not part of this delivery. */}
-        <View style={styles.readOnlyField}>
-          <AppText variant="label">{texts.profile.emailLabel}</AppText>
-          <AppText
-            variant="body"
-            accessibilityLabel={`${texts.profile.emailLabel}: ${profile.email}`}
-          >
-            {profile.email}
-          </AppText>
-          <AppText variant="caption">{texts.profile.emailHint}</AppText>
-        </View>
+        {areNotificationsExpanded ? (
+          <MenuPanel>
+            <AppText variant="caption">{texts.profile.notificationsHint}</AppText>
 
-        <Button
-          label={texts.common.save}
-          loadingLabel={texts.common.saving}
-          onPress={() => void form.submit()}
-          isLoading={updateProfile.isPending || form.isSubmitting}
+            <NotificationToggle
+              label={texts.profile.remindersLabel}
+              value={wantsReminders}
+              onChange={setWantsReminders}
+            />
+            <NotificationToggle
+              label={texts.profile.summaryLabel}
+              value={wantsSummary}
+              onChange={setWantsSummary}
+            />
+          </MenuPanel>
+        ) : null}
+
+        <MenuRow label={texts.profile.legalLink} onPress={() => router.push('/legal')} isLast />
+      </Card>
+
+      <Card padding={0}>
+        <MenuRow
+          label={texts.profile.signOut}
+          onPress={confirmSignOut}
+          tone="danger"
+          isLoading={signOut.isPending}
+          isLast
         />
-      </View>
+      </Card>
 
-      <View style={styles.section}>
-        <AppText variant="subtitle">{texts.profile.notificationsTitle}</AppText>
-        <AppText variant="caption">{texts.profile.notificationsHint}</AppText>
-
-        <NotificationToggle
-          label={texts.profile.remindersLabel}
-          value={wantsReminders}
-          onChange={setWantsReminders}
-        />
-        <NotificationToggle
-          label={texts.profile.summaryLabel}
-          value={wantsSummary}
-          onChange={setWantsSummary}
-        />
-      </View>
-
-      <View style={styles.section}>
-        <AppText variant="caption">
+      <View style={styles.footer}>
+        <AppText variant="caption" style={styles.centeredText}>
           {texts.profile.termsAcceptedAt(formatDate(profile.termsAcceptedAt))}
         </AppText>
         {profile.isAdultConfirmed ? (
-          <AppText variant="caption">{texts.profile.adultConfirmed}</AppText>
+          <AppText variant="caption" style={styles.centeredText}>
+            {texts.profile.adultConfirmed}
+          </AppText>
         ) : null}
-
-        <Button
-          label={texts.profile.legalLink}
-          onPress={() => router.push('/legal')}
-          variant="ghost"
-        />
-
-        <Button
-          label={texts.profile.signOut}
-          onPress={confirmSignOut}
-          variant="danger"
-          isLoading={signOut.isPending}
-        />
       </View>
     </Screen>
   );
@@ -372,6 +416,77 @@ function Stat({
   );
 }
 
+/**
+ * A row of the options list.
+ *
+ * The chevron is the canvas's `chevL` flipped, because the ported icon kit only
+ * carries the left-pointing one and a screen does not add glyphs to the kit. It
+ * is drawn in `textMuted`, which is allowed: at 4.43:1 it clears the 3:1 a
+ * graphic owes, and it is never the only thing saying the row is a control.
+ *
+ * A row that discloses a panel turns the same chevron downwards rather than
+ * borrowing a second glyph, and announces itself with `expanded` so a reader
+ * knows the row opens something instead of leading somewhere.
+ */
+function MenuRow({
+  label,
+  onPress,
+  isExpanded,
+  isLast = false,
+  isLoading = false,
+  tone = 'default',
+}: {
+  label: string;
+  onPress: () => void;
+  /** Present only on rows that unfold a panel in place. */
+  isExpanded?: boolean;
+  isLast?: boolean;
+  isLoading?: boolean;
+  tone?: 'default' | 'danger';
+}) {
+  const isDisclosure = isExpanded !== undefined;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={isLoading}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{
+        busy: isLoading,
+        disabled: isLoading,
+        ...(isDisclosure ? { expanded: isExpanded } : {}),
+      }}
+      style={({ pressed }) => [
+        styles.menuRow,
+        isLast ? null : styles.menuRowDivided,
+        pressed && !isLoading ? styles.menuRowPressed : null,
+      ]}
+    >
+      <AppText
+        variant="label"
+        style={[styles.menuLabel, tone === 'danger' ? styles.menuLabelDanger : null]}
+        numberOfLines={2}
+      >
+        {label}
+      </AppText>
+
+      {isLoading ? <ActivityIndicator size="small" color={colors.danger} /> : null}
+
+      {!isLoading && tone === 'default' ? (
+        <View style={isExpanded === true ? styles.chevronDown : styles.chevronRight}>
+          <Icon name="chevronLeft" size={18} color={colors.textMuted} />
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
+
+/** The body a disclosure row unfolds, inset inside the same card. */
+function MenuPanel({ children }: { children: ReactNode }) {
+  return <View style={styles.menuPanel}>{children}</View>;
+}
+
 function NotificationToggle({
   label,
   value,
@@ -389,12 +504,10 @@ function NotificationToggle({
       </View>
 
       <Switch
-        value={value}
-        onValueChange={onChange}
+        isChecked={value}
+        onChange={onChange}
         accessibilityLabel={label}
         accessibilityHint={texts.profile.notificationsComingSoon}
-        trackColor={{ true: colors.accent, false: colors.borderSubtle }}
-        thumbColor={colors.textPrimary}
       />
     </View>
   );
@@ -454,13 +567,50 @@ const styles = StyleSheet.create({
   statAccented: {
     color: colors.accent,
   },
-  section: {
+  menuRow: {
+    minHeight: MENU_ROW_HEIGHT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing[3],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
+  },
+  menuRowDivided: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSubtle,
+  },
+  /**
+   * The canvas draws no pressed row. It borrows the mechanism the card already
+   * uses for its own press: the `accentSoft` wash, which tints the row by
+   * 1.17:1 without touching the ink — `textPrimary` still reads 14.44:1 over it
+   * and `danger` 4.11:1, and the press is confirmed by the panel that opens or
+   * the screen that follows.
+   */
+  menuRowPressed: {
+    backgroundColor: colors.accentSoft,
+  },
+  menuLabel: {
+    flex: 1,
+  },
+  /** `danger` #E31B23 is 4.72:1 on the white card, so it may set this label. */
+  menuLabelDanger: {
+    color: colors.danger,
+    fontFamily: fontFace.bodyMedium,
+  },
+  chevronRight: {
+    transform: [{ scaleX: -1 }],
+  },
+  chevronDown: {
+    transform: [{ rotate: '-90deg' }],
+  },
+  menuPanel: {
     gap: spacing[4],
-    padding: spacing[4],
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    backgroundColor: colors.surfaceCard,
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[1],
+    paddingBottom: spacing[4],
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSubtle,
   },
   readOnlyField: {
     gap: spacing[1],
@@ -474,5 +624,11 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     flex: 1,
+  },
+  footer: {
+    alignItems: 'center',
+    gap: spacing[1],
+    paddingTop: spacing[2],
+    paddingBottom: spacing[4],
   },
 });
