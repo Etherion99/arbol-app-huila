@@ -39,7 +39,9 @@ export function WizardHeader({ step, totalSteps, title, onClose }: WizardHeaderP
           {texts.planting.stepLabel(step + 1, totalSteps)}
         </AppText>
 
-        <AppText variant="subtitle" style={styles.title} numberOfLines={1}>
+        {/* The display face, not the subhead one: this is a modal bar title and
+            the canvas sets every one of them in Montserrat bold. */}
+        <AppText variant="headerTitle" style={styles.title} numberOfLines={1}>
           {title}
         </AppText>
       </View>
@@ -82,6 +84,9 @@ const styles = StyleSheet.create({
   closeGlyph: {
     color: colors.textPrimary,
   },
+  // The canvas prints "PASO 1 DE 4" in the muted grey, which measures 4.43:1 on
+  // the page and cannot carry a 13px word. The quiet ink that does is
+  // `textSecondary`, at 7.04:1.
   stepLabel: {
     fontFamily: fontFace.monoMedium,
     color: colors.textSecondary,
