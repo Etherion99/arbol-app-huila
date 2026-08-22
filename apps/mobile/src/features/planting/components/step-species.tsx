@@ -36,6 +36,27 @@ export type StepSpeciesProps = {
  * a different kind of answer, and the field never blocks a name nobody has used
  * before.
  */
+/**
+ * Splits a suggestion around the fragment that was typed, so the part the
+ * guardian already wrote can be picked out of the name beside it.
+ *
+ * Null when the fragment is not literally inside the name: the suggestions are
+ * ranked on a normalised key, so an accent or a stray space can rank a name
+ * that does not contain the raw text character for character, and highlighting
+ * the wrong run of letters is worse than highlighting none.
+ */
+function matchedFragment(name: string, typed: string) {
+  const start = typed === '' ? -1 : name.toLowerCase().indexOf(typed.toLowerCase());
+
+  return start === -1
+    ? null
+    : {
+        before: name.slice(0, start),
+        match: name.slice(start, start + typed.length),
+        after: name.slice(start + typed.length),
+      };
+}
+
 export function StepSpecies({
   speciesRawText,
   onSpeciesChange,
@@ -71,25 +92,43 @@ export function StepSpecies({
 
       {isTyping && suggestions.length > 0 ? (
         <View style={styles.suggestions} accessibilityRole="list">
-          {suggestions.map((option) => (
-            <Pressable
-              key={option.speciesId}
-              onPress={() => onSpeciesChange(option.canonicalName)}
-              accessibilityRole="button"
-              accessibilityLabel={texts.planting.speciesSuggestionLabel(
-                option.canonicalName,
-                option.treeCount,
-              )}
-              style={({ pressed }) => [styles.suggestion, pressed && styles.pressed]}
-            >
-              <AppText variant="body" numberOfLines={1} style={styles.suggestionName}>
-                {option.canonicalName}
-              </AppText>
-              <AppText variant="caption" style={styles.suggestionCount}>
-                {texts.map.treeCount(option.treeCount)}
-              </AppText>
-            </Pressable>
-          ))}
+          {suggestions.map((option, index) => {
+            const typed = matchedFragment(option.canonicalName, speciesRawText.trim());
+
+            return (
+              <Pressable
+                key={option.speciesId}
+                onPress={() => onSpeciesChange(option.canonicalName)}
+                accessibilityRole="button"
+                accessibilityLabel={texts.planting.speciesSuggestionLabel(
+                  option.canonicalName,
+                  option.treeCount,
+                )}
+                style={({ pressed }) => [
+                  styles.suggestion,
+                  index === suggestions.length - 1 && styles.suggestionLast,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <AppText variant="body" numberOfLines={1} style={styles.suggestionName}>
+                  {typed === null ? (
+                    option.canonicalName
+                  ) : (
+                    <>
+                      {typed.before}
+                      <AppText variant="body" style={styles.suggestionMatch}>
+                        {typed.match}
+                      </AppText>
+                      {typed.after}
+                    </>
+                  )}
+                </AppText>
+                <AppText variant="caption" style={styles.suggestionCount}>
+                  {texts.map.treeCount(option.treeCount)}
+                </AppText>
+              </Pressable>
+            );
+          })}
         </View>
       ) : null}
 
@@ -119,6 +158,7 @@ export function StepSpecies({
         inputMode="numeric"
         maxLength={4}
         placeholder="32"
+        suffix={texts.planting.heightUnit}
         hint={texts.planting.heightHint}
         error={heightError}
       />
@@ -156,8 +196,20 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSubtle,
   },
+  // The rule belongs between two rows, so the last one does not draw a line
+  // against the rounded edge of the card.
+  suggestionLast: {
+    borderBottomWidth: 0,
+  },
   suggestionName: {
     flex: 1,
+  },
+  // The canvas picks the typed fragment out in `accent`, which measures 4.28:1
+  // on the card's white against a 17px word. `textLink` is the same green two
+  // steps darker, at 5.82:1, and the weight carries the rest of the emphasis.
+  suggestionMatch: {
+    fontFamily: fontFace.bodyMedium,
+    color: colors.textLink,
   },
   suggestionCount: {
     fontFamily: fontFace.monoMedium,
