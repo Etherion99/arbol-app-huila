@@ -680,6 +680,23 @@ export const texts = {
 
     viewerClose: 'Cerrar la fotografía',
     viewerCaption: (code: string, cycle: number) => `${code} · Ciclo ${cycle}`,
+    // The foot of the viewer: the timeline's own line with the branch count
+    // traded for the place the shutter fired. Both halves can be missing -- a
+    // death report carries no height, and a photograph that reached the log
+    // without an EXIF position carries no coordinate.
+    viewerMeasures: (date: string, height: number | null, capture: string) =>
+      height === null
+        ? `${date} · sin medidas · ${capture}`
+        : `${date} · ${height} cm · ${capture}`,
+    viewerCapture: (coordinates: string) => `capturada ${coordinates}`,
+    // The same words as `growthLog.captureLocationMissing`, lowercase because
+    // here they are a fragment between middots and not a line of their own.
+    viewerCaptureMissing: 'sin coordenada de captura',
+    viewerPhotoLabel: (code: string, cycle: number) =>
+      `Fotografía del ciclo ${cycle} del árbol ${code}`,
+    viewerErrorTitle: 'No pudimos mostrar la fotografía',
+    viewerErrorBody:
+      'El enlace de la imagen pudo haber vencido. Vuelve a intentarlo cuando tengas señal.',
 
     loading: 'Cargando el árbol…',
     errorTitle: 'No pudimos cargar este árbol',

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import {
   PHOTO_SIGNED_URL_TTL_SECONDS,
+  type Coordinates,
   type HealthStatus,
   type IsoDateTime,
   type TrackingStatus,
@@ -10,6 +11,7 @@ import {
 } from '@arbolapp/core';
 
 import { signPhotos } from '@/features/photos/growth-log-storage';
+import { parseEwkbPoint } from '@/lib/postgis';
 import { supabase } from '@/lib/supabase/client';
 
 /** One entry of the growth log, with its photograph already signed. */
@@ -22,6 +24,12 @@ export type TimelineEntry = {
   healthStatus: HealthStatus;
   notes: string | null;
   onTime: boolean;
+  /**
+   * Where the device was when the shutter fired, which is not where the tree
+   * is: the guardian stands back to frame it, and a reading taken under a
+   * canopy drifts. Null whenever the photograph carried no EXIF position.
+   */
+  captureLocation: Coordinates | null;
   photoUrl: string | null;
   thumbnailUrl: string | null;
 };
@@ -64,6 +72,8 @@ type EntryRow = {
   health_status: HealthStatus;
   notes: string | null;
   on_time: boolean;
+  /** Hexadecimal EWKB, which is how PostgREST renders a PostGIS geometry. */
+  capture_location: string | null;
   photo_path: string;
   thumbnail_path: string;
 };
@@ -100,7 +110,7 @@ export function useTreeDetail(treeId: Uuid | null) {
         supabase
           .from('log_entries')
           .select(
-            'id, cycle, captured_at, height_cm, visible_branches, health_status, notes, on_time, photo_path, thumbnail_path',
+            'id, cycle, captured_at, height_cm, visible_branches, health_status, notes, on_time, capture_location, photo_path, thumbnail_path',
           )
           .eq('tree_id', treeId)
           .is('archived_at', null)
@@ -165,6 +175,7 @@ export function useTreeDetail(treeId: Uuid | null) {
           healthStatus: entry.health_status,
           notes: entry.notes,
           onTime: entry.on_time,
+          captureLocation: parseEwkbPoint(entry.capture_location),
           photoUrl: photoUrls[index] ?? null,
           thumbnailUrl: thumbnailUrls[index] ?? null,
         })),
