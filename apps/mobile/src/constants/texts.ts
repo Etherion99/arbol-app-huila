@@ -205,12 +205,6 @@ export const texts = {
     adultConfirmed: 'Mayoría de edad declarada',
     termsAcceptedAt: (date: string) => `Términos aceptados el ${date}`,
     saved: 'Tus datos quedaron guardados.',
-    notificationsTitle: 'Notificaciones',
-    notificationsHint:
-      'Los recordatorios llegan cada dos meses, cuando toca fotografiar un árbol. El envío se activa más adelante.',
-    notificationsComingSoon: 'Disponible próximamente',
-    remindersLabel: 'Recordatorios de actualización',
-    summaryLabel: 'Resumen mensual de mis árboles',
     legalLink: 'Política de privacidad y términos',
     signOut: 'Cerrar sesión',
     signOutTitle: '¿Cerrar sesión?',
@@ -220,6 +214,25 @@ export const texts = {
     missingProfileBody:
       'Tu cuenta existe pero no tiene perfil de Guardián. Cierra sesión y vuelve a entrar; si sigue igual, escribe a la coordinación del PRAE.',
     loadErrorTitle: 'No pudimos cargar tu perfil',
+  },
+
+  /** The notification settings, reached from the row of the same name in the profile. */
+  notificationSettings: {
+    title: 'Notificaciones',
+    /**
+     * Not in the canvas, which draws the screen as if it worked. Nothing is
+     * sent and nothing is stored yet, and a switch that silently forgets what
+     * the guardian chose has to say so before it is touched.
+     */
+    inactiveNotice:
+      'El envío de notificaciones todavía no está activo. Por ahora estos interruptores no cambian nada y lo que elijas no se guarda al salir.',
+    comingSoon: 'Disponible próximamente',
+    remindersLabel: 'Recordatorios de bitácora',
+    remindersDescription: 'Un aviso cuando a un árbol tuyo le toque su foto bimestral',
+    coordinatorLabel: 'Avisos del coordinador',
+    coordinatorDescription: 'Archivados, reasignaciones y mensajes del PRAE',
+    pendingFootnote:
+      'Aunque desactives los avisos, tus árboles seguirán apareciendo como pendientes en la app.',
   },
 
   map: {
