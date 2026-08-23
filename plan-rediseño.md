@@ -19,7 +19,12 @@
 > | Los tres medallones de A6, A9b y A10b | El kit portado no trae sobre ni enlace roto. PD-08. | Diseño |
 > | Las pestañas de A7 | Repartir el articulado es una decisión de contenido legal sobre un borrador. | Producto |
 > | La banda de encabezado de E1 y la firma de E3 | Maquetación acotada que la ola 6.2 no alcanzó. | Trabajo pendiente |
-> | **Ver la aplicación móvil renderizada** | Ni Android SDK, ni claves de Maps, ni Mac. Ver la ola 7.2. | El usuario |
+> | **Ver la aplicación móvil renderizada** | Ni Android SDK, ni claves de Maps, ni Mac. | El usuario |
+>
+> **El panel web sí se vio**, servido desde `next build` contra el Supabase local: nueve
+> pantallas capturadas y miradas una por una. **La aplicación móvil sigue sin renderizarse
+> ni una sola vez.** El detalle de qué se ejecutó, qué se vio y qué comandos tiene que
+> disparar el usuario está en el cierre de la ola 7.2, al final de este documento.
 >
 > Este documento se conserva como registro de cómo se organizó el rediseño. **Ya no dirige
 > trabajo.** El protocolo de peticiones al diseño y el registro PD-XX siguen vigentes en
@@ -340,3 +345,197 @@ cifra que contiene es engañosa hasta que se rehaga**.
 El segundo no es un trámite. En todo el trabajo de fidelidad hecho hasta hoy —cuatro fases,
 decenas de cambios visuales— **no se ha renderizado la aplicación ni una sola vez**. Un
 rediseño que invierte el esquema de color entero no se puede dar por bueno sin verlo.
+
+---
+
+## Cierre de la ola 7.2 · agente B — qué se validó y qué sigue sin verse
+
+> 22 de agosto de 2026
+
+Esta sección separa siempre tres cosas distintas, y conviene leerlas como tales:
+
+| Palabra | Qué significa aquí |
+|---|---|
+| **Visto** | Se renderizó en pantalla y hay una captura que alguien miró. |
+| **Responde** | El comando terminó bien o la ruta devolvió 200. Nadie miró cómo se ve. |
+| **Sin ver** | Escrito, con el tipado y el empaquetado en verde, pero jamás dibujado. |
+
+### 1 · Lo que se ejecutó, con resultado literal
+
+| Comando | Dónde | Resultado |
+|---|---|---|
+| `pnpm typecheck` | raíz | Verde en `packages/core`, `apps/mobile` y `apps/web`. |
+| `pnpm lint` | raíz | **0 errores, 5 avisos** preexistentes, todos en `apps/web/src/app/map/tree-card-modal.tsx` y `apps/web/src/features/public-map/public-map.tsx`. |
+| `pnpm format:check` | raíz | Verde. |
+| `npx expo-doctor` | `apps/mobile` | **21/21 checks passed. No issues detected!** |
+| `npx expo export --platform android` | `apps/mobile` | Empaqueta con Metro de verdad: **1 740 módulos, sin un solo error ni aviso**. Bundle Hermes de 4,7 MB y 63 assets. |
+| `npx expo config --type public` | `apps/mobile` | `userInterfaceStyle: 'light'`, splash `backgroundColor: '#F4FDF4'`, `adaptiveIcon.backgroundColor: '#F4FDF4'`. Los tres resuelven desde `design-tokens.json`, no desde hex escrito a mano. |
+| `pnpm db:start` + `npx supabase status` | raíz | Docker disponible; el stack levanta. API `http://127.0.0.1:55321`, Studio `:55323`, correo `:55324`. `supabase_imgproxy` y `supabase_pooler` quedan parados por configuración. |
+| `pnpm --filter @arbolapp/web build` | raíz | Compila con Turbopack en 3,8 s. **12 rutas**, TypeScript en verde. |
+| `pnpm --filter @arbolapp/web start` | raíz | Sirve. El 3000 estaba ocupado, así que se sirvió en `PORT=3210`. |
+
+**`expo export` es lo más cerca de arrancar que hay sin dispositivo**, y por eso está aquí:
+empaqueta con el Metro real y caza los fallos de importación y de resolución que `tsc` no ve.
+No apareció ninguno. Eso descarta la clase de error que rompe la app al primer arranque, y
+**no dice absolutamente nada sobre cómo se ve**.
+
+#### Tipografías que el bundle de Android empaqueta
+
+Siete ficheros, y las cuatro familias del branding 2026 están todas:
+
+| Familia | Pesos empaquetados | Rol |
+|---|---|---|
+| Montserrat | 600 SemiBold, 700 Bold | Titulares |
+| Open Sans | 600 SemiBold | Subtítulos |
+| Roboto | 400 Regular, 500 Medium | Cuerpo |
+| Roboto Mono | 500 Medium | Coordenadas y medidas |
+| Material Symbols | 400 Regular | Íconos (963 KB, el asset más pesado del bundle) |
+
+No se empaquetan Montserrat 400/500 ni Open Sans 400: si alguna pantalla las pide, cae al
+peso más cercano y nadie ha visto ocurrir eso.
+
+### 2 · El panel web, que es lo único del rediseño que se ha visto renderizado
+
+Se sirvió el `next build` contra el Supabase local con su `seed.sql` completo —194 árboles,
+seis guardianes y una coordinadora— y se recorrieron las pantallas en un Chrome sin cabeza,
+capturando cada una. **Estas sí se miraron.** La sesión se abrió con la coordinadora del seed
+(`coordinacion@iesansebastian.edu.co`), así que ninguna pantalla del panel se quedó en la
+redirección a `/sign-in`.
+
+| Pantalla | Ruta | Qué se vio |
+|---|---|---|
+| **D1 Acceso** | `/sign-in` | Tema claro correcto: página `#F4FDF4`, texto `#1A1A1A`. Botón primario Verde Huilense `#008D46` con tinta blanca y 48 px de alto. Wordmark en verde con «Huila» en Naranja Plateño. El panel decorativo de la izquierda dibuja una retícula con cuatro marcadores. A 390 px el panel decorativo desaparece y el formulario ocupa el ancho. |
+| **D1 denegado** | `/sign-in?denied=not-coordinator` | Entrando con una cuenta de guardián sale el aviso ámbar «Esta cuenta es de guardián. El panel es solo para el rol de coordinador; usa la aplicación móvil para ver tus árboles». El gate funciona y lo dice en castellano. |
+| **D2 Tablero** | `/panel` | Cuatro tarjetas de indicador con datos reales (194 sembrados, 182 vivos, 93,8 % de supervivencia, 47,5 % de puntualidad), barras por vereda y lista por especie. `h1` en Montserrat 800 a 34 px sobre `#1A1A1A`. |
+| **D3 Usuarios** | `/panel/users` | Tabla de seis guardianes más la coordinadora, con el correo en Roboto Mono, chips de estado y la nota de que el correo solo se ve aquí. |
+| **D4 Moderación** | `/panel/moderation` | 56 tarjetas de árboles marcados, en rejilla de tres columnas, cada una con «Ver el árbol» y «Archivar». |
+| **D4 modal** | idem | El diálogo «Archivar «Aguacates · HUI-LP-0109»» abre sobre un velo, con el motivo obligatorio y el botón de confirmar deshabilitado mientras no hay texto. |
+| **D5 Especies** | `/panel/species` | Las 26 claves con su conteo, con las variantes que el seed escribe a mano (`mandarino` / `MANDARINOS`, `limón` / `LIMONES` / `Limón Tahití`) listadas por separado, que es justo lo que la pantalla de fusión existe para resolver. |
+| **D6 Detalle admin** | `/panel/moderation/[treeId]` | Ficha con datos, estado «Vencido» en Naranja Plateño y panel de reasignación con los cinco guardianes activos. El recuadro del minimapa dice «El mapa web llega en una fase posterior» y el historial de moderación dice «Este dato aún no está disponible»: ambos huecos son visibles y honestos. |
+| **D7 Exportar** | `/panel/export` | Tres tarjetas de reporte con botón CSV activo y botón Excel deshabilitado, más el aviso de que el inventario devuelve como máximo 1 000 árboles. |
+| **E1 Mapa público** | `/map` | **Sin lienzo de mapa**, como estaba previsto: falta la clave de Google Maps y sale «Clave de Google Maps no configurada». Lo que sí se vio es la cromática que importa: la leyenda pinta los **cinco estados con cinco colores distintos y exactos** — `#008D46`, `#FFD700`, `#F26522`, `#E31B23`, `#757575`. El botón «Filtros» abre su panel. A 390 px leyenda y botón reflúyen bien. |
+| **E3 Incrustable** | `/map/embed` | Responde y monta, pero sin clave solo se ve el mismo mensaje: **no hay leyenda ni filtros que mirar**. De esta variante no se ha visto ninguna superficie propia. |
+| **Raíz** | `/` | Redirige al panel con la sesión abierta. |
+
+#### Lo que el render destapó y el tipado no podía destapar
+
+1. **Magenta de Juventud en línea dentro de la interfaz, en D1.** El renglón
+   `PRAE «DE LA PANTALLA A LA REALIDAD»` se pinta con la clase `text-jil-magenta`, que
+   resuelve a `#E93CAC`, en Roboto Mono de 11 px. `CLAUDE.md` dice que el magenta y el
+   amarillo de Juventud en línea son **solo filiación y nunca entran en la interfaz**, y
+   además ese color sobre el blanco del panel decorativo mide alrededor de **3,7 : 1**, que a
+   11 px no pasa AA. Es el hallazgo más claro de esta ola, y `pnpm test:contrast` no podía
+   verlo porque valida tokens sueltos y no pares de componente.
+2. **El panel de «Filtros» de E1 está maquetado pero vacío.** Abre y muestra «Filtrar por
+   especie — Las especies se cargarán desde la base de datos», y lo mismo para las zonas. No
+   hay todavía ningún control de filtro real.
+3. **El botón «Filtros» mide 42 px de alto**, por debajo del mínimo de 44 px que fija
+   `CLAUDE.md`. Vive en `apps/web/src/app/map/map-filters.tsx`, que es alcance del agente A
+   de esta misma ola.
+4. **Las dos tarjetas del tablero se estiran a la altura del viewport** y su contenido queda
+   centrado en vertical, así que a 1440 × 1000 sobran unos 300 px de vacío arriba y abajo de
+   las barras. Es el comportamiento que pide `flex-1 justify-center`, no un fallo, pero es una
+   decisión que hasta hoy nadie había visto en pantalla y conviene contrastarla con el lienzo.
+5. **`expo config --type public` deja `android.permission.RECORD_AUDIO` en la lista de
+   permisos**, pese a que `app.config.js` declara `microphonePermission: false` y
+   `recordAudioAndroidPermission: false` precisamente para evitarlo. Falta comprobar si el
+   plugin lo retira al generar el manifiesto en el prebuild; hasta entonces queda anotado.
+6. **Comentario huérfano del tema oscuro** en `apps/mobile/app.config.js`: la clave de iOS se
+   justifica diciendo que sin ella «el estilo oscuro no se aplica y el motivo de puntos de luz
+   se pierde». Ese motivo dejó de existir con la v2.
+
+Ninguno de los seis se corrigió aquí: esta ola valida y anota, y tres de ellos caen en
+ficheros que el agente A tenía abiertos en paralelo.
+
+### 3 · La aplicación móvil sigue sin renderizarse, y esto es lo que falta
+
+**No se ha visto ni una pantalla del móvil.** Ni en esta ola ni en ninguna de las siete. Lo
+que hay es empaquetado en verde, que es una cosa distinta y mucho más pequeña.
+
+En este equipo la validación en dispositivo no se puede disparar, y no por falta de ganas:
+
+| Tope | Estado comprobado |
+|---|---|
+| Android SDK | `ANDROID_HOME` y `ANDROID_SDK_ROOT` vacíos, `adb` no está en el `PATH`. No hay emulador ni Gradle. |
+| iOS | Es Windows. Ni simulador ni build local, por definición. |
+| Claves de Google Maps | `PENDIENTE` en `EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY` y en la de iOS. Sin ellas el mapa sale gris. |
+| Expo Go | No sirve: el proyecto usa `expo-dev-client` y `react-native-maps`, que necesitan una build de desarrollo. |
+
+### 4 · Cómo dispara el usuario la validación en dispositivo
+
+`apps/mobile/eas.json` ya trae el perfil `development` con `developmentClient: true`,
+distribución interna y `buildType: apk`, así que la ruta viable es build en la nube. Para esto
+no hace falta tocar el repositorio, salvo el `projectId` del punto 2.
+
+#### Lo imprescindible, que solo puede aportar el usuario
+
+1. **Una cuenta de Expo.** Gratuita, con cola de build compartida.
+2. **Un `projectId` de EAS.** `eas.json` declara `appVersionSource: "remote"`, y la
+   configuración es `app.config.js` (JavaScript), así que **EAS no puede escribir el
+   `projectId` por su cuenta**: solo escribe en `app.json`. Hay que copiarlo a mano a
+   `extra.eas.projectId`.
+3. **Una clave de Google Maps para Android**, restringida al package name
+   `co.edu.iesansebastian.arbolapp`. Va como variable de entorno de EAS, **no en `.env`**:
+   `.env` no se sube a la build.
+4. **Un teléfono Android físico** donde instalar el APK.
+
+#### La secuencia exacta
+
+```bash
+# Node 24: en este equipo la 18 es la del sistema y no sirve para el SDK 57.
+export PATH="/c/Users/etherion/AppData/Roaming/nvm/v24.14.1:$PATH"
+
+# 1. Cuenta de Expo, una sola vez.
+npx eas-cli login
+
+# 2. Crear el proyecto en la cuenta. Devuelve un projectId que hay que copiar
+#    a mano a `extra.eas.projectId` en apps/mobile/app.config.js.
+cd apps/mobile
+npx eas-cli init
+
+# 3. Las variables que la build necesita, en el entorno `development`.
+#    La clave de Maps termina dentro del APK de todos modos, así que lo que la
+#    protege es la restricción por package name, no el secreto.
+npx eas-cli env:create --environment development \
+  --name EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY --value "<clave-android>"
+npx eas-cli env:create --environment development \
+  --name EXPO_PUBLIC_SUPABASE_URL --value "http://<IP-del-equipo>:55321"
+npx eas-cli env:create --environment development \
+  --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "<ANON_KEY de npx supabase status>"
+
+# 4. La build de desarrollo. Sale un APK con enlace y QR para instalar.
+npx eas-cli build -p android --profile development
+
+# 5. Instalado el APK, el servidor de Metro contra el dev client.
+npx expo start --dev-client
+```
+
+#### La trampa del `127.0.0.1`
+
+Contra el Supabase local, **en un teléfono físico `127.0.0.1` es el propio teléfono**. Hay que
+poner la IP del equipo en la red (`ipconfig`, la IPv4 del adaptador Wi-Fi), con el teléfono en
+esa misma red y el cortafuegos de Windows dejando entrar el puerto 55321. La build de
+desarrollo es una variante de depuración, así que admite tráfico HTTP en claro; una build
+`preview` o `production` **no**, y ahí el stack local deja de servir. Esto ya está anotado en
+`.env.example`, en la sección de Supabase.
+
+#### Lo opcional, y lo que es un gasto del usuario
+
+- **iOS.** Hace falta un Mac para compilar en local, o una cuenta de Apple Developer para que
+  EAS firme y distribuya a un dispositivo registrado. **Es una decisión y un gasto del
+  usuario**, no algo que el repositorio pueda resolver.
+- **Clave de Maps para iOS**, restringida al bundle ID `co.edu.iesansebastian.arbolapp`. Sin
+  ella la app cae a Apple Maps.
+- **Un proyecto de Supabase en la nube**, que evitaría la gimnasia de la IP local y dejaría
+  probar desde cualquier red.
+
+### 5 · Qué queda pendiente después de esta ola
+
+| Qué | Estado | Quién lo desbloquea |
+|---|---|---|
+| Las 19 pantallas del móvil | **Sin ver.** Empaquetan sin error; nadie las ha mirado. | El usuario, con la secuencia de arriba |
+| El lienzo del mapa en E1 y E3 | **Sin ver.** Falta `NEXT_PUBLIC_GOOGLE_MAPS_JS_KEY`. | El usuario |
+| Las superficies propias de E3 | **Sin ver.** Sin clave no monta ni leyenda ni filtros. | El usuario |
+| El magenta `#E93CAC` de D1 | Visto y medido: 3,7 : 1 a 11 px, y es un color de filiación. | Trabajo pendiente |
+| Los filtros de E1 | Vistos: el panel abre vacío. | Trabajo pendiente |
+| El `RECORD_AUDIO` del manifiesto | Anotado, sin comprobar en el prebuild. | Trabajo pendiente |
