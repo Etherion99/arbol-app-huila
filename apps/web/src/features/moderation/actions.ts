@@ -73,3 +73,61 @@ export async function archiveTree(formData: FormData): Promise<ArchiveTreeState>
 
   return { error: null, done: true };
 }
+
+/** What the review queue's two buttons get back. */
+export type ResolveFlagState = { error: string | null; done?: boolean };
+
+/**
+ * Records what a coordinator decided about a flagged registration.
+ *
+ * Two outcomes, and neither of them removes anything. `confirmed` says the
+ * signal was real; `dismissed` says the guardian was doing their job and the
+ * GPS was not. The flag stays on the row either way, carrying who decided and
+ * when, because a review queue that forgets its own decisions cannot be audited
+ * and would ask the same question again on the next sweep.
+ *
+ * **Confirming does not archive the tree.** The two are different decisions --
+ * "this reading is genuinely wrong" and "this tree should leave the map" -- and
+ * folding them together would mean a coordinator clicking through a queue
+ * silently retiring somebody's tree without writing the motive the guardian is
+ * owed. The card puts the archive dialog next to this button, so the second
+ * decision is available and is still a decision.
+ *
+ * The coordinator gate is re-checked here as well as inside the function: a
+ * Server Action is a public endpoint, and the only thing between it and the
+ * internet is what it verifies itself.
+ */
+export async function resolveRegistrationFlag(formData: FormData): Promise<ResolveFlagState> {
+  await requireCoordinator();
+
+  const flagId = String(formData.get('flagId') ?? '');
+  const resolution = String(formData.get('resolution') ?? '');
+  const note = String(formData.get('note') ?? '').trim();
+
+  if (!flagId) return { error: texts.moderation.errors.unknown };
+  if (resolution !== 'confirmed' && resolution !== 'dismissed') {
+    return { error: texts.moderation.errors.unknown };
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc('resolve_registration_flag', {
+    target_flag_id: flagId,
+    in_resolution: resolution,
+    in_note: note === '' ? null : note,
+  });
+
+  if (error) {
+    const denied =
+      error.code === '42501' || error.message.toLowerCase().includes('row-level security');
+
+    return { error: denied ? texts.moderation.errors.notAllowed : texts.moderation.errors.unknown };
+  }
+
+  // The queue and the sidebar badge both count open flags, and the badge lives
+  // in the panel layout.
+  revalidatePath(routes.moderation);
+  revalidatePath('/panel', 'layout');
+
+  return { error: null, done: true };
+}

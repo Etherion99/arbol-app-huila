@@ -9,37 +9,43 @@ import { createClient } from '@/lib/supabase/server';
 /**
  * How many trees need the coordinator's attention, for the sidebar badge.
  *
- * ## What this counts, and what the design asks for
+ * ## What this counts
  *
  * The canvas shows "Moderación · 4 marcados" over cards reading "GPS difiere
- * 240 m de la foto", "duplicado a <3 m" and "sin bitácora hace 5 meses". Two of
- * those three do not exist in the database: nothing compares a declared
- * coordinate against photo EXIF, and nothing detects two trees planted within
- * three metres of each other. There is no flag column and no moderation queue
- * table, and adding one is a schema change, which goes by versioned migration
- * and is not interface work.
+ * 240 m de la foto", "duplicado a <3 m" and "sin bitácora hace 5 meses". All
+ * three now exist: the first two are open rows of `registration_flags`, raised
+ * by the integrity checks `register_tree()` runs, and the third is a tree whose
+ * tracking status is `overdue`.
  *
- * So this counts what the database can actually answer: trees whose tracking
- * status is `overdue`, which is the third card's case and the only one with a
- * real signal behind it. `statistics_overview.overdue_total` is the same figure
- * the dashboard's punctuality card reads, so the badge and the tablero cannot
- * disagree.
+ * The badge is the sum, because it answers "how much work is on that screen"
+ * and the screen holds both queues. Each half is counted again inside its own
+ * section, so the badge and the headings cannot disagree.
  *
- * Returns `undefined` when the query fails. The sidebar renders no badge at
+ * `statistics_overview.overdue_total` is the same figure the dashboard's
+ * punctuality card reads, which is what keeps the badge and the tablero
+ * consistent about the second half.
+ *
+ * Returns `undefined` when either query fails. The sidebar renders no badge at
  * all in that case, because a badge showing 0 would tell the coordinator there
- * is nothing to review, which is a different claim from not knowing.
+ * is nothing to review, which is a different claim from not knowing -- and a
+ * badge showing only the half that answered would be worse than both.
  */
 export const getModerationCount = cache(async (): Promise<number | undefined> => {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from('statistics_overview')
-    .select('overdue_total')
-    .maybeSingle();
+  const [overdue, flags] = await Promise.all([
+    supabase.from('statistics_overview').select('overdue_total').maybeSingle(),
+    // `head` with an exact count: the badge needs the number and none of the
+    // rows, and the queue itself is fetched properly by the screen.
+    supabase
+      .from('registration_flags')
+      .select('id', { count: 'exact', head: true })
+      .is('resolution', null),
+  ]);
 
-  if (error || !data) return undefined;
+  if (overdue.error || !overdue.data || flags.error) return undefined;
 
-  return data.overdue_total ?? undefined;
+  return (overdue.data.overdue_total ?? 0) + (flags.count ?? 0);
 });
 
 /** One card in the D4 grid. */
@@ -106,11 +112,12 @@ async function readGuardianNames(
 }
 
 /**
- * The trees the coordinator has to look at, longest neglected first.
+ * The trees whose growth log is overdue, longest neglected first.
  *
- * Same criterion as `getModerationCount` above, and deliberately so: the number
- * in the sidebar badge and the number over this grid come from one definition
- * of "marcado", so they cannot tell the coordinator two different things.
+ * The other half of the moderation screen, and a different question from the
+ * review queue above it: a tree nobody has photographed in five months is not
+ * suspicious, it is neglected, and what it needs is somebody getting in touch
+ * rather than a verdict. The two are never mixed into one grid for that reason.
  */
 export const getFlaggedTrees = cache(async (): Promise<FlaggedTreesResult> => {
   const supabase = await createClient();

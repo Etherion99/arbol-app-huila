@@ -315,6 +315,32 @@ export const texts = {
     },
   },
 
+  /**
+   * The platform's own health, on the tablero.
+   *
+   * Written so a coordinator who is not a developer can act on it: what is
+   * full, how full, and whether the backup is still happening. No jargon and
+   * no byte counts without a unit beside them.
+   */
+  platform: {
+    title: 'PLATAFORMA',
+    /** The threshold the database raises its first alert at, said once. */
+    warnAtPercent: 70,
+    storageValue: (percent: number) => `${percent}% del almacenamiento`,
+    storageDetail: (used: string, quota: string, photos: number) =>
+      `${used} MB de ${quota} MB · ${photos} fotografías`,
+    storageWarning:
+      'Queda poco espacio para fotografías. Avisa a la coordinación del PRAE para ampliar el plan antes de que se llene.',
+    backupNever: 'Todavía no se ha hecho ningún respaldo.',
+    backupFresh: (hours: number) =>
+      hours < 1
+        ? 'Último respaldo: hace menos de una hora.'
+        : `Último respaldo: hace ${Math.round(hours)} horas.`,
+    backupStale: (hours: number) =>
+      `El último respaldo fue hace ${Math.round(hours)} horas. Revisa que la tarea programada siga corriendo.`,
+    unknown: 'No pudimos leer el estado de la plataforma.',
+  },
+
   /** D4 · Moderación con archivado motivado. */
   moderation: {
     title: 'Moderación',
@@ -335,11 +361,13 @@ export const texts = {
     confirm: 'Archivar árbol',
     archiving: 'Archivando…',
     /**
-     * Says out loud which signal the panel can really detect, so nobody reads
-     * an empty grid as "no hay nada que revisar".
+     * Names the two things this screen holds, so an empty half is read as
+     * "no hay nada" and not as "esto todavía no funciona".
      */
     intro:
-      'Aquí aparecen los árboles con la bitácora vencida, que es la única señal que la plataforma sabe detectar hoy. La comparación de coordenadas contra la foto y la detección de duplicados todavía no existen.',
+      'Arriba, los registros que las comprobaciones marcaron para revisión humana. Abajo, los árboles con la bitácora vencida. Nada se rechaza solo: bajo los árboles el GPS falla y una siembra densa es legítima, así que cada marca la decides tú.',
+    /** Heading of the second half: neglect rather than doubt. */
+    overdueTitle: 'Bitácoras vencidas',
     /** The line under each card, naming why the tree is on this screen. */
     reasonOverdue: (months: number) =>
       months <= 1 ? 'sin bitácora hace 1 mes' : `sin bitácora hace ${months} meses`,
@@ -360,6 +388,38 @@ export const texts = {
       notAllowed: 'Tu cuenta no tiene permiso para archivar un árbol.',
       unknown: 'No se pudo archivar el árbol. Inténtalo de nuevo.',
     },
+  },
+
+  /**
+   * The registration review queue.
+   *
+   * Every line here is written so a coordinator reading it aloud to a guardian
+   * would not be accusing them of anything. A flag is a thing the system
+   * noticed, not a thing the guardian did, and the innocent explanation is
+   * stated wherever there is room for it.
+   */
+  registrationReview: {
+    title: 'Revisión de registros',
+    countSuffix: (count: number) => (count === 1 ? '· 1 por revisar' : `· ${count} por revisar`),
+    emptyTitle: 'No hay registros por revisar',
+    emptyBody:
+      'Ninguna siembra reciente activó las comprobaciones de coordenadas ni de duplicados.',
+    /** What each check noticed, in the order of how often it turns out to be nothing. */
+    reason: {
+      missing_capture_location: 'la foto no traía ubicación',
+      gps_mismatch: 'la foto se tomó lejos del punto marcado',
+      duplicate_location: 'hay otro árbol muy cerca',
+    },
+    distance: (metres: number) =>
+      metres >= 1000 ? `${(metres / 1000).toFixed(1)} km` : `${Math.round(metres)} m`,
+    relatedLabel: 'El otro árbol:',
+    photoAlt: (species: string) => `Fotografía de siembra del árbol de ${species}`,
+    photoMissing: 'La fotografía todavía no se ha subido',
+    /** The usual answer, and therefore the primary button. */
+    dismiss: 'Está bien',
+    confirm: 'Marcar como sospechoso',
+    /** Said under the grid, because it is the rule the screen is built on. */
+    note: 'Descartar una marca no borra nada y volver a marcarla tampoco. Si además hay que retirar el árbol del mapa, archívalo con un motivo: el guardián lo leerá.',
   },
 
   /** D5 · Fusión de especies. */
