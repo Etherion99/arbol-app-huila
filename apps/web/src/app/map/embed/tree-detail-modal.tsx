@@ -119,10 +119,10 @@ export function TreeDetailModal({ tree, isLoading, onClose }: TreeDetailModalPro
               </div>
             </div>
 
-            {tree.photoUrl && (
+            {tree.photoPath && (
               <div className={styles.photoSection}>
                 <Image
-                  src={tree.photoUrl}
+                  src={tree.photoPath}
                   alt={`Fotografía del árbol ${tree.code}`}
                   width={400}
                   height={300}

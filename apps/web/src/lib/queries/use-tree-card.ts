@@ -10,6 +10,9 @@ import type { TreeCard } from '@/features/public-map';
  * never pays for photographs or guardian details that nobody tapped.
  *
  * Returns null if the tree is archived or does not exist.
+ *
+ * Note: photoUrl and thumbnailUrl are signed URLs returned by tree_card() SQL function.
+ * They are ready to use in <img> tags without additional client-side signing.
  */
 export function useTreeCard(treeId: string | null) {
   const supabase = createClient();
@@ -53,8 +56,8 @@ export function useTreeCard(treeId: string | null) {
         cycle: row.latest_cycle,
         guardianId: row.guardian_id,
         guardianName: row.guardian_display_name,
-        photoPath: row.latest_photo_path,
-        thumbnailPath: row.latest_thumbnail_path,
+        photoUrl: row.latest_photo_url,
+        thumbnailUrl: row.latest_thumbnail_url,
       } as TreeCard;
     },
     enabled: treeId !== null,

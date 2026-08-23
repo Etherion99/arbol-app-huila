@@ -35,9 +35,9 @@ export interface TreeMarker {
  * Complete tree card data.
  * Retrieved from tree_card() SQL function on user tap/click.
  *
- * Note: The photograph travels as an object key (photo_path), not as a signed URL.
- * The bucket is private, so the client must sign the URL once the card is open,
- * which is also why the map viewport query never fetches these paths.
+ * Note: photoUrl and thumbnailUrl are signed URLs ready to use.
+ * They are generated server-side so the client never needs to sign URLs.
+ * This simplifies the frontend and is appropriate for a public anonymous screen.
  */
 export interface TreeCard {
   id: string;
@@ -59,8 +59,8 @@ export interface TreeCard {
   cycle: number | null; // Latest cycle number, or null if no entries yet
   guardianId: string | null; // Null if unassigned
   guardianName: string | null; // short_display_name() from public_users, e.g. "Andrés C.", null if no guardian
-  photoPath: string | null; // Object key in storage, not a URL (bucket is private)
-  thumbnailPath: string | null; // Object key of the 300px thumbnail
+  photoUrl: string | null; // Signed URL ready to embed in <img>, or null if no photo
+  thumbnailUrl: string | null; // Signed URL of the 300px thumbnail
 }
 
 /**

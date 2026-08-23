@@ -17,9 +17,8 @@ interface TreeCardModalProps {
 /**
  * Modal showing complete tree details when a marker is tapped.
  *
- * The photograph travels as an object key (photoPath), not as a signed URL.
- * The bucket is private, so the client must sign the URL once the modal opens
- * (not shown here, as that's an image service concern).
+ * The photograph is a signed URL ready to use (photoUrl).
+ * No additional signing needed on the client.
  */
 export function TreeCardModal({
   treeId,
@@ -210,7 +209,7 @@ export function TreeCardModal({
               )}
 
               {/* Photo placeholder */}
-              {treeCard.photoPath ? (
+              {treeCard.photoUrl ? (
                 <div className="bg-borderSubtle rounded aspect-video flex items-center justify-center">
                   <p className="text-sm text-textSecondary">
                     {texts.publicMap.treeCard.noPhoto}
