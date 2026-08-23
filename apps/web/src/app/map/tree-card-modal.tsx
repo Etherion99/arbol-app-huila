@@ -31,11 +31,7 @@ export function TreeCardModal({
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 z-40"
-        onClick={onClose}
-        role="presentation"
-      />
+      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} role="presentation" />
 
       {/* Modal */}
       <div
@@ -71,9 +67,7 @@ export function TreeCardModal({
               <div className="flex gap-3">
                 <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-red-900 text-sm">
-                    {texts.states.loadFailedTitle}
-                  </p>
+                  <p className="font-medium text-red-900 text-sm">{texts.states.loadFailedTitle}</p>
                   <p className="text-red-700 text-xs mt-1">{error}</p>
                   <button
                     onClick={onRetry}
@@ -114,9 +108,7 @@ export function TreeCardModal({
                 <p className="text-xs text-textSecondary uppercase tracking-wide">
                   {texts.publicMap.treeCard.code}
                 </p>
-                <p className="font-mono text-lg font-semibold text-textPrimary">
-                  {treeCard.code}
-                </p>
+                <p className="font-mono text-lg font-semibold text-textPrimary">{treeCard.code}</p>
               </div>
 
               {/* Species */}
@@ -211,9 +203,7 @@ export function TreeCardModal({
               {/* Photo placeholder */}
               {treeCard.photoUrl ? (
                 <div className="bg-borderSubtle rounded aspect-video flex items-center justify-center">
-                  <p className="text-sm text-textSecondary">
-                    {texts.publicMap.treeCard.noPhoto}
-                  </p>
+                  <p className="text-sm text-textSecondary">{texts.publicMap.treeCard.noPhoto}</p>
                 </div>
               ) : (
                 <div className="bg-borderSubtle rounded p-3">

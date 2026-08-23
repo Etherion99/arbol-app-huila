@@ -15,9 +15,7 @@ export function MapLegend() {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4 max-w-xs">
-      <h3 className="text-sm font-semibold text-textPrimary mb-3">
-        {texts.publicMap.legendTitle}
-      </h3>
+      <h3 className="text-sm font-semibold text-textPrimary mb-3">{texts.publicMap.legendTitle}</h3>
 
       <div className="space-y-2">
         {states.map((status) => (
@@ -30,9 +28,7 @@ export function MapLegend() {
             />
 
             {/* Status label */}
-            <span className="text-sm text-textSecondary">
-              {texts.publicMap.states[status]}
-            </span>
+            <span className="text-sm text-textSecondary">{texts.publicMap.states[status]}</span>
           </div>
         ))}
       </div>

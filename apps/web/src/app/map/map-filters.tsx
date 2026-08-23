@@ -19,7 +19,8 @@ interface MapFiltersProps {
 export function MapFilters({ currentFilters, onFiltersChange }: MapFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const hasFilters = (currentFilters.species?.length ?? 0) > 0 || (currentFilters.zones?.length ?? 0) > 0;
+  const hasFilters =
+    (currentFilters.species?.length ?? 0) > 0 || (currentFilters.zones?.length ?? 0) > 0;
 
   const handleClearFilters = () => {
     onFiltersChange({});

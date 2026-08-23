@@ -1,10 +1,6 @@
 'use client';
 
-import {
-  GoogleMap,
-  OverlayView,
-  useJsApiLoader,
-} from '@react-google-maps/api';
+import { GoogleMap, OverlayView, useJsApiLoader } from '@react-google-maps/api';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { colorByTrackingStatus } from '@arbolapp/core';
@@ -154,8 +150,8 @@ export function PublicMap({
             Clave de Google Maps no configurada
           </h2>
           <p className="text-sm text-textSecondary">
-            El mapa público no se puede mostrar sin una clave válida. Los filtros y la
-            información del árbol están listos para usarse.
+            El mapa público no se puede mostrar sin una clave válida. Los filtros y la información
+            del árbol están listos para usarse.
           </p>
         </div>
       </div>
@@ -249,10 +245,7 @@ export function PublicMap({
       >
         {/* Empty state message centered on the map */}
         {!isLoading && !error && (!trees || trees.length === 0) && (
-          <OverlayView
-            position={initialCenter}
-            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-          >
+          <OverlayView position={initialCenter} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
             <div className="bg-white rounded shadow-lg p-6 max-w-xs text-center -ml-32">
               <p className="text-sm text-textSecondary">No hay árboles en esta zona</p>
             </div>
