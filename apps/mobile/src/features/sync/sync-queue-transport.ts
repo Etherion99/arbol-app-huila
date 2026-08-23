@@ -73,6 +73,17 @@ async function submitPlanting(job: Extract<SyncJob, { kind: 'planting' }>): Prom
       in_capture_lng: job.photo.captureLocation?.lng ?? null,
       in_capture_lat: job.photo.captureLocation?.lat ?? null,
       in_notes: null,
+      // The job id, which the queue minted before the first attempt and
+      // persists across every retry and every restart. `register_tree()`
+      // returns the tree this id already made rather than making another,
+      // which is the only thing that can make planting idempotent: two
+      // saplings planted side by side in the same minute are identical in
+      // every column the database has, so no natural key could tell a
+      // duplicate from a second real tree.
+      //
+      // `recover()` below still exists and still runs, because it also
+      // covers a job queued by a build that predates this column.
+      in_client_request_id: job.id,
     })
     .maybeSingle();
 

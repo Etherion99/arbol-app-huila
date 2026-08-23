@@ -74,7 +74,9 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-sm);
-  transition: background-color 0.15s ease-out, color 0.15s ease-out;
+  transition:
+    background-color 0.15s ease-out,
+    color 0.15s ease-out;
 }
 
 .closeButton:hover {

@@ -4,9 +4,11 @@ import { texts } from '@/constants/texts';
 import { BlockError } from '@/features/statistics/components/block-error';
 import { MunicipalityFilter } from '@/features/statistics/components/municipality-filter';
 import { SpeciesList } from '@/features/statistics/components/species-list';
+import { PlatformCard } from '@/features/statistics/components/platform-card';
 import { VillageChart } from '@/features/statistics/components/village-chart';
 import { formatCount, formatRate } from '@/features/statistics/format';
 import { MUNICIPALITY_PARAM } from '@/features/statistics/params';
+import { getPlatformHealth } from '@/features/statistics/platform-queries';
 import {
   getMunicipalityOptions,
   getOverview,
@@ -57,10 +59,14 @@ export default async function DashboardPage({ searchParams }: PageProps<'/panel'
       : undefined;
   const municipalityId = municipality?.municipalityId ?? undefined;
 
-  const [overview, villages, species] = await Promise.all([
+  const [overview, villages, species, platform] = await Promise.all([
     getOverview(municipalityId),
     getVillageCounts(municipalityId),
     getSpeciesCounts(),
+    // Unfiltered by municipality, and it has to be: the storage allowance is
+    // one bucket for the whole project, and showing a share of it under a
+    // filter would suggest La Plata has an allowance of its own.
+    getPlatformHealth(),
   ]);
 
   return (
@@ -117,13 +123,21 @@ export default async function DashboardPage({ searchParams }: PageProps<'/panel'
           )}
         </Card>
 
-        <Card className="flex flex-col gap-2.5 p-4.5">
-          {species.ok ? (
-            <SpeciesList counts={species.data} wholeProjectNote={municipalityId !== undefined} />
-          ) : (
-            <BlockError className="m-auto" />
-          )}
-        </Card>
+        <div className="flex min-h-0 flex-col gap-3.5">
+          <Card className="flex min-h-0 flex-1 flex-col gap-2.5 p-4.5">
+            {species.ok ? (
+              <SpeciesList counts={species.data} wholeProjectNote={municipalityId !== undefined} />
+            ) : (
+              <BlockError className="m-auto" />
+            )}
+          </Card>
+
+          {/* Under the species list rather than beside the four headline
+              figures: this is about the platform and those are about the
+              trees, and mixing the two would put "70% del almacenamiento"
+              where a coordinator reads "cuántos árboles hay vivos". */}
+          <PlatformCard health={platform} />
+        </div>
       </div>
     </>
   );

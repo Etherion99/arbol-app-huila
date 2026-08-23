@@ -120,7 +120,7 @@ export function ReassignPanel({ treeId, currentGuardianId, candidates }: Reassig
                     aria-hidden="true"
                     className={cn(
                       'flex size-8 shrink-0 items-center justify-center rounded-full',
-                      'bg-surface-overlay font-sans text-xs font-bold text-accent',
+                      'bg-surface-overlay font-sans text-xs font-bold text-text-link',
                     )}
                   >
                     {candidate.initials}

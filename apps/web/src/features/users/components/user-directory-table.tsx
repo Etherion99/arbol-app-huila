@@ -149,7 +149,7 @@ export function UserDirectoryTable({
                   {entry.upToDateTotal === null ? (
                     <span className="text-text-muted">{texts.common.noValue}</span>
                   ) : (
-                    <TableFigure className="text-accent">{entry.upToDateTotal}</TableFigure>
+                    <TableFigure className="text-text-link">{entry.upToDateTotal}</TableFigure>
                   )}
                 </TableCell>
 

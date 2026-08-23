@@ -17,6 +17,17 @@ La tabla de contraste **no se calcula a mano**: sale de `pnpm test:contrast`, qu
 tokens del propio `theme.ts`. Cualquier cifra de contraste de este documento se reproduce
 ejecutando ese script.
 
+> **El script cambió en la Fase 8, y el cambio importa.** Antes medía **tokens contra
+> superficies**, que responde «¿podría este color llevar texto?». Ahora mide además **los
+> pares que el código pinta de verdad** —esta tinta, sobre ese fondo, a ese tamaño— y falla
+> cuando uno no llega a AA. La distinción no es teórica: la versión vieja estuvo en verde
+> mientras `_layout.tsx` escribía su única línea útil en `warning` a **1.35:1**, porque
+> `warning` estaba correctamente documentado como token que no puede llevar texto y nadie
+> comprobaba si algo lo llevaba. La tabla de pares vive en
+> [`scripts/contrast-pairs.mjs`](scripts/contrast-pairs.mjs), y cada fila nombra el archivo
+> que la pinta: el script falla también si ese archivo ya no existe, que es como se detecta
+> una tabla que quedó hablando de componentes renombrados.
+
 ---
 
 ## Estado del rediseño R1–R6
@@ -73,7 +84,7 @@ Mide fidelidad **visual y de composición**, no si la funcionalidad es correcta.
 
 | ID | Pantalla | Código | Score | Qué falta para la fidelidad completa |
 |---|---|---|---|---|
-| **A1** | Splash | 🟡 `app.config.js` | **35** | El fondo y el esquema claro sí salen de los tokens (`surfacePage`, `userInterfaceStyle: 'light'`). **`splash-icon.png` sigue siendo byte a byte el logo de Expo.** El lienzo compone un logotipo tipográfico en Montserrat 38, el subtítulo «Sembrando vida en La Plata» y la micro-etiqueta de filiación; el plugin `expo-splash-screen` solo pinta un color y un bitmap, así que **nada de esa composición es reproducible desde la configuración**. Tope de contenido: no existe el vector de marca. |
+| **A1** | Splash | 🟡 `app.config.js` · `scripts/generate-splash-icon.mjs` | **70** | El fondo y el esquema claro salen de los tokens, y **`splash-icon.png` ya no es el logo de Expo**: `pnpm splash` compone el logotipo «ÁrbolApp Huila» rasterizando la misma Montserrat 800 que registra `expo-font`, en `accent` y `accent2`, y `imageWidth` sube de 76 a 240 porque una palabra no se lee al tamaño de un ícono. Faltan las **dos líneas de debajo** —«Sembrando vida en La Plata» y la micro-etiqueta de filiación—: hornearlas en el bitmap las escalaría con el logotipo, así que piden una pantalla de carga real, que es trabajo de la Fase 9 junto al ícono de la app. |
 | **A2.1** | Onboarding 1/3 | ✅ `onboarding/index.tsx` | **82** | Composición portada entera: bloque superior al 55 %, velo inferior, pie en `overline` sobre tinta inversa, tres puntos con el activo en `glowAccent`, primario + enlace fantasma. **Falta la fotografía real de campo** — contenido del PRAE. El marco la espera. |
 | **A2.2** | Onboarding 2/3 | ✅ `onboarding/prae.tsx` | **82** | Igual que A2.1. Falta la fotografía. |
 | **A2.3** | Onboarding 3/3 | ✅ `onboarding/guardian.tsx` | **82** | El bloque **sí está dibujado**: rejilla de mapa en SVG y los cinco pines con sus estados, incluido el seleccionado con halo. Cambia «Siguiente» por «Empezar», como el lienzo. |
@@ -369,6 +380,25 @@ cruza 4.5:1 sobre `#008D46`: el blanco mide 4.29 y la tinta 4.06.
   puntos y lo documenta donde ocurre —la ayuda de consentimiento de A4 es el caso explícito—.
   Cuando el lienzo y la accesibilidad chocan, gana la accesibilidad y queda escrito.
 
+### Lo que encontró medir los pares reales
+
+Seis, todos en el web, y ninguno lo veía la tabla de tokens porque los seis dependen del
+fondo o del tamaño, no del token:
+
+| Dónde | Par | Medía | Qué se hizo |
+|---|---|---|---|
+| `components/panel/sidebar.tsx` | `accent` sobre `accentSoft`, 14 px semibold | **3.82:1** | el ítem activo pasa a `textLink`, **4.83:1** |
+| `components/panel/sidebar.tsx` | `accent` sobre blanco, 12 px bold | **4.29:1** | las iniciales del avatar pasan a `textLink`, **5.82:1** |
+| `features/trees/…/reassign-panel.tsx` | el mismo avatar | **4.29:1** | igual |
+| `features/users/…/user-directory-table.tsx` | `accent` sobre tarjeta, 14 px mono | **4.29:1** | la cifra «al día» pasa a `textLink`, **5.82:1** |
+| `components/ui/notice.tsx` | `info` sobre `infoSoft`, ícono de 17 px | **2.76:1** | el glifo pasa a `textSecondary`, como ya hacía el `Notice` del móvil |
+| `components/ui/button.tsx` | `textInverse` sobre `stateArchived`, 15 px | **4.43:1** | pasa a `onAccent`, **4.61:1** |
+
+El último merece una línea aparte: el docblock del botón afirmaba «White on
+`--state-archived` measures 4.61:1, which clears AA» y era cierto —de **blanco puro**—. El
+token debajo era `textInverse`, que es blanco hoja `#F4FDF4` y mide 4.43. El comentario
+llevaba meses siendo correcto sobre un color que el código no usaba.
+
 ### Las insignias suaves, y una regla que sale de ellas
 
 Los once rellenos suaves se midieron compuestos sobre `surfacePage`. El resultado es uniforme
@@ -467,6 +497,43 @@ sección de la ola 7.2 de [plan-rediseño.md](plan-rediseño.md).
 **El web sí se vio**, por primera vez en todo el rediseño: el panel entero, pantalla por
 pantalla, servido contra Supabase local. Qué se vio y qué no está en esa misma sección, y lo
 que el render destapó está más abajo, en la auditoría de accesibilidad.
+
+### La jornada de validación de la Fase 8: no se pudo ejecutar
+
+La Fase 8 existe, entre otras cosas, para cerrar esta deuda, y **no la cierra**. Lo que hace
+falta sigue sin estar en el equipo, y se deja escrito con precisión en vez de simulado:
+
+| Qué falta | Sin ello no se puede ver |
+|---|---|
+| **Android SDK con emulador**, o un dispositivo con depuración USB | absolutamente nada del móvil |
+| **API key de Google Maps para Android** | el mapa sale gris: ni sprites, ni vuelo de apertura, ni latido del marcador, ni escala de grises |
+| **Proyecto de EAS** | el token de Expo Push, y por tanto el ciclo de recordatorio de extremo a extremo |
+| **Development build** | `react-native-maps` y `@sentry/react-native` son módulos nativos y no existen en Expo Go |
+
+Lo que **sí** se ejecutó en esta fase, y es todo lo que se puede ejecutar sin lo anterior:
+
+```
+npx expo-doctor                      21/21 checks passed
+npx expo export --platform android   empaqueta
+npx expo config --type public        el splash resuelve a 240 pt sobre #F4FDF4
+pnpm --filter @arbolapp/web build    12 rutas
+```
+
+**Nada de eso es haber visto una pantalla**, y no se cuenta como tal en ninguna fila de la
+tabla. La lista de comprobación acumulada —los seis puntos de la Fase 3, los seis de la
+Fase 5 y los cuatro de arriba— queda pendiente de una jornada con un teléfono delante.
+
+### El mapa con 1.000 árboles
+
+`pnpm test:map` siembra hasta mil árboles y mide lo que sí es medible aquí: la consulta por
+viewport contra el stack local y el agrupamiento que corre en el teléfono en cada viewport
+asentado. El peor caso del agrupamiento es **0,8 ms, un 4,8 % de un fotograma de 16,67 ms**.
+
+**Los cuadros por segundo durante el paneo NO se midieron.** Esa cifra la produce la vista
+nativa de `react-native-maps` rasterizando marcadores mientras la cámara se mueve, y para
+eso hacen falta las cuatro cosas de la tabla de arriba. Lo medido dice una sola cosa útil, y
+la dice con número: **el JavaScript no es el sospechoso**. Si en el dispositivo hay tirones,
+están en el render nativo y se arreglan en la configuración de los marcadores.
 
 ### Lo que la Fase 5 deja sin comprobar en un teléfono
 
@@ -651,7 +718,11 @@ ver el móvil.
 ### Lo que no se comprobó
 
 - **Ningún lector de pantalla.** Ni TalkBack, ni VoiceOver, ni NVDA. Todo lo que este bloque
-  dice sobre orden de lectura y sobre anuncios sale de leer el árbol de componentes.
+  dice sobre orden de lectura y sobre anuncios sale de leer el árbol de componentes. La
+  Fase 8 pedía explícitamente una revisión con lector de pantalla de los flujos de siembra
+  y bitácora, y **no se hizo**: TalkBack necesita el dispositivo que no hay, y NVDA sobre el
+  panel es posible pero no se ejecutó. Queda en la misma lista que el resto de la jornada
+  de validación.
 - **El orden de tabulación real del web.** No se recorrió ninguna pantalla con el teclado.
 - **Nada del móvil se vio en pantalla**, por lo mismo que dice la sección anterior.
 - **El contraste no se recalculó.** Toda cifra de esta sección está copiada de la tabla de
@@ -672,6 +743,9 @@ pnpm typecheck       # los tres paquetes
 pnpm lint
 pnpm format:check
 pnpm test:contrast   # de aquí sale la tabla de contraste, literalmente
+pnpm test:integrity  # las marcas de registro y la cola de revisión, contra el stack local
+pnpm test:map        # el mapa con 1.000 árboles simulados
+pnpm splash          # regenera el logotipo del splash desde Montserrat
 
 pnpm --filter @arbolapp/web build
 cd apps/mobile
