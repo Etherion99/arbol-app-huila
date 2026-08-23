@@ -124,7 +124,12 @@ export function PlantingSuccess({
 
       <View style={styles.panel}>
         <View style={styles.panelColumn}>
-          {answer === null ? (
+          {/* Asked once, and only of somebody it can still be asked of. A
+              guardian who already granted the permission on their first tree
+              would otherwise meet the same question on their fourth, with a
+              button that raises no dialog because the platform has nothing left
+              to ask. They go straight to the exits instead. */}
+          {answer === null && push.state !== 'registered' ? (
             <>
               <View style={styles.prompt}>
                 <Icon name="bell" size={22} color={colors.accent} />
@@ -152,7 +157,11 @@ export function PlantingSuccess({
             </>
           ) : (
             <>
-              {answer === 'granted' ? (
+              {/* Null here means the question was never put, because this
+                  installation was already registered. Nothing is announced:
+                  they said yes on an earlier tree and telling them again is
+                  noise on a screen that is meant to be a payoff. */}
+              {answer === null ? null : answer === 'granted' ? (
                 <Notice tone="success" message={texts.planting.successNotifyGranted} />
               ) : answer === 'declined' ? (
                 <AppText variant="caption">{texts.planting.successNotifyDeclined}</AppText>

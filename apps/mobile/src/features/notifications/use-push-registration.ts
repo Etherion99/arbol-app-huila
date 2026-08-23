@@ -56,6 +56,18 @@ export function usePushRegistration() {
   const registration = useQuery({
     queryKey: pushRegistrationQueryKey(userId),
     enabled: userId !== null,
+    /**
+     * Long, because reading this costs a write.
+     *
+     * Confirming the registration is not a read: when the permission is
+     * granted it re-claims the token, which is an RPC. Three screens ask for
+     * this hook and the default would refetch on each of their mounts, so a
+     * guardian walking between tabs on a vereda connection would be paying for
+     * a round trip a minute to learn something that changes when they visit
+     * the system settings and at no other time. An hour is far more often than
+     * `last_seen_at` needs to move.
+     */
+    staleTime: 60 * 60 * 1000,
     queryFn: async (): Promise<PushRegistrationState> => {
       const permission = await Notifications.getPermissionsAsync();
 
