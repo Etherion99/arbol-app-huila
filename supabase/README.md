@@ -28,6 +28,8 @@ pnpm test:species     # la clave normalizada de SQL coincide con la de packages/
 pnpm test:rls         # las políticas RLS, ejercitadas con dos guardianes y un coordinador
 pnpm test:merge       # la fusión de especies y su reversión, de extremo a extremo
 pnpm test:reminders   # el motor de recordatorios completo, con las fechas forzadas
+pnpm test:integrity   # las marcas de registro y la cola de revisión del coordinador
+pnpm test:map         # el mapa con 1.000 árboles simulados
 ```
 
 `pnpm test:reminders` **hace su propio `db:reset`** antes de empezar. Fuerza fechas de
@@ -36,6 +38,11 @@ reproducible. Tarda alrededor de un minuto.
 
 `pnpm test:rls` archiva un árbol como parte de la prueba. Ejecuta `pnpm db:reset`
 después si necesitas los datos de prueba intactos.
+
+`pnpm test:integrity` siembra tres árboles y deja dos marcas de registro; `pnpm test:map`
+planta hasta mil árboles con prefijo `SIM-`. Los dos avisan al terminar de que conviene un
+`pnpm db:reset`. Ninguno borra nada por su cuenta: en este proyecto el borrado lo pide una
+persona.
 
 ### Puertos
 
@@ -71,6 +78,8 @@ no rompe nada.
 | `…_access_functions.sql` | `trees_in_viewport()` y las vistas de estadística |
 | `…_tree_card.sql` | `tree_card()` y `short_display_name()`, lo que muestra la ficha flotante del mapa |
 | `…_reminder_engine.sql` | `notification_preferences`, `register_device()`, `due_reminders()`, `reminder_feed()` y el cron diario |
+| `…_registration_integrity.sql` | `trees.client_request_id`, `registration_flags`, `flag_registration()`, la cola de revisión y el `register_tree()` idempotente |
+| `…_storage_quota_and_backups.sql` | `storage_usage()`, `system_alerts`, `check_storage_quota()` con su cron, `backup_runs` y `backup_health()` |
 
 ## Datos de prueba
 
@@ -208,6 +217,83 @@ es el ajuste correcto para un equipo que no debe hacer sonar el teléfono de nad
 `pnpm test:reminders` levanta ese stub y responde con los tickets que Expo habría devuelto,
 que es la única forma de comprobar la agrupación y el retiro de tokens muertos sin tener un
 teléfono delante.
+
+## Integridad del registro
+
+Tres señales, y **ninguna rechaza nada**. Bajo dosel el GPS de un teléfono se va más de
+cien metros sin culpa de nadie, y dos árboles jóvenes en el lindero de un lote sí pueden
+estar a tres metros. Un rechazo automático convertiría cada uno de esos casos en un
+guardián honesto al que una máquina llama mentiroso, y un guardián al que llaman mentiroso
+no vuelve. Lo que produce una señal es una **marca**, y toda marca la juzga una persona.
+
+| Señal | Cuándo | Qué suele significar de verdad |
+|---|---|---|
+| `gps_mismatch` | la foto se tomó a más de **150 m** del punto declarado | dosel, ladera, cielo tapado |
+| `duplicate_location` | hay otro árbol vivo a menos de **3 m** | siembra densa, o el mismo formulario enviado dos veces |
+| `missing_capture_location` | la foto no traía coordenada | teléfono viejo, permiso denegado, arranque en frío |
+
+La tercera existe para que las otras dos signifiquen algo: sin ella, la forma de pasar todas
+las comprobaciones sería apagar la ubicación antes de abrir la cámara.
+
+Los dos umbrales viven en `registration_flag_thresholds()` y su espejo
+`GPS_COHERENCE_METRES` / `DUPLICATE_RADIUS_METRES` de `packages/core`. `pnpm test:offline`
+compara los dos lados, igual que `normalize_species()` frente a `normalizeSpecies()`.
+
+**Un guardián no puede leer `registration_flags`.** Se le dice una vez, en la pantalla donde
+acaba de registrar, con las palabras que elige la aplicación. Un canal permanente de «estás
+marcado» sobre su propio árbol convierte una revisión en una acusación, y además le daría a
+quien quisiera burlar las comprobaciones una forma de probarlas hasta pasarlas.
+
+**Confirmar una marca no archiva el árbol.** Son dos decisiones distintas y una pantalla no
+debe tomar la segunda en silencio: archivar exige un motivo escrito que el guardián lee.
+
+## Escrituras idempotentes desde el teléfono
+
+La cola de sincronización offline reintenta, así que toda escritura tiene que poder llegar
+dos veces sin producir dos cosas. Las dos que hay lo consiguen de forma distinta, porque
+tienen claves distintas:
+
+- **Una entrada de bitácora** es única sobre `(tree_id, cycle)`. Un reintento que choca con
+  ese índice es una escritura cuyo primer intento llegó y cuya respuesta se perdió: es un
+  éxito con una subida pendiente, no un error, y nunca se le muestra al guardián como tal.
+- **Una siembra no tiene clave natural.** Dos árboles plantados uno al lado del otro en el
+  mismo minuto son idénticos en todas las columnas, así que nada en la fila podría
+  distinguir un duplicado de un segundo árbol real. Por eso el teléfono acuña un
+  `client_request_id` **antes del primer intento**, y `register_tree()` devuelve el árbol
+  que ese identificador ya creó en vez de crear otro. El índice es único por guardián, no
+  globalmente: el identificador sale de un teléfono y la base no tiene motivo para suponer
+  que dos teléfonos nunca coinciden.
+
+## Cuota de almacenamiento y respaldos
+
+El plan gratuito da **1 GB para todo el año** y el proyecto suma unas 1.800 fotografías
+anuales a ~200 KB más miniatura. Cabe, con margen; el modo de fallo no es «nos quedamos sin
+espacio» sino «nadie se dio cuenta de que íbamos a quedarnos».
+
+`check_storage_quota()` corre a diario a las 08:30 de Colombia —`30 13 * * *` en UTC, la
+misma excepción declarada que el barrido de recordatorios— y levanta una fila de
+`system_alerts` la primera vez que el uso cruza el **70 %**, y otra al 85 y al 95. El índice
+único sobre `(kind, threshold_percent)` es lo que hace que un cron diario durante un año
+produzca una fila y no trescientas sesenta y cinco. El tablero muestra además el porcentaje
+en todo momento, porque una alerta se ve una vez y un medidor se mira cada semana.
+
+**La alerta es una fila y no un correo.** Este proyecto no tiene servicio de correo propio y
+el del plan gratuito es para autenticación; una fila que el panel lee y que el cron no puede
+duplicar es algo que el coordinador ve en la pantalla que ya abre.
+
+### El respaldo vive fuera de Supabase
+
+Un respaldo que vive en la misma cuenta que respalda no es un respaldo.
+`.github/workflows/backup.yml` corre en GitHub a las 03:00 de Colombia, vuelca el esquema y
+los datos, sincroniza las fotografías a un bucket ajeno al proyecto y anota la ejecución en
+`backup_runs`. Esa anotación es lo que hace visible un respaldo que dejó de correr:
+`backup_health()` lo da por vencido a las 36 horas, que son dos ejecuciones perdidas y no
+una que llegó tarde.
+
+**No se ha ejecutado nunca**, porque el proyecto en la nube no existe todavía. El flujo está
+apagado tras la variable de repositorio `BACKUP_ENABLED` y escrito ya para que el día que se
+cree el proyecto el respaldo empiece ese mismo día. Lo que hace falta para encenderlo está
+en la cabecera del propio archivo.
 
 ## Convención de nombres en Storage
 
