@@ -16,7 +16,11 @@ const tones: Record<NoticeTone, { fill: string; border: string; mark: string }> 
   info: {
     fill: 'bg-info-soft',
     border: 'border-info/40',
-    mark: 'text-info',
+    // Not `text-info`: `#0097DA` measures 2.76:1 over `info-soft` composited
+    // on the page, under the 3:1 SC 1.4.11 asks of a meaningful graphic. The
+    // mobile `Notice` already draws its info glyph in `textSecondary` for the
+    // same reason, so the two now match.
+    mark: 'text-text-secondary',
   },
   warning: {
     fill: 'bg-jil-yellow-soft',

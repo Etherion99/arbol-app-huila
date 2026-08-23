@@ -60,7 +60,7 @@ export function Sidebar({
                   'flex min-h-hit items-center gap-2.5 rounded-lg px-2.5 font-sans text-sm transition-colors',
                   'focus-visible:ring-3 focus-visible:ring-border-focus/50 focus-visible:outline-none',
                   active
-                    ? 'bg-accent-soft font-semibold text-accent'
+                    ? 'bg-accent-soft font-semibold text-text-link'
                     : 'text-text-secondary hover:bg-surface-raised hover:text-text-primary',
                 )}
               >
@@ -89,7 +89,7 @@ export function Sidebar({
       <div className="flex items-center gap-2.5 border-t border-border-subtle p-2.5">
         <span
           aria-hidden="true"
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-overlay font-sans text-xs font-bold text-accent"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-overlay font-sans text-xs font-bold text-text-link"
         >
           {session.initials}
         </span>

@@ -1,5 +1,17 @@
-// Measures every colour token in packages/core against the four surfaces it can
-// land on, and checks the result against the rule the token claims for itself.
+// Measures the palette, and then measures what the application actually paints
+// with it.
+//
+// Two halves, and the second is the one that catches things. The first walks
+// every colour token against the four surfaces and checks the result against the
+// rule the token claims for itself. The second walks the pairs the screens
+// really render -- this ink, on that ground, at that size -- and fails when one
+// of them does not clear AA.
+//
+// The second half exists because the first was green for weeks while a screen
+// showed text at 1.40:1. `warning` was correctly documented as a token that may
+// never carry text, and nothing checked whether anything did. A verifier that
+// cannot see the problem is worse than no verifier, because it gives permission
+// not to look.
 //
 // The rules live in the docblock of packages/core/src/theme.ts, which is where
 // somebody reaching for a colour actually reads. This script is what keeps that
@@ -14,7 +26,15 @@
 //
 // Run with `pnpm test:contrast`.
 
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { colors, fontSize } from '../packages/core/src/theme.ts';
+import { colorVars } from './design-token-names.mjs';
+import { EXEMPT, PAIRS, SCANNED, SKIPPED } from './contrast-pairs.mjs';
+
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 // WCAG 2.1 SC 1.4.3 and 1.4.11.
 const SMALL_TEXT = 4.5;
@@ -333,7 +353,235 @@ for (const line of badgeAdvice) {
   console.log(`  - ${line}`);
 }
 
+// ---------------------------------------------------------------------------
+// 5 · The pairs the code actually renders
+// ---------------------------------------------------------------------------
+
+/**
+ * A photograph under the app's standard dark wash.
+ *
+ * A photograph has no colour this script can know, so the wash is measured over
+ * white -- the brightest picture a guardian could take, and therefore the worst
+ * case for the pale ink that sits on it. Ink that clears its threshold here
+ * clears it over every photograph.
+ */
+const PHOTO_SCRIM = ['rgba(0, 0, 0, 0.85)', '#FFFFFF'];
+
+/** The colour a background entry names: a token, a literal, or the scrim. */
+function valueOf(entry) {
+  if (entry === 'PHOTO_SCRIM') return null;
+  return colors[entry] ?? entry;
+}
+
+/** Resolves a background, which may be a stack of translucent fills. */
+function groundOf(background) {
+  const stack = (Array.isArray(background) ? background : [background]).flatMap((entry) =>
+    entry === 'PHOTO_SCRIM' ? PHOTO_SCRIM : [entry],
+  );
+
+  let resolved = parseColor(valueOf(stack[stack.length - 1]));
+
+  // Back to front, so an alpha fill lands on what is really underneath it.
+  for (let index = stack.length - 2; index >= 0; index -= 1) {
+    resolved = composite(valueOf(stack[index]), toHex(resolved));
+  }
+  return resolved;
+}
+
+function toHex({ rgb }) {
+  return `#${rgb.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
+}
+
+function nameOf(background) {
+  return Array.isArray(background) ? background.join(' over ') : background;
+}
+
+/**
+ * What a pair owes, by what it is.
+ *
+ * `decoration` is the one that owes nothing, and it is not a loophole: SC
+ * 1.4.11 asks 3:1 of non-text content that *conveys information* or bounds a
+ * control, and explicitly not of a purely decorative edge. The seam under a
+ * shelf and the hairline round a thumbnail well carry nothing — remove them and
+ * the screen still says everything it said. A row is only allowed to be
+ * `decoration` when whatever it outlines is named in words somewhere else, and
+ * the role column has to say what that is.
+ */
+const REQUIRED = {
+  small: SMALL_TEXT,
+  large: LARGE_TEXT,
+  graphic: LARGE_TEXT,
+  decoration: 0,
+  exempt: 0,
+};
+
+console.log('\n## 5 · The pairs the code actually renders\n');
+console.log(
+  '  Every row is an ink a component paints on a ground it paints it on, at the\n' +
+    '  size it is set at. This is the half that fails a screen rather than a token.\n',
+);
+
+const pairFailures = [];
+/** Which tokens each file has a measured pair for, so the scan can check coverage. */
+const covered = new Map();
+
+for (const group of PAIRS) {
+  console.log(`  ${group.file}`);
+
+  // A pair table that names a file nobody has any more is worse than no table:
+  // it reads as coverage and measures nothing. This is the check that caught
+  // the entries left behind when the queue components were renamed.
+  if (!existsSync(join(repoRoot, group.file))) {
+    pairFailures.push(`${group.file} is in the pair table and no longer exists`);
+    console.log('    (this file is gone — the table is stale)\n');
+    continue;
+  }
+
+  for (const [foreground, background, size, role] of group.pairs) {
+    if (colors[foreground] === undefined) {
+      pairFailures.push(
+        `${group.file}: the pair table names "${foreground}", which no longer exists`,
+      );
+      continue;
+    }
+
+    const seen = covered.get(group.file) ?? new Set();
+    seen.add(foreground);
+    covered.set(group.file, seen);
+
+    const ratio = contrast(parseColor(colors[foreground]), groundOf(background));
+    const owed = REQUIRED[size];
+    const passes = ratio >= owed;
+
+    console.log(
+      `    ${foreground.padEnd(16)} on ${nameOf(background).padEnd(28)} ` +
+        `${ratioCell(ratio)}  ${size.padEnd(8)} ${passes ? 'ok' : 'FAIL'}  ${role}`,
+    );
+
+    if (!passes && EXEMPT[foreground] === undefined) {
+      pairFailures.push(
+        `${group.file}: ${foreground} on ${nameOf(background)} measures ` +
+          `${ratio.toFixed(2)}:1 and owes ${owed}:1 as ${size} — ${role}`,
+      );
+    }
+  }
+  console.log('');
+}
+
+// ---------------------------------------------------------------------------
+// 6 · Coverage: every foreground the code uses has to be measured somewhere
+// ---------------------------------------------------------------------------
+
+/** Every source file under a root, ignoring what the repository never reads. */
+function sourceFiles(root) {
+  const found = [];
+  const skip = new Set(['node_modules', '.expo', '.next', 'dist', 'android', 'ios']);
+
+  const walk = (directory) => {
+    for (const name of readdirSync(directory)) {
+      if (skip.has(name) || name.startsWith('.')) continue;
+      const path = join(directory, name);
+      if (statSync(path).isDirectory()) {
+        walk(path);
+      } else if (/\.(ts|tsx)$/.test(name)) {
+        found.push(path);
+      }
+    }
+  };
+
+  walk(join(repoRoot, root));
+  return found;
+}
+
+/** The token a Tailwind fragment resolves to, or null when it is not a colour. */
+const tokenByVar = new Map(Object.entries(colorVars).map(([token, name]) => [name, token]));
+
+console.log('## 6 · Foregrounds the code uses that nothing measures\n');
+console.log(
+  '  Only the ones that need measuring. A token clearing 4.5:1 on every surface\n' +
+    '  in the palette is readable wherever it lands, so asking somebody to write\n' +
+    '  down where it lands would add a line and no information. What has to be\n' +
+    '  declared is a token whose verdict depends on the ground or the size —\n' +
+    '  which is every token that does not clear AA on its own.\n',
+);
+
+/** The worst this token measures against any of the four surfaces. */
+function worstOnSurfaces(token) {
+  return Math.min(
+    ...SURFACES.map((surface) => contrast(parseColor(colors[token]), parseColor(colors[surface]))),
+  );
+}
+
+const uncovered = [];
+
+for (const { root, foreground } of SCANNED) {
+  for (const path of sourceFiles(root)) {
+    const relativePath = relative(repoRoot, path).split('\\').join('/');
+    if (SKIPPED[relativePath] !== undefined) continue;
+
+    // Comments are stripped first. Half the colour decisions in this project
+    // are argued out in a docblock that names the token it rejected, and a scan
+    // that reads those would report every explanation as a use.
+    const source = readFileSync(path, 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+
+    const seen = covered.get(relativePath) ?? new Set();
+
+    for (const match of source.matchAll(new RegExp(foreground.source, 'g'))) {
+      const token = tokenByVar.get(match[1]) ?? (colors[match[1]] === undefined ? null : match[1]);
+
+      // Not a colour token at all: `text-sm`, `border-2`, a Tailwind utility
+      // that happens to start with the same prefix.
+      if (token === null) continue;
+      if (seen.has(token) || EXEMPT[token] !== undefined) continue;
+
+      seen.add(token);
+      covered.set(relativePath, seen);
+
+      const worst = worstOnSurfaces(token);
+      if (worst >= SMALL_TEXT) continue;
+
+      uncovered.push(
+        `${relativePath} paints ${token}, which reaches only ${worst.toFixed(2)}:1 on the ` +
+          `${worst < LARGE_TEXT ? 'page and cannot be ink at any size' : 'page and depends on its size'}` +
+          `, and no pair in scripts/contrast-pairs.mjs says where it sits`,
+      );
+    }
+  }
+}
+
+if (uncovered.length === 0) {
+  console.log('  None. Every foreground that needs a ground has one.\n');
+} else {
+  for (const line of [...new Set(uncovered)]) {
+    console.log(`  - ${line}`);
+  }
+  console.log('');
+}
+
+console.log('## Exemptions\n');
+for (const [token, why] of Object.entries(EXEMPT)) {
+  console.log(`  ${token}: ${why}\n`);
+}
+
 console.log('\n' + '='.repeat(78));
+
+if (pairFailures.length > 0 || uncovered.length > 0) {
+  console.error(
+    `\n${pairFailures.length + uncovered.length} problem(s) in what the code paints:\n`,
+  );
+  for (const line of [...pairFailures, ...new Set(uncovered)]) {
+    console.error(`  - ${line}`);
+  }
+  console.error(
+    '\nA pair under its threshold is a screen somebody cannot read. Fix the pair —\n' +
+      'a darker ink from the palette, or a larger size — and never the hex: the\n' +
+      'design system owns the palette, and a token that fails AA is escalated.\n' +
+      'A foreground nothing measures is added to scripts/contrast-pairs.mjs.',
+  );
+  process.exit(1);
+}
 
 if (failures.length > 0) {
   console.error(

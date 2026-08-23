@@ -42,10 +42,15 @@ const buttonVariants = cva(
         ghost: 'text-text-link hover:bg-accent-soft hover:text-text-link-hover',
         /**
          * Archiving. Grey and not red on purpose: nothing is being deleted, and
-         * a red button would tell the coordinator otherwise. White on
-         * `--state-archived` measures 4.61:1, which clears AA.
+         * a red button would tell the coordinator otherwise.
+         *
+         * `on-accent` and not `text-inverse`: the label used to take the latter,
+         * which is leaf white `#F4FDF4` and measures 4.43:1 on this grey — seven
+         * hundredths under AA for a 15px label. Pure white is 4.61:1 and clears
+         * it. The docblock had claimed 4.61 all along; the token underneath it
+         * was the wrong white.
          */
-        archive: 'bg-state-archived text-text-inverse hover:brightness-110',
+        archive: 'bg-state-archived text-on-accent hover:brightness-110',
         /** Reserved for a genuinely destructive action. There are none yet. */
         danger: 'border-danger bg-danger-soft text-destructive hover:brightness-95',
       },
