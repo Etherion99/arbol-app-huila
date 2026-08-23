@@ -56,18 +56,28 @@ module.exports = () => {
         // The splash the canvas draws is typeset, not drawn: the wordmark is
         // Montserrat, with a subtitle under it and the affiliation microlabel
         // below that. This plugin renders a background colour and one bitmap
-        // and nothing else, so none of that composition can be reproduced here.
+        // and nothing else, so the composition cannot be reproduced *here*.
         //
-        // `splash-icon.png` is therefore still byte for byte the Expo logo the
-        // template shipped. It is not a placeholder somebody forgot: the 2026
-        // branding guide exists only as a photograph of a printed page, so
-        // there is no vector and no exported mark to put in its place. This
-        // stays wrong on screen until a logotype asset lands in the repository.
+        // What it can take is a bitmap, and `pnpm splash` typesets one:
+        // `scripts/generate-splash-icon.mjs` renders «ÁrbolApp Huila» from the
+        // same Montserrat the app registers with `expo-font`, in the same two
+        // accent tokens, and writes `splash-icon.png`. It replaced the Expo
+        // template logo the repository had carried since it was created.
+        //
+        // The two lines under the wordmark -- «Sembrando vida en La Plata» and
+        // the affiliation microlabel -- are still not there, and cannot be: a
+        // subtitle baked into the bitmap would scale with the wordmark and read
+        // at whatever size the plugin chose. They belong to a real splash
+        // screen component, which is Phase 9's work alongside the app icon.
         'expo-splash-screen',
         {
           backgroundColor: colors.surfacePage,
           image: './assets/images/splash-icon.png',
-          imageWidth: 76,
+          // A wordmark, not an icon. 76 was right for a square mark and would
+          // render two words of Montserrat at about nine points; the canvas
+          // sets the wordmark at 38 on a 390 point screen, which is a block
+          // roughly this wide.
+          imageWidth: 240,
         },
       ],
       'expo-secure-store',
