@@ -2,7 +2,6 @@ import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import type { TreeRegistration } from '@arbolapp/core';
 
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
@@ -28,9 +27,7 @@ import {
   useStoredPlantingDraft,
   type PlantingDraft,
 } from '@/features/planting/planting-draft';
-import { useRegisterTree } from '@/features/planting/use-register-tree';
-import { describeTreeError } from '@/features/trees/tree-errors';
-import { useIsOnline } from '@/hooks/use-is-online';
+import { useRegisterTree, type RegisterTreeResult } from '@/features/planting/use-register-tree';
 import { formatShortDate, isRealCalendarDate, todayInColombia } from '@/lib/dates';
 
 const STEP_TITLES = [
@@ -50,18 +47,17 @@ const STEP_TITLES = [
  * comes in. Losing a half filled form there does not mean retyping it, it means
  * the tree never gets registered, so the form outlives the process.
  *
- * **A failed photograph upload is not a failed registration.** The tree and its
- * cycle 1 entry are written together by `register_tree()`, in one transaction,
- * and the photograph follows -- it has to, because the storage policies read
- * ownership out of the object name and there is nothing to own the object until
- * the row exists. So when the upload is the part that fails, the draft keeps the
- * registration it already has and offers to send only the photograph again,
- * rather than inviting the guardian to plant the same tree twice.
+ * **Pressing «Registrar» hands the work to the queue, and that always works.**
+ * There is no failed submission on this screen any more, because there is
+ * nothing here that can fail: the form becomes a job on the phone, the draft is
+ * cleared because the data is no longer only in a form, and the queue sends it
+ * whenever the radio allows. What the screen then reports is which of two
+ * things happened to that job -- the server has it, or this phone still does --
+ * and never a dead end asking a guardian in a vereda to try again later.
  */
 export default function PlantTreeScreen() {
   const router = useRouter();
   const { session } = useSession();
-  const isOnline = useIsOnline();
   const zones = useZones();
   const location = useUserLocation();
   const locationPrimer = useLocationPrimer(location);
@@ -76,7 +72,7 @@ export default function PlantTreeScreen() {
   const [working, setWorking] = useState<PlantingDraft>(() => stored.draft ?? emptyDraft());
   const [isConfirmingExit, setIsConfirmingExit] = useState(false);
   const [hasTriedToAdvance, setHasTriedToAdvance] = useState(false);
-  const [done, setDone] = useState<{ registration: TreeRegistration; villageName: string } | null>(
+  const [done, setDone] = useState<{ result: RegisterTreeResult; villageName: string } | null>(
     null,
   );
 
@@ -161,32 +157,20 @@ export default function PlantTreeScreen() {
     const result = await registerTree.mutateAsync({
       speciesRawText: working.speciesRawText.trim(),
       zoneId: working.villageId,
+      villageName,
       location: working.location ?? { lat: 0, lng: 0 },
       plantedAt: working.plantedAt,
       heightCm: heightNumber,
       visibleBranches: working.visibleBranches,
       photo: working.photo,
-      // Set only by a previous attempt whose row landed and whose upload did
-      // not, so a retry sends the photograph instead of planting a second tree.
-      existing: working.registration,
+      // The moment the job exists, the queue owns the photograph and every
+      // field, and the draft stops being a safety net and becomes a way to
+      // plant the same tree twice.
+      onQueued: clearPlantingDraft,
     });
 
-    if (!result.isPhotoUploaded) {
-      // The registration stands. What is left is an errand, so the draft keeps
-      // it and the screen offers to send only the photograph again.
-      update({
-        registration: {
-          treeId: result.registration.treeId,
-          code: result.registration.code,
-          cycle: result.registration.cycle,
-        },
-      });
-      return;
-    }
-
-    clearPlantingDraft();
-    setDone({ registration: result.registration, villageName: villageName ?? '' });
-  }, [heightNumber, registerTree, stepBlocker, update, villageName, working]);
+    setDone({ result, villageName: villageName ?? '' });
+  }, [heightNumber, registerTree, stepBlocker, villageName, working]);
 
   /**
    * Back to a blank step one without leaving the route. Planting a second tree
@@ -226,7 +210,7 @@ export default function PlantTreeScreen() {
   if (done !== null) {
     return (
       <PlantingSuccess
-        registration={done.registration}
+        result={done.result}
         villageName={done.villageName}
         speciesRawText={working.speciesRawText}
         onPlantAnother={plantAnother}
@@ -330,21 +314,17 @@ export default function PlantTreeScreen() {
             />
           ) : null}
 
-          {/* The registration landed and only the photograph is outstanding.
-              Said plainly, with the one action that can still help. */}
-          {working.registration !== null ? (
-            <Notice
-              tone="warning"
-              title={texts.photo.uploadFailedTitle}
-              message={isOnline ? texts.photo.uploadFailedBody : texts.photo.uploadOffline}
-              onRetry={() => void submit()}
-              retryLabel={texts.photo.uploadRetry}
-            />
-          ) : registerTree.isError ? (
+          {/* Saving to the queue is a local write and effectively cannot fail;
+              if the phone's own storage refuses it, that is worth saying rather
+              than swallowing. Everything that used to be reported here -- a
+              refused registration, a photograph that would not upload -- now
+              belongs to the job itself and is shown on its card in «Mis
+              árboles», where it survives this screen being closed. */}
+          {registerTree.isError ? (
             <Notice
               tone="error"
               title={texts.treeErrors.title}
-              message={describeTreeError(registerTree.error, isOnline)}
+              message={texts.treeErrors.unknown}
               onRetry={() => void submit()}
             />
           ) : null}

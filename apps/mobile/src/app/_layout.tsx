@@ -25,6 +25,8 @@ import { SessionProvider, useSession } from '@/features/auth/session-provider';
 import { loadOnboardingState, useOnboardingState } from '@/features/onboarding/onboarding-store';
 import { configureNotificationHandler } from '@/features/notifications/push-tokens';
 import { loadPlantingDraft } from '@/features/planting/planting-draft';
+import { SyncRunner } from '@/features/sync/components/sync-runner';
+import { loadSyncQueue } from '@/features/sync/sync-queue';
 import { isEnvComplete, missingEnvVars } from '@/lib/env';
 import { queryClient } from '@/lib/query-client';
 
@@ -42,6 +44,12 @@ configureNotificationHandler();
 // Read once, at start up, so the wizard knows on its first frame whether there
 // is a half filled form to offer back rather than flickering into the question.
 loadPlantingDraft();
+
+// Same reason, and a sharper one: the connection strip counts what is waiting,
+// and a count that arrives a frame late shows a guardian "sin conexión" and
+// then changes its mind to "sin conexión — 2 registros" while they are reading
+// it. Nothing is sent from here; that is `SyncRunner`'s job, below.
+loadSyncQueue();
 
 /**
  * Every face the type scale names, keyed by the family name a style asks for.
@@ -83,6 +91,12 @@ function RootNavigator() {
           any screen, and the overlay has to reach the guardian on the one they
           are standing on. */}
       <SessionExpiredDialog />
+
+      {/* Above the navigator for the same reason. The queue has to keep sending
+          while the guardian is inside the planting wizard or the growth log,
+          both of which are modals presented over the tab layout rather than
+          screens inside it. */}
+      <SyncRunner />
 
       <Stack
         screenOptions={{

@@ -1,4 +1,5 @@
 import { texts } from '@/constants/texts';
+import { DUPLICATE_KEY } from '@/features/sync/sync-queue-model';
 
 /**
  * Turning a failure into a sentence that says what to do next.
@@ -6,37 +7,19 @@ import { texts } from '@/constants/texts';
  * A generic "ocurrió un error" after a guardian has walked to a tree, filled in
  * four steps and taken a photograph is a dead end, and dead ends are what make
  * people stop using an app. Every failure this layer can name gets named.
+ *
+ * Its reader is now the pending card of the sync queue rather than a screen
+ * catching its own rejection: no screen writes to the server any more, so a
+ * refusal reaches a guardian hours later, attached to a job. That is why a
+ * queued job stores the SQLSTATE and not just a message — it is the key into
+ * this function, and losing it would cost every one of these sentences.
  */
-
-/** SQLSTATE of a unique violation, which is how a duplicate cycle arrives. */
-export const DUPLICATE_KEY = '23505';
-
-/**
- * A failure raised by the client itself, wearing the same SQLSTATE the database
- * would have used. It lets one `describeTreeError` handle both without the
- * screens caring which side noticed.
- */
-export class TreeOperationError extends Error {
-  constructor(
-    readonly code: string,
-    message: string,
-  ) {
-    super(message);
-    this.name = 'TreeOperationError';
-  }
-}
 
 /** What Supabase hands back on a failure, as much of it as is worth reading. */
 export type PostgrestFailure = {
   code?: string;
   message?: string;
 };
-
-export function isDuplicateCycle(error: unknown): boolean {
-  return (
-    typeof error === 'object' && error !== null && 'code' in error && error.code === DUPLICATE_KEY
-  );
-}
 
 /**
  * The message for a failure, chosen from its SQLSTATE where there is one.

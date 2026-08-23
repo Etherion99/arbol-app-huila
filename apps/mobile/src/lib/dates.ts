@@ -103,6 +103,52 @@ export function formatDayAndMonth(value: string): string {
     .replace(/\./g, '');
 }
 
+/**
+ * `hoy 9:12`, `ayer 17:40`, `3 may 8:05` — when something was saved on this
+ * phone, as the pending list prints it.
+ *
+ * The time of day is here and nowhere else in the app for a reason: every other
+ * date the guardian reads is a calendar fact about a tree, where an hour would
+ * be noise. This one is about their own morning. Two entries saved on the same
+ * walk have to be told apart, and «hoy» on both of them does not do it.
+ *
+ * The day words are only used while they are unambiguous. Past yesterday the
+ * calendar date is what a guardian can actually place, and «hace 9 días» would
+ * make them do the arithmetic back.
+ */
+export function formatSavedAt(value: string): string {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  const time = new Intl.DateTimeFormat('es-CO', {
+    timeZone: COLOMBIA,
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: false,
+  }).format(parsed);
+
+  // Compared as calendar dates in Colombia rather than by subtracting hours:
+  // something saved at 23:50 and read at 00:10 was saved yesterday, however
+  // few minutes ago that was.
+  const day = partsOf(parsed);
+  const today = partsOf(new Date());
+  const yesterday = partsOf(new Date(Date.now() - 86_400_000));
+
+  const sameDay = (other: Record<string, string>) =>
+    day.year === other.year && day.month === other.month && day.day === other.day;
+
+  if (sameDay(today)) {
+    return `hoy ${time}`;
+  }
+  if (sameDay(yesterday)) {
+    return `ayer ${time}`;
+  }
+
+  return `${formatDayAndMonth(value)} ${time}`;
+}
+
 /** `2025`, for the line naming how long somebody has been a guardian. */
 export function formatYear(value: string): string {
   const parsed = new Date(value);
