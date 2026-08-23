@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import type { IsoDateTime, TrackingStatus, Uuid } from '@arbolapp/core';
+import type { IsoDateTime, ReminderKind, TrackingStatus, Uuid } from '@arbolapp/core';
 
+import { useSession } from '@/features/auth/session-provider';
 import { useGuardianTrees, type GuardianTree } from '@/features/trees/use-guardian-trees';
 import { supabase } from '@/lib/supabase/client';
 
@@ -28,6 +29,33 @@ export type ResolvedActivity = {
   onTime: boolean;
 };
 
+/** A reminder the guardian was actually sent, as the history section lists it. */
+export type ReminderActivity = {
+  reminderId: Uuid;
+  treeId: Uuid;
+  speciesName: string;
+  code: string;
+  kind: ReminderKind;
+  cycle: number;
+  sentAt: IsoDateTime;
+  /** Null when it was delivered and ignored, which is the number worth having. */
+  openedAt: IsoDateTime | null;
+  /** Set by the growth log trigger when the photograph finally arrived. */
+  resolvedAt: IsoDateTime | null;
+};
+
+type ReminderRow = {
+  reminder_id: string;
+  tree_id: string;
+  species_name: string;
+  code: string;
+  kind: ReminderKind;
+  cycle: number;
+  sent_at: string;
+  opened_at: string | null;
+  resolved_at: string | null;
+};
+
 type LogEntryRow = {
   id: string;
   tree_id: string;
@@ -47,6 +75,9 @@ const HISTORY_LIMIT = 40;
 export const activityHistoryQueryKey = (treeIds: readonly string[]) =>
   ['activity-history', ...treeIds] as const;
 
+export const reminderHistoryQueryKey = (userId: string | null) =>
+  ['reminder-history', userId] as const;
+
 /**
  * Everything the activity tab draws, from the two sources that actually exist.
  *
@@ -58,12 +89,18 @@ export const activityHistoryQueryKey = (treeIds: readonly string[]) =>
  * recomputing it on the client is how those three surfaces start disagreeing
  * about one tree.
  *
- * "Anteriores" reads the growth log itself rather than `reminders`. Both tables
- * are readable by their guardian, but only one of them has rows: `reminders` is
- * written by the notification cron, which is not built yet, so a feed built on
- * it would be permanently empty. The growth log is written every time a
- * guardian closes a cycle, and it carries the two things the row needs that a
- * reminder does not have -- the cycle's `on_time` verdict and its capture date.
+ * "Anteriores" reads the growth log rather than `reminders`, and still does:
+ * the two answer different questions. A closed cycle is a photograph the
+ * guardian took, and it carries the `on_time` verdict and the capture date
+ * that a reminder row does not have. Being reminded is not an achievement, so
+ * it does not belong in the list of what was accomplished.
+ *
+ * "Recordatorios" is the third section and reads `reminder_feed()`, which is
+ * `reminders` with the tree named. It exists now because the sweep writes rows
+ * -- until this phase it would have been permanently empty -- and it answers
+ * the question neither of the others does: what the app actually sent, and
+ * whether it landed. A guardian who says "nunca me avisaron" and a coordinator
+ * looking at why a vereda stopped updating are both asking about this list.
  *
  * ## What is missing on purpose
  *
@@ -76,6 +113,8 @@ export const activityHistoryQueryKey = (treeIds: readonly string[]) =>
  * either here would put a row on screen that no query can ever fill.
  */
 export function useActivityFeed() {
+  const { session } = useSession();
+  const userId = session?.user.id ?? null;
   const trees = useGuardianTrees();
 
   // Derived during render. The list is already ordered by what falls due first,
@@ -119,6 +158,48 @@ export function useActivityFeed() {
     },
   });
 
+  /**
+   * The reminders themselves, keyed by the guardian rather than by their trees.
+   *
+   * Not filtered by `treeIds` on purpose: a reminder about a tree that has
+   * since been reassigned or archived is still something the app sent to this
+   * guardian, and dropping it would quietly rewrite the record of what they
+   * were told. `reminder_feed()` runs as the caller, so the reminders policy
+   * is what decides, exactly as it does for every other read here.
+   */
+  const reminders = useQuery({
+    queryKey: reminderHistoryQueryKey(userId),
+    enabled: userId !== null,
+    staleTime: 30_000,
+    queryFn: async ({ signal }): Promise<ReminderRow[]> => {
+      const { data, error } = await supabase
+        .rpc('reminder_feed', { history_limit: HISTORY_LIMIT })
+        .abortSignal(signal);
+
+      if (error !== null) {
+        throw new Error(error.message);
+      }
+
+      return (data ?? []) as ReminderRow[];
+    },
+  });
+
+  const sentReminders = useMemo<ReminderActivity[]>(
+    () =>
+      (reminders.data ?? []).map((row) => ({
+        reminderId: row.reminder_id,
+        treeId: row.tree_id,
+        speciesName: row.species_name,
+        code: row.code,
+        kind: row.kind,
+        cycle: row.cycle,
+        sentAt: row.sent_at,
+        openedAt: row.opened_at,
+        resolvedAt: row.resolved_at,
+      })),
+    [reminders.data],
+  );
+
   // Joined during render against the trees already in cache, rather than by
   // embedding the tree in the query: the names are sitting here anyway, and an
   // embed would refetch every species on each page of the log.
@@ -149,17 +230,20 @@ export function useActivityFeed() {
   return {
     pending,
     resolved,
+    sentReminders,
     hasTrees: (trees.data ?? []).length > 0,
     isPending: trees.isPending,
     isHistoryPending: treeIds.length > 0 && history.isPending,
-    isRefetching: trees.isRefetching || history.isRefetching,
+    isRemindersPending: userId !== null && reminders.isPending,
+    isRefetching: trees.isRefetching || history.isRefetching || reminders.isRefetching,
     /** The trees query owns the screen's error: without it there is nothing to draw. */
     error: trees.error,
     /** Reported separately, so a failed history never blanks a working pending list. */
-    historyError: history.error,
+    historyError: history.error ?? reminders.error,
     refetch: () => {
       void trees.refetch();
       void history.refetch();
+      void reminders.refetch();
     },
   };
 }

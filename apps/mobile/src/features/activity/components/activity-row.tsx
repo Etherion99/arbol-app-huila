@@ -6,7 +6,11 @@ import { Icon } from '@/components/ui/icon';
 import { StatusDot } from '@/components/ui/status-dot';
 import { texts } from '@/constants/texts';
 import { MIN_TOUCH_TARGET, colors, spacing } from '@/constants/theme';
-import type { PendingActivity, ResolvedActivity } from '@/features/activity/use-activity-feed';
+import type {
+  PendingActivity,
+  ReminderActivity,
+  ResolvedActivity,
+} from '@/features/activity/use-activity-feed';
 import { daysSince, formatShortDate } from '@/lib/dates';
 
 export type PendingActivityRowProps = {
@@ -82,6 +86,67 @@ export function ResolvedActivityRow({ item }: ResolvedActivityRowProps) {
           <AppText variant="bodyMuted">{sentence}</AppText>
           <AppText variant="caption">{formatShortDate(item.capturedAt)}</AppText>
         </View>
+      </View>
+    </Card>
+  );
+}
+
+export type ReminderActivityRowProps = {
+  item: ReminderActivity;
+  onOpen: () => void;
+};
+
+/**
+ * One reminder the app sent, and what became of it.
+ *
+ * ## Why the state is a word and not a colour
+ *
+ * The three outcomes -- resolved, opened but unanswered, delivered and ignored
+ * -- are a sequence, and a sequence drawn in colour needs three hues that read
+ * as ordered. The five tracking colours are already spoken for and none of them
+ * means "you opened this", so borrowing one would say something false on a
+ * screen where the same palette means something specific. The line under the
+ * tree says it in words instead, which also survives being read aloud.
+ *
+ * The row opens the growth log like a pending one, because a reminder that is
+ * not resolved is still a photograph somebody owes. A resolved one opens it
+ * too: the tree is the thing the row is about, and there is nothing else on
+ * this screen for it to lead to.
+ */
+export function ReminderActivityRow({ item, onOpen }: ReminderActivityRowProps) {
+  const sentence = texts.activity.reminderRow(item.speciesName, item.cycle);
+  const state =
+    item.resolvedAt !== null
+      ? texts.activity.reminderResolved
+      : item.openedAt !== null
+        ? texts.activity.reminderOpened
+        : texts.activity.reminderUnopened;
+
+  return (
+    <Card
+      onPress={onOpen}
+      padding={spacing[3]}
+      style={styles.row}
+      accessibilityLabel={`${texts.activity.reminderKind[item.kind]}. ${sentence}. ${state}`}
+      accessibilityHint={texts.activity.pendingRowHint}
+    >
+      <View style={styles.line}>
+        {/* A bell rather than a status dot: this row is about something the app
+            did, not about the state of the tree, and the dot means the second
+            everywhere else in the application. */}
+        <Icon
+          name="bell"
+          size={16}
+          color={item.resolvedAt === null ? colors.textSecondary : colors.stateOk}
+        />
+
+        <View style={styles.body}>
+          <AppText variant="overline">{texts.activity.reminderKind[item.kind]}</AppText>
+          <AppText variant="bodyMuted">{sentence}</AppText>
+          <AppText variant="caption">{`${state} · ${formatShortDate(item.sentAt)}`}</AppText>
+        </View>
+
+        <Icon name="chevronRight" size={18} color={colors.textSecondary} />
       </View>
     </Card>
   );
