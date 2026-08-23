@@ -70,7 +70,7 @@ const tones: Record<BadgeTone, { fill: string; mark: string; label: string }> = 
   jil: {
     fill: 'bg-jil-magenta-soft',
     mark: 'bg-jil-magenta',
-    label: 'Juventud en línea',
+    label: texts.ui.affiliationBadge,
   },
 };
 

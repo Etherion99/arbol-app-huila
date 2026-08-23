@@ -124,6 +124,8 @@ export const texts = {
     selectPlaceholder: 'Selecciona…',
     dialogClose: 'Cerrar el diálogo',
     clearSearch: 'Borrar la búsqueda',
+    /** The affiliation mark. A programme name, but still a word on a screen. */
+    affiliationBadge: 'Juventud en línea',
   },
 
   /**
