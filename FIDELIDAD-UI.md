@@ -90,14 +90,14 @@ Mide fidelidad **visual y de composición**, no si la funcionalidad es correcta.
 | **A10b** | Retorno del enlace · inválido | ✅ `auth/callback.tsx` | **82** | Título, aviso enmarcado y «Entra a tu cuenta». Falta el medallón del encabezado. |
 | **B1** | Mapa con ficha flotante | ✅ `(app)/map.tsx` | **88** | Búsqueda con control de ubicación, chips de municipio y vereda, clústeres, **FAB «Sembrar»**, ficha flotante con especie · ciclo · guardián, chip de estado y «Ver árbol», y las **cuatro pestañas** del lienzo. |
 | **B2** | Mis árboles | ✅ `(app)/trees.tsx` | **86** | Encabezado con conteo y pendientes, tarjetas con insignia de estado, línea `VEREDA · CICLO` en `overline`, texto de urgencia y botón «Actualizar» por tarjeta. **Falta la miniatura real** —hoy es un ícono de reemplazo— y el badge **«PENDIENTE DE ENVIAR»**, que necesita la cola offline. Añade pestañas Pendientes / Todos que el lienzo no dibuja. |
-| **B3** | Actividad | ✅ `(app)/activity.tsx` | **88** | Caja de notificaciones desactivadas con su acción, secciones PENDIENTES / ANTERIORES con filas fechadas y los avisos del coordinador. Las secciones se derivan durante el render, sin efecto. |
+| **B3** | Actividad | ✅ `(app)/activity.tsx` | **90** | Secciones PENDIENTES / ANTERIORES con filas fechadas, derivadas durante el render. La caja de notificaciones desactivadas **ya lee el registro real de este teléfono** y desaparece cuando sí recibe. Añade una tercera sección, RECORDATORIOS, que el lienzo no dibuja — ver la nota bajo la tabla. |
 | **B4** | Perfil | ✅ `(app)/profile.tsx` | **84** | Avatar con iniciales, insignia «Guardiana desde», tres fichas, lista de opciones con chevron, cerrar sesión y pie de versión con filiación. **La ficha de CICLOS dibuja su estado vacío**: no hay agregado que la alimente. La edición vive tras «Editar perfil» pero dentro de la misma pantalla, no como ruta propia. |
-| **B4b** | Ajustes de notificaciones | ✅ `settings/notifications.tsx` | **78** | Pantalla propia, los dos interruptores con su subtítulo y la nota «Aunque desactives los avisos…». **Los interruptores son estado local y no persisten**: `expo-notifications` no es dependencia del proyecto y la pantalla lo dice en su propia ayuda. |
+| **B4b** | Ajustes de notificaciones | ✅ `settings/notifications.tsx` | **88** | Pantalla propia, los dos interruptores con su subtítulo y la nota «Aunque desactives los avisos…». **Los interruptores persisten** en `notification_preferences` y el barrido los respeta; el aviso de «no se guarda nada» desapareció. Añade un bloque superior que dice si este teléfono puede recibir —permiso sin pedir, denegado, o compilación sin proyecto de push—, que el lienzo no dibuja porque fue dibujado cuando no había nada que entregar. |
 | **C1.1** | Registrar · paso 1, ubicación | ✅ `features/planting/components/step-location.tsx` | **80** | Mini-mapa, pin arrastrable, círculo de precisión y coordenadas escritas a mano con validación contra la caja de Huila. **Divergencia estructural:** el lienzo pone municipio y vereda en este paso; el código los mueve a un paso propio. |
 | **C1.2** | Registrar · paso 2, especie | ✅ `step-species.tsx` | **80** | Campo libre con sugerencias sobre lo ya escrito, resaltado literal del fragmento y la nota de que el texto se guarda tal cual. El resaltado se omite si el fragmento no está carácter a carácter, que es la decisión correcta. **El paso está fusionado con el de datos.** |
 | **C1.3** | Registrar · paso 3, datos | 🟡 fusionado en `step-species.tsx` | **72** | Fecha, altura y ramas existen y se validan (fecha real, no futura, altura ≥ 1). **No son un paso propio**: el lienzo dibuja cuatro pasos y el código también, pero con otro corte — `ubicación · zona · especie+datos · foto` frente a `ubicación+zona · especie · datos · foto`. |
 | **C1.4** | Registrar · paso 4, foto | ✅ `step-photo.tsx` | **86** | Captura y tarjeta RESUMEN con especie, siembra, ubicación y peso real de la foto en KB. |
-| **C1e** | Éxito + permiso | ✅ `planting-success.tsx` | **82** | Confirmación, próxima fecha de foto y código en la variante `data`. **La solicitud de permiso no pide nada**: `expo-notifications` no es dependencia, y aceptar muestra un aviso de «todavía no». Está documentado en el propio archivo en vez de fingir el permiso. |
+| **C1e** | Éxito + permiso | ✅ `planting-success.tsx` | **88** | Confirmación, próxima fecha de foto y código en la variante `data`. **La solicitud de permiso ya levanta el diálogo del sistema** —aquí y en los ajustes, nunca en el onboarding— y el resultado que muestra es el que respondió el sistema: concedido, bloqueado, o compilación sin proyecto de push. |
 | **C2** | Detalle del árbol | ✅ `tree/[id].tsx` | **88** | Foto de cabecera con su estado vacío, chip de estado, actualizar bitácora, comparador, gráfica de altura, lista de entradas y tarjeta del guardián. |
 | **C3** | Nueva entrada de bitácora | ✅ `log/[treeId].tsx` | **88** | Cámara con **fantasma de la foto anterior**, altura, ramas con `StepperField`, estado de salud en `ChipGroup`, notas y coordenada de captura. |
 | **C3m** | Reportar árbol muerto | 🟡 variante de `log/[treeId].tsx` | **74** | Existe como estado de la misma pantalla: elegir «muerto» retira las medidas y exige una causa, que es lo que la restricción `log_entries_cause_when_dead` pide. **El lienzo la dibuja como artboard aparte**, con aviso de consecuencias y foto de evidencia obligatoria. La fusión está razonada en el archivo; se registra como divergencia, no como error. |
@@ -117,6 +117,27 @@ Mide fidelidad **visual y de composición**, no si la funcionalidad es correcta.
 | **F4** | Error de red y sesión expirada | ✅ `ui/screen-state.tsx` | **86** | Estados a pantalla completa con medallón, título, detalle del error y una sola salida. `Notice` queda para el fallo dentro de una pantalla que sigue funcionando. |
 | **F5** | GPS impreciso y cámara denegada | ✅ `step-location.tsx` · `photo-capture.tsx` | **82** | Aviso de precisión pobre sobre el mapa y pantalla de cámara desactivada que abre los ajustes del teléfono. Dibujados dentro de sus pantallas, no como artboards propios. |
 | **F6** | Errores de perfil · 2 estados | ✅ `(app)/profile.tsx` | **86** | Los dos casos como estados a pantalla completa, sobre el mismo `ScreenState` que F4. |
+
+### La tercera sección de Actividad, y por qué se añadió
+
+El lienzo dibuja PENDIENTES y ANTERIORES. Está bien dibujado y se dibujó cuando **no se
+había enviado nunca un recordatorio**: `reminders` existía como tabla y no tenía filas, así
+que no había nada que una tercera sección pudiera mostrar.
+
+Ahora las tiene, y la pregunta que responden no cabe en ninguna de las dos. ANTERIORES son
+ciclos cerrados: fotografías que el guardián tomó, con su veredicto de puntualidad y su
+fecha de captura. Que a alguien le hayan escrito no es un logro, y meterlo ahí lo pondría a
+la altura de las fotos que sí lo son. PENDIENTES es lo que se debe hoy, no lo que se avisó.
+
+RECORDATORIOS dice lo que ninguna de las dos puede decir: **qué envió la aplicación y si
+llegó**. Un guardián que dice «a mí nunca me avisaron» y un coordinador que mira por qué una
+vereda dejó de actualizar preguntan por esa lista. Se registra como divergencia deliberada,
+no como error del lienzo.
+
+El estado de cada fila —resuelto, abierto sin foto, entregado— va **en palabras y no en
+color**. Son tres resultados en secuencia, y una secuencia pintada necesita tres tonos que se
+lean como ordenados; los cinco del seguimiento ya significan otra cosa y ninguno quiere decir
+«lo abriste». La palabra además sobrevive a leerse en voz alta.
 
 ### Recuento
 
@@ -140,7 +161,13 @@ Mide fidelidad **visual y de composición**, no si la funcionalidad es correcta.
 | 4 | **E3** Embed | 68 | Falta el conteo de vivos y la firma de marca. |
 | 5 | **C1.3** Paso 3, datos | 72 | El wizard corta los cuatro pasos en otro sitio. |
 | 6 | **C3m** Árbol muerto | 74 | Resuelta como variante y no como pantalla. |
-| 7 | **B4b** Notificaciones | 78 | Los interruptores no persisten. |
+| 7 | **A6 · A9b · A10b** Medallones | 82–84 | El kit de íconos no trae sobre, enlace roto ni sobre tachado (PD-08). |
+
+> **Actualizado tras la Fase 5.** B4b sube de 78 a 88 y sale de esta lista: los
+> interruptores persisten. B3 sube a 90 y C1e a 88. El puesto que queda libre lo ocupan los
+> tres medallones de encabezado que el kit de íconos no trae, que era el siguiente empate.
+> Las medias por bloque de la tabla anterior no se han recalculado: se recalculan enteras en
+> la próxima medición, no fila a fila.
 
 **Ninguna de las siete es un problema de piel.** Tres son contenido o datos que faltan, dos
 son decisiones de composición que se tomaron a conciencia y se pueden revertir, y dos son
@@ -433,6 +460,29 @@ sección de la ola 7.2 de [plan-rediseño.md](plan-rediseño.md).
 **El web sí se vio**, por primera vez en todo el rediseño: el panel entero, pantalla por
 pantalla, servido contra Supabase local. Qué se vio y qué no está en esa misma sección, y lo
 que el render destapó está más abajo, en la auditoría de accesibilidad.
+
+### Lo que la Fase 5 deja sin comprobar en un teléfono
+
+El motor de recordatorios se verifica de extremo a extremo contra el stack local con
+`pnpm test:reminders`, y ahí se prueba todo lo que vive del lado del servidor: el barrido,
+la agrupación, la escalada de cuatro peldaños, la doble ejecución sin duplicar, el retiro del
+token muerto y la preferencia. **Nada de eso necesita un teléfono.** Lo que sí lo necesita, y
+queda pendiente para la jornada acumulada de la Fase 8:
+
+| Qué | Por qué no se puede comprobar aquí |
+|---|---|
+| El diálogo del sistema de notificaciones | Solo aparece en un dispositivo real. En emulador no hay servicio de push detrás. |
+| El token de Expo Push de verdad | `getExpoPushTokenAsync()` exige un **proyecto de EAS**, y este repositorio todavía no tiene uno. El código lo detecta y lo dice —`no-project-id`— en vez de fallar en silencio. |
+| La notificación en la pantalla de bloqueo | Cómo trunca el título y el cuerpo cada lanzador, y si el canal de Android sale con el nombre y el color correctos. |
+| El toque que abre la cámara | La ruta y el estado del store están escritos y con tipos; que el sistema entregue la respuesta con la app cerrada solo se ve arrancando desde una notificación. |
+| El respaldo local a 60 días | Programar y cancelar se ejercita en código, pero que dispare de verdad a los dos meses no es observable en una sesión. |
+| Que el respaldo local y el del servidor no coincidan nunca | La regla es exclusiva por construcción —los locales solo se arman si esta instalación **no** está registrada— pero verlo pide dos teléfonos y dos meses. |
+
+**El proyecto de EAS es la única dependencia externa nueva que introduce esta fase.** Sin él
+la aplicación arranca, el mapa funciona, la bitácora funciona y los recordatorios locales
+funcionan; lo único que no puede existir es el token, y por tanto el envío desde el servidor
+a ese dispositivo. Va en la misma casilla que la API key de Google Maps y la cuenta de Apple
+en la tabla de dependencias externas de [plan.md](plan.md).
 
 ---
 
