@@ -214,6 +214,46 @@ Estado al 21 de agosto de 2026. Los copys citados son **literales verificados** 
 | PD-07 | Tinta blanca sobre `--accent` en el botón primario, y la insignia de estado | **R2 entera** | 📤 redactada el 22 de agosto de 2026 |
 | PD-08 | Ocho iconos que el kit del sistema de diseño no cubre | **R4**, y hoy `Notice`, `Select`, `Dialog`, `Tag`, `Checkbox`, `OptionSheet` y la barra de búsqueda | 📤 redactada el 22 de agosto de 2026 |
 | PD-09 | «Por actualizar» y «Vencido» no se ven sobre el suelo claro del mapa | **B1**, la leyenda de B2 y la ficha del árbol | 📤 redactada el 22 de agosto de 2026 |
+| PD-10 | La línea de filiación en magenta no llega a AA como texto pequeño | D1, y las micro-etiquetas de A1, B4 y E1 | 📤 redactada el 22 de agosto de 2026 |
+
+### PD-10 · La línea de filiación en magenta no pasa AA, y el lienzo la dibuja así
+
+**Nivel 2 — requiere el lienzo.** Redactada el 22 de agosto de 2026, en la ola 7.2, después
+de ver la pantalla renderizada. Ni `pnpm test:contrast` ni el typecheck podían encontrarla:
+el script valida tokens sueltos, no pares de componente.
+
+**Dónde.** `apps/web/src/app/sign-in/page.tsx:43` — la línea «JUVENTUD EN LÍNEA · I.E. SAN
+SEBASTIÁN» del panel de marca de D1, en `text-jil-magenta` a 11 px en la cara mono.
+
+**El problema es doble, y las dos mitades hay que resolverlas juntas:**
+
+1. **Contraste.** `--jil-magenta` `#E93CAC` mide **3.54:1** sobre `surface-page` y 3.68:1
+   sobre blanco. A 11 px eso es texto pequeño, que debe 4.5:1. No pasa.
+2. **Regla de marca.** [CLAUDE.md](CLAUDE.md) dice que el magenta y el amarillo de Juventud
+   en línea son «**solo filiación**: nunca entran en la interfaz». Esta línea **es** una
+   marca de filiación, así que la regla puede leerse de las dos maneras, y ahí está el nudo.
+
+**Por qué no se corrigió en el código.** El lienzo v2 **dibuja esta línea en magenta**, y no
+solo aquí: la misma micro-etiqueta aparece en A1 (splash), en B4 (pie del perfil) y en E1
+(encabezado del mapa público). Cambiar el color en una sola pantalla rompería la coherencia
+de las cuatro; cambiarlo en las cuatro es rediseñar cómo se firma el producto. Ninguna de
+las dos cosas la decide el código.
+
+**Lo que se pide al diseño**, en orden de preferencia:
+
+1. **Un magenta más oscuro para texto**, del mismo modo que `--text-link` `#00753A` existe
+   como la versión legible de `--accent` `#008D46`. Haría falta ~`#B01B7E` para cruzar
+   4.5:1 sobre papel. Sería el arreglo más limpio: un token nuevo, cero cambios de
+   composición.
+2. **Subir la etiqueta a texto grande**, que a 3:1 el magenta actual ya pasa. Cambia la
+   escala tipográfica de una micro-etiqueta que el lienzo quiere pequeña, así que es
+   probable que no sea lo que se quiere.
+3. **Confirmar que la filiación va en tinta normal** (`text-secondary` `#4A5A50`, 7.04:1) y
+   que el magenta queda solo para rellenos y marcas no textuales — que es como ya lo usa
+   `components/ui/badge.tsx` con `bg-jil-magenta-soft` y su punto, donde no hay problema.
+
+**Mientras no se resuelva, el código no toca nada.** La pantalla queda como la dibuja el
+lienzo y esta petición es el registro de que se sabe y de por qué se decidió esperar.
 
 ### PD-09 · El marcador amarillo no se ve sobre el mapa claro
 

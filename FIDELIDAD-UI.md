@@ -103,7 +103,7 @@ Mide fidelidad **visual y de composición**, no si la funcionalidad es correcta.
 | **C3m** | Reportar árbol muerto | 🟡 variante de `log/[treeId].tsx` | **74** | Existe como estado de la misma pantalla: elegir «muerto» retira las medidas y exige una causa, que es lo que la restricción `log_entries_cause_when_dead` pide. **El lienzo la dibuja como artboard aparte**, con aviso de consecuencias y foto de evidencia obligatoria. La fusión está razonada en el archivo; se registra como divergencia, no como error. |
 | **C4** | Visor de fotografía | ✅ `features/trees/components/photo-viewer.tsx` | **88** | Visor a pantalla completa con velo inferior, pie de ciclo, medidas y coordenada de captura. |
 | **D1** | Acceso del coordinador | ✅ `app/sign-in/page.tsx` | **86** | Dos columnas con panel de marca y formulario restringido al rol coordinador, con su mensaje de acceso denegado. |
-| **D2** | Tablero de estadísticas | ✅ `app/panel/page.tsx` | **86** | Barra lateral, filtro de municipio, cuatro indicadores sobre las vistas agregadas reales, y los gráficos por vereda y por especie. Un literal `bg-green-950` fuera de tokens en `village-chart.tsx`. |
+| **D2** | Tablero de estadísticas | ✅ `app/panel/page.tsx` | **86** | Barra lateral, filtro de municipio, cuatro indicadores sobre las vistas agregadas reales, y los gráficos por vereda y por especie. Comprobado renderizado en la ola 7.2. |
 | **D3** | Gestión de usuarios | ✅ `app/panel/users/page.tsx` | **84** | Directorio con rol, conteos, estado y acciones, y la nota de que el correo solo se ve en el panel. |
 | **D4** | Moderación · archivado motivado | ✅ `app/panel/moderation/page.tsx` | **86** | Lista de marcados de más antiguo a más nuevo y diálogo de archivado con motivo obligatorio. |
 | **D5** | Fusión de especies | ✅ `app/panel/species/page.tsx` | **82** | Claves con conteos, selección de variantes, elección del nombre oficial y deshacer. La página delega entera en `species-merge-screen.tsx`. |
@@ -430,7 +430,9 @@ se difumina en ninguna fila de la tabla.
 Lo que impide verlo en este equipo, y lo que hace falta para desbloquearlo, está en la
 sección de la ola 7.2 de [plan-rediseño.md](plan-rediseño.md).
 
-**El web sí es observable**, y lo que se vio se registra en esa misma sección.
+**El web sí se vio**, por primera vez en todo el rediseño: el panel entero, pantalla por
+pantalla, servido contra Supabase local. Qué se vio y qué no está en esa misma sección, y lo
+que el render destapó está más abajo, en la auditoría de accesibilidad.
 
 ---
 
@@ -564,6 +566,30 @@ URL firmadas en `next.config.ts`, que es trabajo de build.
   texto en cuatro sitios y los cuatro son cara display a 26 pt; `textMuted` aparece a 12 y 13
   px y siempre sobre el blanco, donde mide 4.61:1, con el comentario que lo dice.
 - `<html lang="es">` está puesto en `apps/web/src/app/layout.tsx`.
+
+### Lo que solo apareció al renderizar el web
+
+La ola 7.2 sirvió el `next build` contra Supabase local y **miró las pantallas del panel una
+a una**, con sesión de coordinadora. El detalle de qué se vio y qué no está en la sección de
+la ola 7.2 de [plan-rediseño.md](plan-rediseño.md). Lo que el render destapó y ninguna
+comprobación estática podía ver:
+
+| | Hallazgo | Estado |
+|---|---|---|
+| 1 | **La línea de filiación de D1 va en magenta a 11 px** — `#E93CAC`, **3.54:1**. No pasa AA como texto pequeño, y `CLAUDE.md` reserva el magenta para filiación y no para interfaz. El lienzo **la dibuja así**, y la misma micro-etiqueta aparece en A1, B4 y E1. | 📤 **PD-10**, sin tocar el código |
+| 2 | **El panel «Filtros» de E1 abre vacío**: dice «Las especies se cargarán desde la base de datos» y no tiene controles. La pantalla puntúa 62 en parte por esto. | 🔧 trabajo pendiente |
+| 3 | Las tarjetas del tablero D2 se estiran a la altura del viewport y centran su contenido: ~300 px de vacío a 1440×1000. Es lo que `flex-1 justify-center` hace; nunca se había visto en pantalla. | 🔧 maquetación |
+| 4 | `expo config --type public` deja `android.permission.RECORD_AUDIO` pese a `recordAudioAndroidPermission: false`. **Sin comprobar en prebuild**, que es donde se resolvería. | ⚠️ sin comprobar |
+| 5 | Comentario huérfano del tema oscuro en `app.config.js`, hablando de un motivo de puntos de luz que ya no existe. | 🔧 limpieza |
+
+**Lo que el render confirmó y estaba bien:** los cinco estados pintan los cinco colores
+exactos —`#008D46`, `#FFD700`, `#F26522`, `#E31B23`, `#757575`—, el botón primario es
+`#008D46` con tinta blanca a 48 px de alto, los titulares salen en Montserrat 800, la página
+es `#F4FDF4` con texto `#1A1A1A`, y el panel refluye bien a 390 px.
+
+**Esto es la primera vez en todo el rediseño que algo se mira.** Cinco de los hallazgos de
+esta tabla los produjo mirar, no leer, y esa es la medida de lo que sigue costando no poder
+ver el móvil.
 
 ### Lo que no se comprobó
 
