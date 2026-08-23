@@ -59,9 +59,12 @@
   margin: 0;
 }
 
+/* The glyph stays at its drawn size and the box grows to the minimum touch
+   target the accessibility rule sets. A 32px control is the one place in this
+   modal a thumb could miss. */
 .closeButton {
-  width: 32px;
-  height: 32px;
+  width: var(--hit-target);
+  height: var(--hit-target);
   border: none;
   background: none;
   color: var(--text-secondary);
@@ -77,6 +80,11 @@
 .closeButton:hover {
   background-color: var(--surface-raised);
   color: var(--text-primary);
+}
+
+.closeButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--border-focus) 50%, transparent);
 }
 
 .content {

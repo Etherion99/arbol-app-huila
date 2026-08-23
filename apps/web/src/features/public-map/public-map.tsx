@@ -1,11 +1,13 @@
 'use client';
 
 import { GoogleMap, OverlayView, useJsApiLoader } from '@react-google-maps/api';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
-import { colorByTrackingStatus } from '@arbolapp/core';
+import { colorByTrackingStatus, colors } from '@arbolapp/core';
+import { Button } from '@/components/ui/button';
+import { texts } from '@/constants/texts';
 import { lightMapStyle } from '@/features/map/map-style';
-import type { PublicMapProps, TrackingStatus, ViewportBounds } from './types';
+import type { PublicMapProps, ViewportBounds } from './types';
 
 // Default center: La Plata, Huila, Colombia
 const DEFAULT_CENTER = { lat: 2.4048, lng: -75.5015 };
@@ -32,7 +34,6 @@ interface MapMarker extends google.maps.Marker {
 export function PublicMap({
   initialCenter = DEFAULT_CENTER,
   initialZoom = DEFAULT_ZOOM,
-  filters,
   onViewportChange,
   onMarkerClick,
   embedMode = false,
@@ -45,6 +46,19 @@ export function PublicMap({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
   const markersRef = useRef<Map<string, MapMarker>>(new Map());
+
+  /**
+   * The marker listener is attached once per marker and lives as long as the
+   * marker does, so it cannot close over the callback of the render that
+   * created it -- E3 passes a plain function and its identity changes every
+   * render, which would either strand the listener on a stale handler or, if
+   * the callback went into the effect's dependencies, rebuild every marker on
+   * every render. The ref is written on each render and read at click time.
+   */
+  const onMarkerClickRef = useRef(onMarkerClick);
+  useEffect(() => {
+    onMarkerClickRef.current = onMarkerClick;
+  }, [onMarkerClick]);
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
@@ -85,36 +99,45 @@ export function PublicMap({
 
     // Add or update markers
     for (const tree of trees) {
+      // The state travels in the marker's own name. The fill alone cannot carry
+      // it: `due_soon` is `#FFD700` and `up_to_date` is `#008D46`, and a reader
+      // who does not separate those two has no other place to read the state.
+      const label = texts.publicMap.markerLabel(
+        tree.species,
+        texts.publicMap.states[tree.status] ?? texts.publicMap.states.up_to_date,
+      );
+
       if (!markersRef.current.has(tree.id)) {
         const marker = new google.maps.Marker({
           position: { lat: tree.lat, lng: tree.lng },
           map: mapRef.current,
-          title: tree.species,
+          title: label,
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
             scale: 8,
             fillColor: colorByTrackingStatus[tree.status] || colorByTrackingStatus.up_to_date,
             fillOpacity: 1,
-            strokeColor: '#ffffff',
+            strokeColor: colors.onAccent,
             strokeWeight: 2,
           },
         });
 
         (marker as MapMarker).treeId = tree.id;
         marker.addListener('click', () => {
-          onMarkerClick?.(tree.id);
+          onMarkerClickRef.current?.(tree.id);
         });
 
         markersRef.current.set(tree.id, marker);
       } else {
-        // Update marker color if status changed
+        // Update marker colour and name if the status changed
         const marker = markersRef.current.get(tree.id)!;
+        marker.setTitle(label);
         marker.setIcon({
           path: google.maps.SymbolPath.CIRCLE,
           scale: 8,
           fillColor: colorByTrackingStatus[tree.status] || colorByTrackingStatus.up_to_date,
           fillOpacity: 1,
-          strokeColor: '#ffffff',
+          strokeColor: colors.onAccent,
           strokeWeight: 2,
         });
       }
@@ -141,18 +164,15 @@ export function PublicMap({
   if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
     return (
       <div
-        className="flex flex-col items-center justify-center w-full h-full bg-surfacePage p-6 gap-4"
+        className="flex h-full w-full flex-col items-center justify-center gap-4 bg-surface-page p-6"
         role="region"
-        aria-label="Mapa no disponible"
+        aria-label={texts.publicMap.regionUnavailable}
       >
-        <div className="max-w-md text-center space-y-4">
-          <h2 className="text-xl font-bold text-textPrimary">
-            Clave de Google Maps no configurada
+        <div className="max-w-md space-y-4 text-center">
+          <h2 className="font-heading text-xl font-bold text-text-primary">
+            {texts.publicMap.mapKeyMissing}
           </h2>
-          <p className="text-sm text-textSecondary">
-            El mapa público no se puede mostrar sin una clave válida. Los filtros y la información
-            del árbol están listos para usarse.
-          </p>
+          <p className="text-sm text-text-secondary">{texts.publicMap.mapKeyMissingDetail}</p>
         </div>
       </div>
     );
@@ -162,21 +182,19 @@ export function PublicMap({
   if (loadError) {
     return (
       <div
-        className="flex flex-col items-center justify-center w-full h-full bg-surfacePage p-6 gap-4"
-        role="region"
-        aria-label="Error al cargar el mapa"
+        className="flex h-full w-full flex-col items-center justify-center gap-4 bg-surface-page p-6"
+        role="alert"
+        aria-label={texts.publicMap.regionError}
       >
-        <div className="max-w-md text-center space-y-4">
-          <h2 className="text-xl font-bold text-textPrimary">No se pudo cargar el mapa</h2>
-          <p className="text-sm text-textSecondary">Revisa tu conexión e inténtalo de nuevo.</p>
+        <div className="max-w-md space-y-4 text-center">
+          <h2 className="font-heading text-xl font-bold text-text-primary">
+            {texts.publicMap.mapError}
+          </h2>
+          <p className="text-sm text-text-secondary">{texts.publicMap.mapErrorDetail}</p>
           {onRetry && (
-            <button
-              onClick={onRetry}
-              className="mt-4 px-6 py-2 bg-primary text-white rounded font-medium hover:bg-primary-dark"
-              aria-label="Reintentar cargar el mapa"
-            >
-              Reintentar
-            </button>
+            <Button className="mt-4" onClick={onRetry} aria-label={texts.publicMap.retryMap}>
+              {texts.publicMap.retry}
+            </Button>
           )}
         </div>
       </div>
@@ -187,33 +205,34 @@ export function PublicMap({
   if (!isLoaded) {
     return (
       <div
-        className="flex flex-col items-center justify-center w-full h-full bg-surfacePage"
+        className="flex h-full w-full flex-col items-center justify-center bg-surface-page"
         role="status"
-        aria-label="Cargando mapa"
+        aria-label={texts.publicMap.regionLoading}
       >
-        <p className="text-textSecondary">Cargando mapa…</p>
+        <p className="text-text-secondary">{texts.publicMap.loadingMap}</p>
       </div>
     );
   }
 
   return (
     <div className="relative w-full h-full">
-      {/* Error banner */}
+      {/* Error banner. The tone is carried by the fill and the border; the words
+          stay in `text-primary`, which is the rule every soft fill in this
+          palette obeys -- none of them can legibly carry its own colour. */}
       {error && (
-        <div className="absolute top-0 left-0 right-0 z-10 bg-red-50 border-b border-red-200 p-4">
+        <div
+          role="alert"
+          className="absolute top-0 right-0 left-0 z-10 border-b border-danger bg-danger-soft p-4"
+        >
           <div className="flex items-start gap-3">
             <div className="flex-1">
-              <p className="font-medium text-red-900">No se pudo cargar los árboles</p>
-              <p className="text-sm text-red-700 mt-1">{error}</p>
+              <p className="font-medium text-text-primary">{texts.publicMap.treesError}</p>
+              <p className="mt-1 text-sm text-text-secondary">{error}</p>
             </div>
             {onRetry && (
-              <button
-                onClick={onRetry}
-                className="px-3 py-1 text-sm font-medium text-red-700 hover:text-red-800 border border-red-200 rounded hover:bg-red-100"
-                aria-label="Reintentar"
-              >
-                Reintentar
-              </button>
+              <Button variant="secondary" onClick={onRetry}>
+                {texts.publicMap.retry}
+              </Button>
             )}
           </div>
         </div>
@@ -221,8 +240,11 @@ export function PublicMap({
 
       {/* Loading indicator */}
       {isLoading && (
-        <div className="absolute top-4 left-4 z-10 bg-white rounded shadow-sm px-4 py-2">
-          <p className="text-sm text-textSecondary">Cargando árboles…</p>
+        <div
+          role="status"
+          className="absolute top-4 left-4 z-10 rounded bg-surface-overlay px-4 py-2 shadow-card"
+        >
+          <p className="text-sm text-text-secondary">{texts.publicMap.loading}</p>
         </div>
       )}
 
@@ -246,8 +268,8 @@ export function PublicMap({
         {/* Empty state message centered on the map */}
         {!isLoading && !error && (!trees || trees.length === 0) && (
           <OverlayView position={initialCenter} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
-            <div className="bg-white rounded shadow-lg p-6 max-w-xs text-center -ml-32">
-              <p className="text-sm text-textSecondary">No hay árboles en esta zona</p>
+            <div className="shadow-overlay -ml-32 max-w-xs rounded bg-surface-overlay p-6 text-center">
+              <p className="text-sm text-text-secondary">{texts.publicMap.emptyMap}</p>
             </div>
           </OverlayView>
         )}

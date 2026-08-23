@@ -93,6 +93,11 @@
   --color-text-inverse: var(--text-inverse);
   --color-text-link: var(--text-link);
   --color-text-link-hover: var(--text-link-hover);
+  /* `--color-danger` as well as the shadcn `--color-destructive` that aliases
+     it: `border-danger` was already being written against a name Tailwind had
+     never been given, so the rule it produced was dropped and the border simply
+     did not appear. */
+  --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
@@ -107,6 +112,9 @@
      the note on `ink` in components/ui/badge.tsx. */
   --color-earth-brown: var(--earth-brown);
   --color-green-950: var(--green-950);
+  /* The scrim behind a modal, which is the base ink at low alpha. Named here so
+     an overlay writes `bg-ink/45` rather than spelling the hex out again. */
+  --color-ink: var(--ink);
 }
 
 /* The two shadows the design system defines, as utilities rather than theme

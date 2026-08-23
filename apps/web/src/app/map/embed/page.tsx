@@ -1,13 +1,15 @@
 import { Metadata } from 'next';
+
+import { texts } from '@/constants/texts';
 import { EmbedMapClient } from './embed-map-client';
 
 export const metadata: Metadata = {
-  title: 'Mapa de árboles - ÁrbolApp Huila',
-  description: 'Mapa interactivo de árboles del proyecto PRAE',
+  title: texts.publicMap.embedTitle,
+  description: texts.publicMap.embedDescription,
   robots: 'index, follow',
   openGraph: {
-    title: 'Mapa de árboles - ÁrbolApp Huila',
-    description: 'Mapa interactivo de árboles del proyecto PRAE',
+    title: texts.publicMap.embedTitle,
+    description: texts.publicMap.embedDescription,
     type: 'website',
   },
 };

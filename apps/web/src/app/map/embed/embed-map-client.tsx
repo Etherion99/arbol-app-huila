@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { createClient } from '@supabase/supabase-js';
+import { texts } from '@/constants/texts';
 import { PublicMap, ViewportBounds, TreeMarker } from '@/features/public-map';
 import { TreeDetailModal } from './tree-detail-modal';
 import styles from './embed-map.module.css';
@@ -104,7 +105,9 @@ export function EmbedMapClient() {
         initialZoom={DEFAULT_ZOOM}
         trees={trees}
         isLoading={isLoading}
-        error={error ? (error instanceof Error ? error.message : 'Error desconocido') : null}
+        error={
+          error ? (error instanceof Error ? error.message : texts.publicMap.unknownError) : null
+        }
         onViewportChange={handleViewportChange}
         onMarkerClick={handleMarkerClick}
         onRetry={handleRetry}

@@ -76,7 +76,7 @@ export default function PublicMapPage() {
   }, [treesQuery.isError, treesQuery.error]);
 
   return (
-    <div className="flex h-screen bg-surfacePage">
+    <div className="flex h-screen bg-surface-page">
       {/* Map area */}
       <div className="flex-1 relative">
         <PublicMap
@@ -105,7 +105,6 @@ export default function PublicMapPage() {
       {/* Tree card modal */}
       {selectedTreeId && (
         <TreeCardModal
-          treeId={selectedTreeId}
           isLoading={treeCardQuery.isLoading}
           treeCard={treeCardQuery.data || null}
           error={
