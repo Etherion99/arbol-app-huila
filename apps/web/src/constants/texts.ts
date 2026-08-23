@@ -31,23 +31,50 @@ export const texts = {
   /** The five tracking states, for any surface that names one. */
   treeState: treeStateLabels,
 
-  /** E1 · Mapa público con ficha del árbol. */
+  /** E1 · Mapa público con ficha del árbol. E3 · La variante empotrable. */
   publicMap: {
     title: 'Mapa de árboles del PRAE Huila',
     subtitle: 'Ubicación de los árboles sembrados',
     legend: 'Leyenda de estados',
     legendTitle: 'Estados de seguimiento',
+    filters: 'Filtros',
+    filtersActive: 'Filtros activos',
+    clearFilters: 'Limpiar filtros',
     filterSpecies: 'Filtrar por especie',
     filterZone: 'Filtrar por zona',
+    /** Said where the canvas draws a control the query behind it does not have. */
+    filterSpeciesPending: 'Las especies se cargarán desde la base de datos.',
+    filterZonePending: 'Las zonas se cargarán desde la base de datos.',
     noFiltersApplied: 'Mostrando todos los árboles',
     loading: 'Cargando árboles…',
+    loadingMap: 'Cargando mapa…',
     emptyMap: 'No hay árboles en esta zona',
+    treesError: 'No se pudieron cargar los árboles',
+    unknownError: 'No se pudo completar la consulta. Inténtalo de nuevo.',
     mapError: 'No se pudo cargar el mapa',
     mapErrorDetail: 'Revisa tu conexión e inténtalo de nuevo.',
     mapKeyMissing: 'Clave de Google Maps no configurada',
     mapKeyMissingDetail:
       'El mapa público no se puede mostrar sin una clave válida. Los filtros y la información del árbol están listos para usarse.',
     retry: 'Reintentar',
+    retryMap: 'Reintentar cargar el mapa',
+    /**
+     * Read out by assistive technology on the regions the map replaces itself
+     * with. A region announced only as "mapa" while it is showing a failure is
+     * the silent failure this project forbids.
+     */
+    regionUnavailable: 'Mapa no disponible',
+    regionError: 'Error al cargar el mapa',
+    regionLoading: 'Cargando el mapa',
+    /**
+     * The marker's tooltip and its accessible name. The state travels with the
+     * species on purpose: on the map the colour of the pin is the only other
+     * place it is said, and colour alone is not a channel.
+     */
+    markerLabel: (species: string, state: string) => `${species} · ${state}`,
+    /** E3 · The <head> of the embeddable page. */
+    embedTitle: 'Mapa de árboles · ÁrbolApp Huila',
+    embedDescription: 'Mapa interactivo de los árboles sembrados por el PRAE del Huila.',
     treeCard: {
       title: 'Detalle del árbol',
       code: 'Código',
@@ -59,11 +86,14 @@ export const texts = {
       location: 'Ubicación',
       village: 'Vereda',
       municipality: 'Municipio',
+      coordinates: 'Coordenadas',
       guardian: 'Guardián responsable',
       cycle: 'Ciclo',
       noCycle: 'Sin registros',
       noGuardian: 'Sin asignar',
       noPhoto: 'Sin fotografía',
+      photoAlt: (code: string) => `Fotografía del árbol ${code}`,
+      loadFailed: 'No se pudo cargar la información del árbol.',
       close: 'Cerrar',
     },
     states: {
