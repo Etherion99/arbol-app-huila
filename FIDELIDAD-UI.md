@@ -210,9 +210,16 @@ corrección escrita a mano en el CSS se pierde en la siguiente ejecución.
 
 | Dónde | Valor | Situación |
 |---|---|---|
-| `apps/web/src/features/public-map/public-map.tsx` | `text-red-900/700/800`, `bg-red-100`, `border-red-200` | Ola 6.2. Debe usar `danger` / `dangerSoft`. |
-| `apps/web/src/app/map/tree-card-modal.tsx` | `text-red-600/700/800/900`, `border-red-200` | Ola 6.2. Igual. |
-| `apps/web/src/features/statistics/components/village-chart.tsx` | `bg-green-950` | Ola 6.1. Existe `--green-950` como token. |
+| `apps/web/src/features/public-map/public-map.tsx` | `text-red-900/700/800`, `bg-red-100`, `border-red-200` | Ola 6.2. **Corregido en la ola 7.2:** ahora `danger` / `dangerSoft`. |
+| `apps/web/src/app/map/tree-card-modal.tsx` | `text-red-600/700/800/900`, `border-red-200` | Ola 6.2. **Corregido en la ola 7.2.** |
+| `apps/web/src/features/statistics/components/village-chart.tsx` | `bg-green-950` | **Falso positivo.** Ver abajo. |
+
+**`bg-green-950` no es color fuera de `packages/core`.** `globals.css` declara
+`--color-green-950: var(--green-950)` dentro de `@theme inline`, y esa entrada pisa la
+rampa por defecto de Tailwind. Comprobado sobre el CSS que emite `pnpm --filter
+@arbolapp/web build`: la utilidad compila a `.bg-green-950{background-color:var(--green-950)}`,
+es decir `#00592C`, el token. La fila se conserva porque el nombre sigue siendo ambiguo a
+la vista, no porque el valor sea ajeno.
 
 La página de ejemplo de `create-next-app` **ya no existe**: la Fase R6 la sustituyó.
 
@@ -427,6 +434,151 @@ sección de la ola 7.2 de [plan-rediseño.md](plan-rediseño.md).
 
 ---
 
+## Accesibilidad — auditoría sobre el tema claro
+
+Pasada de la ola 7.2, sobre cinco frentes: áreas táctiles y etiquetas, tinta pequeña sobre
+tokens que no llegan a AA, estado comunicado solo por color, orden de foco en los dos flujos
+largos, y copy dentro de componentes.
+
+**Qué es una comprobación aquí.** Todo lo que sigue sale de **leer el código**. Ninguna
+pantalla del móvil se vio renderizada y ninguna se declara verificada visualmente. Del web
+solo se verificó lo que la compilación permite verificar: qué utilidad de Tailwind existe y
+a qué valor resuelve, leyendo el CSS que emite `pnpm --filter @arbolapp/web build`. **No se
+usó ningún lector de pantalla, ni en móvil ni en web.**
+
+### Lo que se corrigió
+
+| Dónde | Qué estaba mal | Qué se hizo |
+|---|---|---|
+| `apps/web/src/app/globals.css` | `--color-danger` nunca se declaró, así que la utilidad `border-danger` de `button.tsx` no generaba regla y el borde no se dibujaba | se declara `--color-danger`, y también `--color-ink` para el velo de los modales |
+| `features/public-map/public-map.tsx`, `app/map/tree-card-modal.tsx` | la rampa roja de Tailwind (`bg-red-50/100`, `text-red-600…900`, `border-red-200`) como tono de error | `danger`, `dangerSoft` y tinta neutra, según la regla de las insignias suaves |
+| las mismas y `map-legend.tsx`, `map-filters.tsx`, `app/map/page.tsx` | **clases en camelCase que Tailwind nunca tuvo**: `text-textPrimary`, `text-textSecondary`, `bg-surfacePage`, `bg-surfaceRaised`, `border-borderSubtle`, `bg-borderSubtle` | la forma en kebab-case que sí existe |
+| `map-filters.tsx` | `bg-primary-dark` y `bg-primary-soft`, que tampoco existen | el `Button` del catálogo |
+| `features/public-map/public-map.tsx` | el marcador solo decía la especie: **el estado viajaba únicamente en el relleno del pin** | el nombre del marcador es «especie · estado» |
+| `app/map/embed/tree-detail-modal.tsx` | la ficha leía `tree.status` —la columna de ciclo de vida— y lo pasaba por un mapa cuya única clave era `updated`, así que imprimía `alive` en crudo | lee `trackingStatus` y lo nombra con `texts.publicMap.states` |
+| `tree-detail-modal.module.css` | la ✕ medía 32 px | `var(--hit-target)`, y anillo de foco visible |
+| `tree-card-modal.tsx`, `public-map.tsx`, `map-filters.tsx` | botones a `px-3 py-1` y a `p-2`, entre 26 y 36 px de alto | el `Button` del catálogo, que nace en 44 |
+| `map-filters.tsx` | `aria-label="Filtrar por especie"` sobre un botón cuya palabra visible es «Filtros» — el nombre accesible contradecía el rótulo | se quita la etiqueta; el nombre lo da el texto. Se añaden `aria-expanded` y `aria-controls` |
+| `tree-detail-modal.tsx` | el diálogo no se anunciaba como tal | `role="dialog"`, `aria-modal` y `aria-labelledby` |
+| `public-map.tsx`, `tree-card-modal.tsx`, `tree-detail-modal.tsx` | los estados de carga y de error no eran regiones vivas | `role="status"` y `role="alert"` donde corresponde |
+| `apps/mobile/src/app/_layout.tsx` | la lista de variables de entorno que faltan se pintaba en `warning` `#FFD700`, que mide **1.35:1** sobre la página: la única línea útil de esa pantalla era invisible | `danger` a 4.54:1, en la cara mono |
+| `features/public-map/public-map.tsx` | el `useEffect` de los marcadores leía `onMarkerClick` sin declararlo. En E3 el callback no está memoizado, así que el oyente quedaba atado a una versión vieja | el callback vive en una ref que un efecto sincroniza |
+| todo el mapa público y `components/ui/badge.tsx` | copys en español dentro del JSX, con el bloque `publicMap` de `texts.ts` escrito y sin usar | movidos a `apps/web/src/constants/texts.ts` |
+
+El bloque `publicMap` no cubría todo lo que había en pantalla. Se le añadieron las claves que
+faltaban —los nombres de región para lectores, el rótulo del marcador, los dos textos del
+`<head>` de E3, «Coordenadas», el alt de la fotografía y los copys de los filtros—.
+
+### Lo que se encontró y no se corrigió
+
+**1 · Los dos modales del mapa público no atrapan el foco.**
+`app/map/tree-card-modal.tsx` y `app/map/embed/tree-detail-modal.tsx` son `role="dialog"`
+escritos a mano: al abrirse el foco se queda donde estaba, `Escape` no cierra, el tabulador
+sale del diálogo y al cerrarlo el foco no vuelve al marcador. El panel no tiene este problema
+porque `components/ui/dialog.tsx` se construyó sobre el diálogo de Base UI, que trae la
+trampa de foco, la tecla de escape y el cableado de `aria-modal`. **La corrección es
+reconstruir las dos fichas sobre `DialogContent`**, que es rehacer dos pantallas y no cabía
+en esta pasada.
+
+**2 · Los marcadores del mapa web no se alcanzan con el teclado.**
+Son `google.maps.Marker` con `SymbolPath.CIRCLE` a escala 8, es decir 16 px de diámetro —por
+debajo de los 44 y de los 24 que pide la versión reducida de la regla—. La ficha del árbol
+solo se abre con el ratón. La salida no es agrandar el pin: es la lista de árboles del
+viewport que `public-map.module.css` ya tiene estilada (`.treesList`) y que **ningún
+componente usa**. Ese fichero CSS está muerto hoy.
+
+**3 · El gris `#757575` como texto pequeño directamente sobre la página.**
+La regla del propio documento dice que `textMuted` nunca lleva texto pequeño. Sobre blanco
+mide 4.61:1 y pasa, y ahí está bien usado. Sobre `surfacePage` mide **4.43:1** y no pasa, y
+el panel lo hace en tres sitios, los tres a 12 px y los tres hijos directos del `<main>` que
+`app/panel/layout.tsx` pinta en `surfacePage`:
+
+| Fichero | Línea | Qué dice |
+|---|---|---|
+| `app/panel/users/page.tsx` | 43 | el aviso de que el correo solo se ve en el panel |
+| `app/panel/moderation/page.tsx` | 58 | «se muestran los N árboles con la bitácora más atrasada» |
+| `app/panel/export/page.tsx` | 63 | «las exportaciones no quedan registradas todavía» |
+
+Los tres se arreglan cambiando `text-text-muted` por `text-text-secondary`, que mide 7.04:1.
+No se tocaron porque son ficheros del panel y en la ola 7.2 hay otro agente trabajando sobre
+ellos.
+
+**4 · Las iniciales del avatar en `accent` sobre blanco.**
+`components/panel/sidebar.tsx:92` y `features/trees/components/reassign-panel.tsx:123`
+escriben las iniciales en `text-xs font-bold` sobre `accent`, que mide **4.29:1**. Es el
+mismo par que **PD-07** y la misma decisión: el color lo fija el sistema de diseño. Pero aquí
+no hay atenuante de texto grande —12 px negrita no califica— y el móvil sí lo resolvió: sus
+iniciales van a 26 pt en la cara display, y `profile.tsx` lo documenta donde ocurre. También
+son ficheros del panel.
+
+**5 · `TableFigure` en `text-accent`.**
+`features/users/components/user-directory-table.tsx:152` pinta la cifra «al día» en `accent`
+sobre la fila blanca: 4.29:1. La cifra no es decorativa, es el dato de la columna. Panel.
+
+**6 · El enlace de descarga del panel mide 36 px.**
+`app/panel/export/page.tsx:82` es un `<a download>` renderizado por `Button size="sm"`, que
+son 36 px de alto. La variante `sm` está documentada para acciones en línea dentro de una
+fila densa de tabla; una tarjeta de exportación no es eso. Panel.
+
+**7 · El asistente de siembra no anuncia el cambio de paso.**
+`apps/mobile/src/app/plant.tsx` intercambia el contenido de los cuatro pasos en su sitio. El
+foco se queda en el botón «Siguiente», que no cambia de rótulo hasta el último paso, y nada
+mueve el foco al encabezado nuevo ni lo anuncia. `WizardHeader` sí expone
+`accessibilityRole="progressbar"` con su valor, pero eso se lee al llegar a él, no al
+avanzar. El bloqueo de validación sí se anuncia: `Notice` lleva
+`accessibilityLiveRegion="polite"`. La bitácora **no** tiene el mismo hueco por accidente —
+al pulsar «Reportar muerto» aparece un `Notice` de tono error, y esa región viva es lo que
+anuncia el cambio de formulario—. La corrección es `AccessibilityInfo` en `goNext`, y **no
+se escribió a ciegas**: no hay dispositivo donde comprobar que el anuncio llega y en qué
+orden, y una llamada de accesibilidad que no se ha oído nunca no es una corrección.
+
+**8 · El velo de los modales sigue escrito en hexadecimal.**
+`components/ui/dialog.tsx:39` usa `bg-[rgba(26,26,26,0.45)]`. Es el valor correcto —`--ink`
+al 45%— pero escrito a mano. Ahora existe `--color-ink`, así que se resuelve con `bg-ink/45`.
+Es un fichero del catálogo del panel y se deja para quien lo tenga abierto.
+
+**9 · La ficha del árbol de E1 nunca muestra la fotografía.**
+`app/map/tree-card-modal.tsx` tiene las dos ramas de la condición invertidas: si hay
+`photoUrl` dibuja un hueco que dice «Sin fotografía», y si no la hay dibuja el mismo texto
+más pequeño. No es un defecto de accesibilidad y arreglarlo implica declarar el host de las
+URL firmadas en `next.config.ts`, que es trabajo de build.
+
+### Lo que quedó comprobado y está bien
+
+- **El catálogo del móvil cumple los 44 px de punta a punta.** `Button` e `IconButton` no
+  crecen la caja, la rellenan con `hitSlop` desde `MIN_TOUCH_TARGET`; `Checkbox`, `ChipGroup`,
+  `DateField`, `Select`, `Switch`, `TextField`, `Tabs`, `OptionSheet` y `StepperField` fijan
+  `minHeight`. Las 26 pantallas y componentes con `Pressable` etiquetan todos sus controles;
+  las tres llamadas a `Card` con `onPress` pasan `accessibilityLabel`.
+- **`due_soon` y `overdue` no se fusionaron.** `colorByTrackingStatus` mantiene los cinco
+  colores, y ningún sitio los colapsa.
+- **El estado nunca viaja solo en el color, ahora también en el web.** El móvil ya lo tenía
+  resuelto mejor que nadie: `MapLegend` dibuja los sprites reales de los marcadores, no
+  círculos, así que la forma es un segundo canal y la leyenda enseña la clave correcta.
+  `Badge` y `StatusDot` ponen el nombre del estado junto al punto y `StatusDot` se esconde de
+  los lectores porque la etiqueta ya lo dice. En el web la leyenda y la ficha escriben el
+  nombre al lado del punto, y desde esta ola el marcador también.
+- **Ninguna insignia escribe su etiqueta en su propio color**, ni en el móvil ni en el web, y
+  las dos lo documentan con la medida.
+- **Los usos de tinta débil del móvil están medidos donde ocurren.** `accent` aparece como
+  texto en cuatro sitios y los cuatro son cara display a 26 pt; `textMuted` aparece a 12 y 13
+  px y siempre sobre el blanco, donde mide 4.61:1, con el comentario que lo dice.
+- `<html lang="es">` está puesto en `apps/web/src/app/layout.tsx`.
+
+### Lo que no se comprobó
+
+- **Ningún lector de pantalla.** Ni TalkBack, ni VoiceOver, ni NVDA. Todo lo que este bloque
+  dice sobre orden de lectura y sobre anuncios sale de leer el árbol de componentes.
+- **El orden de tabulación real del web.** No se recorrió ninguna pantalla con el teclado.
+- **Nada del móvil se vio en pantalla**, por lo mismo que dice la sección anterior.
+- **El contraste no se recalculó.** Toda cifra de esta sección está copiada de la tabla de
+  «Contraste — WCAG AA», que sale de `pnpm test:contrast`.
+- **Los tamaños táctiles del web no se midieron en un navegador**, se leyeron de la utilidad
+  aplicada: `min-h-hit` es `var(--hit-target)` y las alturas de `Button` son `h-9`, `h-11` y
+  `h-12`.
+
+---
+
 ## Cómo se reproduce esta medición
 
 ```bash
@@ -456,14 +608,13 @@ match the rules documented in packages/core/src/theme.ts».
 
 ### Advertencias de lint que quedan vivas
 
-`pnpm lint` pasa —son avisos, no errores— pero los cinco son de la ola 6.2 y valen como lista
-de trabajo:
+**Ninguna.** Las cinco de la ola 6.2 cayeron en la 7.2:
 
-| Archivo | Aviso |
-|---|---|
-| `app/map/tree-card-modal.tsx` | `treeId` declarado y sin usar |
-| `features/public-map/public-map.tsx` | `useMemo`, `TrackingStatus` y `filters` sin usar |
-| `features/public-map/public-map.tsx` | `useEffect` con `onMarkerClick` fuera del array de dependencias |
+| Archivo | Aviso | Cómo se cerró |
+|---|---|---|
+| `app/map/tree-card-modal.tsx` | `treeId` declarado y sin usar | se quita de las props; el llamador ya no lo pasa |
+| `features/public-map/public-map.tsx` | `useMemo`, `TrackingStatus` y `filters` sin usar | se quitan. `filters` sigue en el contrato de `PublicMapProps`, que es de donde lo lee E1; lo que sobraba era desestructurarlo |
+| `features/public-map/public-map.tsx` | `useEffect` con `onMarkerClick` fuera del array de dependencias | el callback pasa por una ref que un efecto sincroniza |
 
-El último no es cosmético: un `useEffect` que lee un callback que no declara puede quedarse
-con una versión vieja del manejador.
+El último no era cosmético, y meterlo en las dependencias tampoco valía: E3 pasa una función
+sin memoizar, así que el efecto habría reconstruido todos los marcadores en cada render.
