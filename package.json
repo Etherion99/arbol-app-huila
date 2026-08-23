@@ -23,13 +23,16 @@
     "test:trees": "node scripts/check-tree-registration.mjs",
     "test:reminders": "node scripts/check-reminders.mjs",
     "test:offline": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-offline-queue.mjs",
+    "test:integrity": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-registration-integrity.mjs",
+    "test:map": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-map-performance.mjs",
     "test:contrast": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-contrast.mjs",
     "tokens": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/generate-design-tokens.mjs",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,json,md,yml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,json,md,yml}\"",
-    "sprites": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/generate-marker-sprites.mjs"
+    "sprites": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/generate-marker-sprites.mjs",
+    "splash": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/generate-splash-icon.mjs"
   },
   "devDependencies": {
     "prettier": "3.4.2",
