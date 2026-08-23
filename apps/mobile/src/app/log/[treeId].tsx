@@ -14,13 +14,12 @@ import { StepperField } from '@/components/ui/stepper-field';
 import { TextField } from '@/components/ui/text-field';
 import { texts } from '@/constants/texts';
 import { MAX_CONTENT_WIDTH, MIN_TOUCH_TARGET, colors, fontFace, spacing } from '@/constants/theme';
-import { useAddLogEntry } from '@/features/growth-log/use-add-log-entry';
+import { useAddLogEntry, type AddLogEntryResult } from '@/features/growth-log/use-add-log-entry';
 import { useUserLocation } from '@/features/map/use-user-location';
 import { PhotoCapture } from '@/features/photos/components/photo-capture';
 import type { PreparedPhoto } from '@/features/photos/photo-pipeline';
-import { describeTreeError } from '@/features/trees/tree-errors';
+import { useNextCycleForTree } from '@/features/sync/sync-queue';
 import { useTreeDetail } from '@/features/trees/use-tree-detail';
-import { useIsOnline } from '@/hooks/use-is-online';
 import { formatCoordinates, formatDayAndMonth } from '@/lib/dates';
 
 const HEALTH_OPTIONS = [
@@ -42,7 +41,6 @@ const HEALTH_OPTIONS = [
 export default function GrowthLogScreen() {
   const router = useRouter();
   const { treeId } = useLocalSearchParams<{ treeId: string }>();
-  const isOnline = useIsOnline();
   const location = useUserLocation();
   const detail = useTreeDetail(treeId ?? null);
   const addEntry = useAddLogEntry();
@@ -54,7 +52,7 @@ export default function GrowthLogScreen() {
   const [notes, setNotes] = useState('');
   const [deadCause, setDeadCause] = useState<string | null>(null);
   const [hasTriedToSave, setHasTriedToSave] = useState(false);
-  const [saved, setSaved] = useState<{ wasAlreadyRecorded: boolean } | null>(null);
+  const [saved, setSaved] = useState<AddLogEntryResult | null>(null);
 
   const card = detail.data?.card ?? null;
   const entries = useMemo(() => detail.data?.entries ?? [], [detail.data]);
@@ -67,8 +65,17 @@ export default function GrowthLogScreen() {
    * object key is built from the cycle, so guessing 1 while the log was still
    * loading would write over the planting photograph of a tree that already has
    * several. Nothing may be saved until this is a real number.
+   *
+   * It counts what is still queued on this phone as well as what the server
+   * has. A guardian who recorded a cycle in a vereda on Saturday and comes back
+   * to the same tree on Sunday, still without signal, must not be handed the
+   * same number twice -- the two entries would collide on the unique index, on
+   * the object key, and on each other.
    */
-  const nextCycle = card === null ? null : (card.latestCycle ?? 0) + 1;
+  const nextCycle = useNextCycleForTree(
+    treeId ?? '',
+    card === null ? null : (card.latestCycle ?? 0),
+  );
 
   /**
    * The previous cycle's photograph, which becomes the ghost in the viewfinder.
@@ -131,6 +138,10 @@ export default function GrowthLogScreen() {
 
     const result = await addEntry.mutateAsync({
       treeId,
+      // Captured now, while the tree is on screen and named. The pending card
+      // cannot go and look it up: the whole reason it exists is that there is
+      // no connection to look anything up with.
+      treeLabel: card?.speciesRawText ?? treeId,
       cycle: nextCycle,
       // Null only for a death report. The database enforces the same rule from
       // the other side, so the two cannot drift.
@@ -141,14 +152,11 @@ export default function GrowthLogScreen() {
       photo,
     });
 
-    if (!result.isPhotoUploaded) {
-      return;
-    }
-
-    setSaved({ wasAlreadyRecorded: result.wasAlreadyRecorded });
+    setSaved(result);
   }, [
     addEntry,
     blocker,
+    card,
     deadCause,
     healthStatus,
     heightNumber,
@@ -165,8 +173,8 @@ export default function GrowthLogScreen() {
       <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
         <View style={styles.centred}>
           <AppText variant="title" style={styles.centredText}>
-            {saved.wasAlreadyRecorded
-              ? texts.growthLog.duplicateTitle
+            {saved.outcome !== 'sent'
+              ? texts.sync.queuedTitle
               : isDead
                 ? texts.growthLog.deadSavedTitle
                 : texts.growthLog.savedTitle}
@@ -176,13 +184,16 @@ export default function GrowthLogScreen() {
               skips it from here on, so naming a due date would promise the one
               thing that has stopped happening.
 
-              For a living tree the date is read live rather than snapshotted
-              when the entry was saved. It is a generated column two months from
-              the capture, and the mutation invalidated this query, so what
-              renders is the database's answer and not an arithmetic guess. */}
+              An entry still on the phone must not be answered with one either,
+              and for a plainer reason: the date is a generated column two
+              months from the capture, and until the row exists there is nothing
+              to generate it from. It is read live rather than snapshotted when
+              the entry was saved -- the queue invalidated this query the moment
+              the upload landed -- so what renders is the database's answer and
+              never an arithmetic guess. */}
           <AppText variant="bodyMuted" style={styles.centredText}>
-            {saved.wasAlreadyRecorded
-              ? texts.growthLog.duplicateBody
+            {saved.outcome !== 'sent'
+              ? texts.sync.queuedLogEntryBody
               : isDead
                 ? texts.growthLog.deadSavedBody
                 : card === null
@@ -342,19 +353,15 @@ export default function GrowthLogScreen() {
             </AppText>
           ) : null}
 
-          {addEntry.data?.isPhotoUploaded === false ? (
-            <Notice
-              tone="warning"
-              title={texts.photo.uploadFailedTitle}
-              message={isOnline ? texts.photo.uploadFailedBody : texts.photo.uploadOffline}
-              onRetry={() => void save()}
-              retryLabel={texts.photo.uploadRetry}
-            />
-          ) : addEntry.isError ? (
+          {/* Saving is a local write now and effectively cannot fail. What used
+              to be reported here -- a refused insert, a photograph that would
+              not upload -- belongs to the queued job and is shown on its card in
+              «Mis árboles», where it outlives this screen. */}
+          {addEntry.isError ? (
             <Notice
               tone="error"
               title={texts.treeErrors.title}
-              message={describeTreeError(addEntry.error, isOnline)}
+              message={texts.treeErrors.unknown}
               onRetry={() => void save()}
             />
           ) : null}

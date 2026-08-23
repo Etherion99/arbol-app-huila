@@ -13,6 +13,8 @@ import { Tabs } from '@/components/ui/tabs';
 import { texts } from '@/constants/texts';
 import { MAX_CONTENT_WIDTH, colors, radii, spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
+import { PendingSyncSection } from '@/features/sync/components/pending-sync-section';
+import { useSyncQueueState } from '@/features/sync/sync-queue';
 import { TreeListCard } from '@/features/trees/components/tree-list-card';
 import { useGuardianTrees } from '@/features/trees/use-guardian-trees';
 import { useIsOnline } from '@/hooks/use-is-online';
@@ -25,12 +27,20 @@ type Filter = 'pending' | 'all';
  * The tab exists because the map answers "where are the trees" and this answers
  * "what do I have to do", which is a different question and the one a guardian
  * opens the app for. The pending filter is the default for the same reason.
+ *
+ * It is also where the offline queue becomes visible, which the canvas draws as
+ * a «PENDIENTES DE ENVIAR» block above a «SINCRONIZADOS» one. That is the right
+ * place for it and not a separate screen: the question a guardian is asking is
+ * "what happened to my morning's work", and splitting the answer across two
+ * screens by which side of the wire it happens to be on is answering a question
+ * about plumbing instead.
  */
 export default function MyTreesScreen() {
   const router = useRouter();
   const { session } = useSession();
   const isOnline = useIsOnline();
   const trees = useGuardianTrees();
+  const queue = useSyncQueueState();
   const [filter, setFilter] = useState<Filter>('pending');
 
   const all = useMemo(() => trees.data ?? [], [trees.data]);
@@ -45,11 +55,21 @@ export default function MyTreesScreen() {
 
   const shown = filter === 'pending' ? pending : all;
 
+  /**
+   * Whether this phone is still carrying work.
+   *
+   * It changes what "no trees" means. A guardian whose first planting is sitting
+   * in the queue has an empty `guardian_trees()` and has very much sown a tree,
+   * so the empty state -- "todavía no has sembrado ningún árbol" -- would be
+   * flatly untrue at the one moment it would hurt most.
+   */
+  const hasQueued = queue.jobs.length > 0;
+
   // The canvas draws the load failure as a whole screen, but only when there is
   // nothing to fall back on. With trees already cached the list stays up and the
   // failure stays a strip over it: in a vereda the last known list is worth more
   // than a full screen apologising for a refetch that failed.
-  if (trees.error !== null && all.length === 0) {
+  if (trees.error !== null && all.length === 0 && !hasQueued) {
     return (
       <ScreenState
         icon="wifiOff"
@@ -84,7 +104,13 @@ export default function MyTreesScreen() {
           <AppText variant="data" style={styles.summary}>
             {texts.myTrees.summaryCount(all.length)}
             {texts.myTrees.summarySeparator}
-            {pending.length === 0 ? (
+            {/* Without signal the list is whatever the phone last managed to
+                fetch, so a count of what is "por actualizar" would be asserting
+                something the app cannot currently know. The canvas says «vistos
+                sin conexión» instead, which is the honest claim. */}
+            {!isOnline ? (
+              texts.myTrees.summaryOffline
+            ) : pending.length === 0 ? (
               texts.myTrees.summaryAllUpToDate
             ) : (
               <AppText variant="data" style={styles.summaryPending}>
@@ -118,11 +144,15 @@ export default function MyTreesScreen() {
         <Notice tone="warning" message={texts.myTrees.offlineCached} />
       ) : null}
 
-      {trees.isPending ? (
+      {/* `paused` is a query that has never run because the radio is down, and
+          it is not the same as one that is loading. Left as "cargando" it would
+          spin forever on a phone in a vereda and hide the very block that has
+          something to show there: the work waiting in the queue. */}
+      {trees.isPending && trees.fetchStatus !== 'paused' ? (
         <AppText variant="bodyMuted" accessibilityRole="progressbar" style={styles.centredText}>
           {texts.myTrees.loading}
         </AppText>
-      ) : all.length === 0 && trees.error === null ? (
+      ) : all.length === 0 && trees.error === null && !hasQueued ? (
         <View style={styles.empty}>
           <View style={styles.medallion}>
             <Icon name="sprout" size={42} color={colors.emerald600} />
@@ -146,10 +176,19 @@ export default function MyTreesScreen() {
           contentContainerStyle={styles.list}
           refreshing={trees.isRefetching}
           onRefresh={() => void trees.refetch()}
+          // Above the list rather than beside it, so it scrolls with the trees
+          // exactly as the canvas draws it, and so the two section headers sit
+          // in the same column as the cards they label.
+          ListHeaderComponent={<PendingSyncSection hasSynced={shown.length > 0} />}
           ListEmptyComponent={
-            <AppText variant="bodyMuted" style={styles.centredText}>
-              {texts.myTrees.emptyPending}
-            </AppText>
+            // Nothing is said when the server list is empty and the queue is
+            // not: the pending cards above are the content, and a line about
+            // having no trees would contradict them.
+            all.length === 0 ? null : (
+              <AppText variant="bodyMuted" style={styles.centredText}>
+                {texts.myTrees.emptyPending}
+              </AppText>
+            )
           }
           renderItem={({ item }) => (
             <TreeListCard
@@ -163,7 +202,7 @@ export default function MyTreesScreen() {
         />
       )}
 
-      {all.length > 0 ? (
+      {all.length > 0 || hasQueued ? (
         <View style={styles.footer}>
           <Button label={texts.planting.start} onPress={() => router.push('/plant')} />
         </View>
@@ -172,10 +211,15 @@ export default function MyTreesScreen() {
   );
 }
 
+/**
+ * The strip is told it is on the screen that already lists the queue, so it
+ * keeps its sentence and drops the «Ver» link that would offer to bring the
+ * guardian here.
+ */
 function Frame({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
-      <ConnectionBanner />
+      <ConnectionBanner isShowingPending />
       <View style={styles.column}>{children}</View>
     </SafeAreaView>
   );

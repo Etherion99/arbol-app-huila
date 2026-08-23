@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import type { TreeRegistration } from '@arbolapp/core';
 
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { texts } from '@/constants/texts';
 import { MAX_CONTENT_WIDTH, colors, effects, spacing } from '@/constants/theme';
 import { usePushRegistration } from '@/features/notifications/use-push-registration';
 import { useNextPhotoDate, type NextPhotoDate } from '@/features/planting/use-next-photo-date';
+import type { RegisterTreeResult } from '@/features/planting/use-register-tree';
 
 /**
  * What became of the question. `declined` is the guardian's own answer; the
@@ -21,7 +21,11 @@ import { useNextPhotoDate, type NextPhotoDate } from '@/features/planting/use-ne
 type NotifyAnswer = 'granted' | 'blocked' | 'unavailable' | 'declined';
 
 export type PlantingSuccessProps = {
-  registration: TreeRegistration;
+  /**
+   * What became of the job. It carries the tree when the server took it, and
+   * nothing but an outcome when the phone is still holding it.
+   */
+  result: RegisterTreeResult;
   /** Empty when the zone catalogue could not name it; the line then drops it. */
   villageName: string;
   /** As the guardian typed it. Never title cased: the raw text is preserved. */
@@ -66,15 +70,29 @@ export type PlantingSuccessProps = {
  * guardian meets first.
  */
 export function PlantingSuccess({
-  registration,
+  result,
   villageName,
   speciesRawText,
   onPlantAnother,
 }: PlantingSuccessProps) {
   const router = useRouter();
-  const nextPhoto = useNextPhotoDate(registration.treeId);
+  const registration = result.registration;
+  // Only read when the tree exists. The empty id below is never queried against
+  // anything: the line that uses this is not rendered in the queued variant.
+  const nextPhoto = useNextPhotoDate(registration?.treeId ?? '');
   const push = usePushRegistration();
   const [answer, setAnswer] = useState<NotifyAnswer | null>(null);
+
+  /**
+   * The tree is on the phone rather than on the server.
+   *
+   * The screen stays a payoff and does not become an apology. The guardian did
+   * everything right, the work is safe, and the two things that are missing --
+   * the code and the next photograph date -- are missing because only the
+   * database can decide them, which is worth saying plainly instead of filling
+   * in with a guess that would be wrong by however long the queue takes.
+   */
+  const isQueued = registration === null;
 
   const ask = async () => {
     const result = await push.enable.mutateAsync();
@@ -97,7 +115,7 @@ export function PlantingSuccess({
         </View>
 
         <AppText variant="display" style={styles.centred}>
-          {texts.planting.successTitle}
+          {isQueued ? texts.sync.queuedTitle : texts.planting.successTitle}
         </AppText>
 
         <AppText variant="bodyMuted" style={styles.centred}>
@@ -106,20 +124,44 @@ export function PlantingSuccess({
             : texts.planting.successBody(speciesRawText, villageName)}
         </AppText>
 
-        <NextPhotoLine value={nextPhoto} />
+        {isQueued ? (
+          <Notice
+            // Information rather than a warning: nothing has gone wrong and
+            // there is nothing to do. The one outcome that is a problem — the
+            // server refusing the registration outright — says so instead, and
+            // the card in «Mis árboles» is where it can be acted on.
+            tone={result.outcome === 'blocked' ? 'warning' : 'info'}
+            message={
+              result.outcome === 'blocked'
+                ? texts.sync.blockedRejected
+                : texts.sync.queuedPlantingBody
+            }
+          />
+        ) : (
+          <>
+            <NextPhotoLine value={nextPhoto} />
 
-        {/* Not in the canvas, which stops at the species and the date. Kept
-            because the code is the string that finds this tree in the search
-            and on the map, it was already on the screen this one replaces, and
-            dropping it would take something real away from the guardian at the
-            one moment they are told it exists. */}
-        <AppText
-          variant="data"
-          style={styles.code}
-          accessibilityLabel={texts.planting.successCodeLabel(registration.code)}
-        >
-          {registration.code}
-        </AppText>
+            {/* Not in the canvas, which stops at the species and the date. Kept
+                because the code is the string that finds this tree in the search
+                and on the map, it was already on the screen this one replaces,
+                and dropping it would take something real away from the guardian
+                at the one moment they are told it exists.
+
+                Null only on the path that recovers a registration after the app
+                was killed mid-call: the rows are found again, the code is not
+                among what is asked for, and an invented one would be worse than
+                a missing line. */}
+            {registration.code === null ? null : (
+              <AppText
+                variant="data"
+                style={styles.code}
+                accessibilityLabel={texts.planting.successCodeLabel(registration.code)}
+              >
+                {registration.code}
+              </AppText>
+            )}
+          </>
+        )}
       </View>
 
       <View style={styles.panel}>
@@ -129,7 +171,13 @@ export function PlantingSuccess({
               would otherwise meet the same question on their fourth, with a
               button that raises no dialog because the platform has nothing left
               to ask. They go straight to the exits instead. */}
-          {answer === null && push.state !== 'registered' ? (
+          {/* Not asked when the tree is still on the phone. The platform allows
+              this dialog once and a refusal stands forever, so it must not be
+              spent in a vereda: registering a push token needs the network that
+              is by definition missing, and the guardian would answer a question
+              about reminders for a tree that has no date yet. They meet it on
+              the next tree that goes up, or in the settings screen. */}
+          {!isQueued && answer === null && push.state !== 'registered' ? (
             <>
               <View style={styles.prompt}>
                 <Icon name="bell" size={22} color={colors.accent} />
@@ -182,16 +230,27 @@ export function PlantingSuccess({
               )}
 
               <View style={styles.exits}>
-                <Button
-                  label={texts.planting.successOpenTree}
-                  onPress={() =>
-                    router.replace({
-                      pathname: '/tree/[id]',
-                      params: { id: registration.treeId },
-                    })
-                  }
-                  style={styles.exit}
-                />
+                {/* There is no tree screen to open yet when the registration is
+                    still on the phone, so the first exit becomes the list that
+                    can actually show the guardian where their work is. */}
+                {registration === null ? (
+                  <Button
+                    label={texts.sync.queuedSeePending}
+                    onPress={() => router.replace('/trees')}
+                    style={styles.exit}
+                  />
+                ) : (
+                  <Button
+                    label={texts.planting.successOpenTree}
+                    onPress={() =>
+                      router.replace({
+                        pathname: '/tree/[id]',
+                        params: { id: registration.treeId },
+                      })
+                    }
+                    style={styles.exit}
+                  />
+                )}
                 <Button
                   label={texts.planting.successPlantAnother}
                   variant="secondary"

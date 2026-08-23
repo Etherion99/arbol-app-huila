@@ -1,17 +1,32 @@
+import { isBlocked } from '@/features/sync/sync-queue-model';
+import { useSyncQueueState } from '@/features/sync/sync-queue';
+
 /**
  * How many records the guardian has saved on the phone that have not reached
- * the server yet.
+ * the server yet, and how many of those have stopped trying.
  *
- * There is no offline write queue in the app yet, so today the answer is always
- * none and the connection strip says only that the signal is gone. This is the
- * single seam the strip reads: when the queue exists, this function is the only
- * one that changes, and every screen showing the strip starts counting at once.
+ * The two numbers are kept apart because they lead to different sentences. Work
+ * that is waiting for signal needs no action and the strip says so; work that
+ * has stopped needs the guardian to look at it, and telling them it will go up
+ * "when the signal comes back" would be a promise nothing intends to keep.
  *
- * It is a hook rather than a plain function on purpose. The queue will live in
- * device storage and change while a screen is mounted, so the count has to be
- * something a screen can subscribe to, and callers written against a hook do
- * not have to be rewritten the day it starts moving.
+ * It stays a hook, and every screen that shows the strip subscribes to it: the
+ * queue changes from a timer and from a connectivity listener while a screen is
+ * mounted, so the count has to be something a screen can watch rather than
+ * something it reads once.
  */
-export function usePendingSyncCount(): number {
-  return 0;
+export type PendingSyncCount = {
+  /** Everything still owed to the server, blocked entries included. */
+  total: number;
+  /** The subset that will not move again without the guardian. */
+  blocked: number;
+};
+
+export function usePendingSyncCount(): PendingSyncCount {
+  const { jobs } = useSyncQueueState();
+
+  return {
+    total: jobs.length,
+    blocked: jobs.filter(isBlocked).length,
+  };
 }

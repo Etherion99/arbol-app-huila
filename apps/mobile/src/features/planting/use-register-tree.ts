@@ -1,161 +1,113 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  growthLogPhotoPath,
-  growthLogThumbnailPath,
-  type TreeRegistration,
-  type Uuid,
-} from '@arbolapp/core';
+import { useMutation } from '@tanstack/react-query';
+import type { Uuid } from '@arbolapp/core';
 
-import { useSession } from '@/features/auth/session-provider';
-import { uploadGrowthLogPhoto } from '@/features/photos/growth-log-storage';
-import { discardPreparedPhoto, type PreparedPhoto } from '@/features/photos/photo-pipeline';
-import { guardianTreesQueryKey } from '@/features/trees/use-guardian-trees';
-import { supabase } from '@/lib/supabase/client';
+import type { PreparedPhoto } from '@/features/photos/photo-pipeline';
+import { SETTLE_TIMEOUT_MS } from '@/features/sync/sync-queue-timing';
+import type { SettledJob } from '@/features/sync/sync-queue-engine';
+import { syncQueue } from '@/features/sync/sync-queue';
 
 export type RegisterTreeInput = {
   speciesRawText: string;
   zoneId: Uuid;
+  /** Only so the pending card can name the vereda without the zone catalogue. */
+  villageName: string | null;
   location: { lat: number; lng: number };
   plantedAt: string;
   heightCm: number;
   visibleBranches: number;
   photo: PreparedPhoto;
   /**
-   * Set when a previous attempt already created the rows and only the upload
-   * failed. The registration is not repeated; the photograph is sent again to
-   * the same deterministic key.
+   * Called the instant the job is on the queue and before anything is waited
+   * on, so the wizard can throw away the draft at exactly the moment it stops
+   * being the only copy.
+   *
+   * It matters that this is not "after the mutation resolves". The wait that
+   * follows can last most of a minute, and a phone killed inside it would come
+   * back with both a job in the queue and a draft offering to plant the same
+   * tree again.
    */
-  existing?: { treeId: Uuid; code: string; cycle: number } | null;
+  onQueued?: () => void;
 };
 
-/**
- * What came back, and whether the photograph made it.
- *
- * The two are reported separately on purpose. A registration whose upload failed
- * is a success with an outstanding errand, not a failure -- the tree exists, its
- * cycle 1 entry exists, and it is on the map. Collapsing the two would either
- * hide a missing photograph or tell a guardian their tree was not registered
- * when it was.
- */
-export type RegisterTreeResult = {
-  registration: TreeRegistration;
-  isPhotoUploaded: boolean;
-  uploadError: unknown;
-};
-
-type RegistrationRow = {
-  tree_id: string;
-  code: string;
+/** The tree, once it exists. Null while the registration is still on the phone. */
+export type PlantedTree = {
+  treeId: Uuid;
+  /**
+   * Null on the one path that finds the rows without being told the code: a
+   * registration recovered after the app was killed between the write and the
+   * answer. The screen drops the line rather than inventing one.
+   */
+  code: string | null;
   cycle: number;
-  photo_path: string;
-  thumbnail_path: string;
+};
+
+export type RegisterTreeResult = {
+  /** `sent` means the server has it. Anything else means this phone still does. */
+  outcome: SettledJob['outcome'];
+  registration: PlantedTree | null;
 };
 
 /**
- * Planting a tree: the row first, then its photograph.
+ * Planting a tree, which is now a thing the guardian hands to the queue rather
+ * than a call the wizard makes.
  *
- * **The atomicity, and why it is this way round.** A tree and its cycle 1 entry
- * have to appear together or not at all -- the planting record is not separate
- * from the growth log, it *is* cycle 1 -- and two round trips from a phone on a
- * rural connection cannot promise that. So both rows are written by one call to
- * `register_tree()`, inside one transaction. Either both exist or neither does.
+ * ## Why the wizard no longer talks to the server
  *
- * The photograph cannot be part of that transaction, because it does not live in
- * the database. And it cannot go first either: the storage policies decide
- * ownership by reading a tree id out of the object name, so there is nothing to
- * own the object until the row exists. That leaves exactly one safe order, and
- * it is the one that fails well:
+ * It used to write the rows, then upload the photograph, and report whichever
+ * of the two failed. That works with signal and falls apart without it: a
+ * guardian in a vereda would fill in four steps, take a photograph, press the
+ * button and be told to try again later -- with no later that the app took part
+ * in. Every write from this phone goes through the queue now, because a direct
+ * write in a vereda is a write that is lost.
  *
- * - Row first, photograph second. A failed upload leaves a complete
- *   registration with its photograph still on the phone, and the retry is a
- *   plain re-upload to the same deterministic key. Nothing is lost and nothing
- *   is duplicated.
- * - Photograph first would need the row to already exist to be allowed at all,
- *   and if it were allowed, a failure between the two would leave an orphaned
- *   object nobody could reach or ever clean up.
+ * ## What the wizard still gets to say
  *
- * So a missing photograph is a recoverable, visible errand, and the thing that
- * can never happen -- a tree without a growth log -- is the thing the database
- * transaction rules out.
+ * The two facts a guardian actually wants are the tree's code and the date its
+ * next photograph is due, and both of them come from the database. So this does
+ * not enqueue and walk away: it enqueues and then waits a bounded moment for
+ * that job in particular. With signal the job is usually through in a couple of
+ * seconds and the screen shows the real answer, exactly as it did before.
+ * Without signal the wait ends the instant the queue reports it cannot send --
+ * not after a timeout -- and the screen says so instead of inventing a date.
+ *
+ * Nothing about the ordering, the retries or the duplicate handling lives here.
+ * That is all the queue's, which is the point of there being one.
  */
 export function useRegisterTree() {
-  const queryClient = useQueryClient();
-  const { session } = useSession();
-  const userId = session?.user.id ?? null;
-
   return useMutation({
     mutationFn: async (input: RegisterTreeInput): Promise<RegisterTreeResult> => {
-      const registration =
-        input.existing === null || input.existing === undefined
-          ? await createRows(input)
-          : {
-              ...input.existing,
-              // Rebuilt rather than stored: the keys are a pure function of the
-              // tree and the cycle, which is exactly why a retry can find them.
-              photoPath: growthLogPhotoPath(input.existing.treeId, input.existing.cycle),
-              thumbnailPath: growthLogThumbnailPath(input.existing.treeId, input.existing.cycle),
-            };
+      const job = syncQueue.enqueue({
+        kind: 'planting',
+        speciesRawText: input.speciesRawText,
+        zoneId: input.zoneId,
+        villageName: input.villageName,
+        location: input.location,
+        plantedAt: input.plantedAt,
+        heightCm: input.heightCm,
+        visibleBranches: input.visibleBranches,
+        photo: input.photo,
+      });
 
-      try {
-        await uploadGrowthLogPhoto(registration.treeId, registration.cycle, input.photo);
-      } catch (uploadError) {
-        // Deliberately not rethrown. The registration succeeded, and telling the
-        // guardian it failed would invite them to plant the same tree twice.
-        return { registration, isPhotoUploaded: false, uploadError };
-      }
+      input.onQueued?.();
 
-      // Only once the bytes are in the bucket is the local copy expendable.
-      discardPreparedPhoto(input.photo);
+      const settled = await syncQueue.settle(job.id, SETTLE_TIMEOUT_MS);
 
-      return { registration, isPhotoUploaded: true, uploadError: null };
+      return {
+        outcome: settled.outcome,
+        registration:
+          settled.outcome === 'sent' && settled.target !== null
+            ? {
+                treeId: settled.target.treeId,
+                code: settled.target.code,
+                cycle: settled.target.cycle,
+              }
+            : null,
+      };
     },
 
-    onSuccess: () => {
-      // The new tree belongs in the guardian's list and on the map. The map
-      // queries by viewport, so its key is refetched wholesale rather than
-      // guessed at.
-      void queryClient.invalidateQueries({ queryKey: guardianTreesQueryKey(userId) });
-      void queryClient.invalidateQueries({ queryKey: ['trees-in-viewport'] });
-      void queryClient.invalidateQueries({ queryKey: ['species-catalogue'] });
-      void queryClient.invalidateQueries({ queryKey: ['species-suggestions'] });
-    },
+    // Nothing is invalidated here. The queue does it, once per job that
+    // actually reached the bucket, which is the only moment the guardian's list
+    // and the map became wrong -- and it happens whether or not this screen is
+    // still mounted to see it.
   });
-}
-
-async function createRows(input: RegisterTreeInput): Promise<TreeRegistration> {
-  const { data, error } = await supabase
-    .rpc('register_tree', {
-      in_species_raw_text: input.speciesRawText,
-      in_zone_id: input.zoneId,
-      in_lng: input.location.lng,
-      in_lat: input.location.lat,
-      in_planted_at: input.plantedAt,
-      in_height_cm: input.heightCm,
-      in_visible_branches: input.visibleBranches,
-      // The EXIF capture time, never the moment this call was made. In the field
-      // those are hours apart, and the reminder cadence counts from the former.
-      in_captured_at: input.photo.capturedAt,
-      in_capture_lng: input.photo.captureLocation?.lng ?? null,
-      in_capture_lat: input.photo.captureLocation?.lat ?? null,
-      in_notes: null,
-    })
-    .maybeSingle();
-
-  if (error !== null) {
-    throw error;
-  }
-
-  if (data === null) {
-    throw new Error('register_tree returned no row');
-  }
-
-  const row = data as RegistrationRow;
-
-  return {
-    treeId: row.tree_id,
-    code: row.code,
-    cycle: row.cycle,
-    photoPath: row.photo_path,
-    thumbnailPath: row.thumbnail_path,
-  };
 }

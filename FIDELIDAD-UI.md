@@ -89,7 +89,7 @@ Mide fidelidad **visual y de composición**, no si la funcionalidad es correcta.
 | **A10a** | Retorno del enlace · confirmando | ✅ `auth/callback.tsx` | **88** | Estado de carga centrado con «Confirmando tu cuenta…». |
 | **A10b** | Retorno del enlace · inválido | ✅ `auth/callback.tsx` | **82** | Título, aviso enmarcado y «Entra a tu cuenta». Falta el medallón del encabezado. |
 | **B1** | Mapa con ficha flotante | ✅ `(app)/map.tsx` | **88** | Búsqueda con control de ubicación, chips de municipio y vereda, clústeres, **FAB «Sembrar»**, ficha flotante con especie · ciclo · guardián, chip de estado y «Ver árbol», y las **cuatro pestañas** del lienzo. |
-| **B2** | Mis árboles | ✅ `(app)/trees.tsx` | **86** | Encabezado con conteo y pendientes, tarjetas con insignia de estado, línea `VEREDA · CICLO` en `overline`, texto de urgencia y botón «Actualizar» por tarjeta. **Falta la miniatura real** —hoy es un ícono de reemplazo— y el badge **«PENDIENTE DE ENVIAR»**, que necesita la cola offline. Añade pestañas Pendientes / Todos que el lienzo no dibuja. |
+| **B2** | Mis árboles | ✅ `(app)/trees.tsx` | **90** | Encabezado con conteo y pendientes, tarjetas con insignia de estado, línea `VEREDA · CICLO` en `overline`, texto de urgencia y botón «Actualizar» por tarjeta. El badge **«PENDIENTE DE ENVIAR»** ya está, colgado del final de la misma `overline` en `earthBrown` como lo dibuja el lienzo, y el ciclo que muestra es el encolado y no el que alcanzó el servidor. Sin conexión el encabezado dice «vistos sin conexión». **Falta la miniatura real** —hoy es un ícono de reemplazo—. Añade pestañas Pendientes / Todos que el lienzo no dibuja. |
 | **B3** | Actividad | ✅ `(app)/activity.tsx` | **90** | Secciones PENDIENTES / ANTERIORES con filas fechadas, derivadas durante el render. La caja de notificaciones desactivadas **ya lee el registro real de este teléfono** y desaparece cuando sí recibe. Añade una tercera sección, RECORDATORIOS, que el lienzo no dibuja — ver la nota bajo la tabla. |
 | **B4** | Perfil | ✅ `(app)/profile.tsx` | **84** | Avatar con iniciales, insignia «Guardiana desde», tres fichas, lista de opciones con chevron, cerrar sesión y pie de versión con filiación. **La ficha de CICLOS dibuja su estado vacío**: no hay agregado que la alimente. La edición vive tras «Editar perfil» pero dentro de la misma pantalla, no como ruta propia. |
 | **B4b** | Ajustes de notificaciones | ✅ `settings/notifications.tsx` | **88** | Pantalla propia, los dos interruptores con su subtítulo y la nota «Aunque desactives los avisos…». **Los interruptores persisten** en `notification_preferences` y el barrido los respeta; el aviso de «no se guarda nada» desapareció. Añade un bloque superior que dice si este teléfono puede recibir —permiso sin pedir, denegado, o compilación sin proyecto de push—, que el lienzo no dibuja porque fue dibujado cuando no había nada que entregar. |
@@ -112,7 +112,7 @@ Mide fidelidad **visual y de composición**, no si la funcionalidad es correcta.
 | **E1** | Mapa público con ficha | 🟡 `app/map/page.tsx` | **62** | Mapa, leyenda, filtros y ficha del árbol existen. **Falta entera la banda de encabezado** que el lienzo dibuja: logotipo, línea de filiación y los **tres indicadores** (vivos · sembrados · supervivencia). Además los copys viven dentro de los componentes en vez de en `texts.ts` —que **sí tiene el bloque `publicMap` escrito y sin usar**— y hay colores `text-red-*` fuera de `packages/core`. |
 | **E3** | Variante incrustable | 🟡 `app/map/embed/page.tsx` | **68** | Versión compacta con su modal de detalle. Mismos dos defectos que E1: copys dentro del componente y, hasta esta ola, un `photoPath` que no compilaba. Falta el conteo de vivos y la firma de marca con «Ver el mapa completo». |
 | **F1** | Mis árboles · vacío | ✅ en `(app)/trees.tsx` | **86** | Medallón, título, cuerpo y «Sembrar mi primer árbol» con su ícono. |
-| **F2** | Offline con cola de pendientes | 🟡 `connection-banner.tsx` | **45** | La franja **sí cuenta los registros en cola**. Faltan el enlace «Ver», el cierre y **la sección PENDIENTES DE ENVIAR con sus tarjetas**. Tope real: la cola de sincronización offline es trabajo de datos, no de pantalla, y no está construida. |
+| **F2** | Offline con cola de pendientes | ✅ `connection-banner.tsx` · `features/sync/` | **88** | **La cola de sincronización existe** (`features/sync/`), así que la pantalla ya no tiene tope de datos. La franja cuenta los registros y trae el enlace «Ver» y el cierre; la sección **PENDIENTES DE ENVIAR** con sus tarjetas de borde discontinuo, su pastilla de estado y la cabecera **SINCRONIZADOS** vive dentro de `(app)/trees.tsx`, que es donde el lienzo la dibuja. Añade dos variantes de franja que el lienzo no dibuja —«enviando» y «no pudimos enviar»— porque la regla de fallo no silencioso las exige en cuanto hay cola. |
 | **F3** | Permiso de ubicación | ✅ `location-permission-primer.tsx` | **86** | La pantalla previa existe y explica el uso antes del diálogo del sistema, con la salida «escribir las coordenadas a mano». |
 | **F4** | Error de red y sesión expirada | ✅ `ui/screen-state.tsx` | **86** | Estados a pantalla completa con medallón, título, detalle del error y una sola salida. `Notice` queda para el fallo dentro de una pantalla que sigue funcionando. |
 | **F5** | GPS impreciso y cámara denegada | ✅ `step-location.tsx` · `photo-capture.tsx` | **82** | Aviso de precisión pobre sobre el mapa y pantalla de cámara desactivada que abre los ajustes del teléfono. Dibujados dentro de sus pantallas, no como artboards propios. |
@@ -156,12 +156,12 @@ lean como ordenados; los cinco del seguimiento ya significan otra cosa y ninguno
 | | Pantalla | Score | Por qué |
 |---|---|---|---|
 | 1 | **A1** Splash | 35 | No existe el logotipo como asset. Tope de contenido. |
-| 2 | **F2** Offline con cola | 45 | No existe la cola de sincronización. Tope de datos. |
-| 3 | **E1** Mapa público | 62 | Falta la banda de encabezado con los tres indicadores. |
-| 4 | **E3** Embed | 68 | Falta el conteo de vivos y la firma de marca. |
-| 5 | **C1.3** Paso 3, datos | 72 | El wizard corta los cuatro pasos en otro sitio. |
-| 6 | **C3m** Árbol muerto | 74 | Resuelta como variante y no como pantalla. |
-| 7 | **A6 · A9b · A10b** Medallones | 82–84 | El kit de íconos no trae sobre, enlace roto ni sobre tachado (PD-08). |
+| 2 | **E1** Mapa público | 62 | Falta la banda de encabezado con los tres indicadores. |
+| 3 | **E3** Embed | 68 | Falta el conteo de vivos y la firma de marca. |
+| 4 | **C1.3** Paso 3, datos | 72 | El wizard corta los cuatro pasos en otro sitio. |
+| 5 | **C3m** Árbol muerto | 74 | Resuelta como variante y no como pantalla. |
+| 6 | **A6 · A9b · A10b** Medallones | 82–84 | El kit de íconos no trae sobre, enlace roto ni sobre tachado (PD-08). |
+| 7 | **A7** Privacidad y términos | 80 | Faltan las pestañas: repartir el articulado es decisión de contenido legal. |
 
 > **Actualizado tras la Fase 5.** B4b sube de 78 a 88 y sale de esta lista: los
 > interruptores persisten. B3 sube a 90 y C1e a 88. El puesto que queda libre lo ocupan los
@@ -169,10 +169,17 @@ lean como ordenados; los cinco del seguimiento ya significan otra cosa y ninguno
 > Las medias por bloque de la tabla anterior no se han recalculado: se recalculan enteras en
 > la próxima medición, no fila a fila.
 
-**Ninguna de las siete es un problema de piel.** Tres son contenido o datos que faltan, dos
-son decisiones de composición que se tomaron a conciencia y se pueden revertir, y dos son
-trabajo de maquetación acotado en el mapa público. El rediseño de color, tipografía y
-componentes **no pone el techo en ninguna**.
+> **Actualizado al construirse la cola de sincronización offline.** **F2 sube de 45 a 88 y
+> sale de esta lista**, que era el peor score que no venía de un asset que falta: la cola
+> existe, la sección PENDIENTES DE ENVIAR está maquetada contra el lienzo y la franja tiene
+> su «Ver» y su cierre. B2 sube de 86 a 90 al llegarle el badge «PENDIENTE DE ENVIAR». El
+> puesto libre lo ocupa A7, que era el siguiente. Las medias por bloque siguen sin
+> recalcularse fila a fila.
+
+**Ninguna de las siete es un problema de piel.** Dos son contenido que falta, dos son
+decisiones de composición que se tomaron a conciencia y se pueden revertir, dos son trabajo
+de maquetación acotado en el mapa público y una espera un texto legal. El rediseño de color,
+tipografía y componentes **no pone el techo en ninguna**.
 
 ---
 

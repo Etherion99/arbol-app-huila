@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { texts } from '@/constants/texts';
 import { colors, fontFace, radii, spacing } from '@/constants/theme';
+import { useTreePendingSync } from '@/features/sync/sync-queue';
 import type { GuardianTree } from '@/features/trees/use-guardian-trees';
 import { useTreeThumbnail } from '@/features/trees/use-guardian-trees';
 import { daysSince, formatDayAndMonth } from '@/lib/dates';
@@ -32,15 +33,23 @@ export type TreeListCardProps = {
  */
 export function TreeListCard({ tree, onOpen, onUpdate }: TreeListCardProps) {
   const thumbnail = useTreeThumbnail(tree.latestThumbnailPath);
+  const pending = useTreePendingSync(tree.treeId);
   const needsUpdate = tree.trackingStatus === 'due_soon' || tree.trackingStatus === 'overdue';
+
+  // The newest cycle the guardian has actually recorded, which is the queued one
+  // whenever there is one: `guardian_trees()` can only count what reached it.
+  const shownCycle = pending.latestQueuedCycle ?? tree.latestCycle;
 
   return (
     <Card
       onPress={onOpen}
-      accessibilityLabel={texts.myTrees.cardLabel(
+      // The card is a control, so its label replaces everything written inside
+      // it: anything the overline says has to be said here too or a screen
+      // reader never hears it.
+      accessibilityLabel={`${texts.myTrees.cardLabel(
         tree.speciesRawText,
         texts.treeState[tree.trackingStatus],
-      )}
+      )}${pending.hasPending ? `. ${texts.myTrees.pendingBadge}` : ''}`}
     >
       <View style={[styles.row, !needsUpdate && styles.rowCentred]}>
         <View style={styles.thumbnail}>
@@ -73,10 +82,18 @@ export function TreeListCard({ tree, onOpen, onUpdate }: TreeListCardProps) {
             {tree.villageName === null
               ? tree.code
               : `Vereda ${tree.villageName} · ${
-                  tree.latestCycle === null
-                    ? texts.myTrees.noCycle
-                    : texts.myTrees.cycle(tree.latestCycle)
+                  shownCycle === null ? texts.myTrees.noCycle : texts.myTrees.cycle(shownCycle)
                 }`}
+            {/* The canvas hangs it off the end of the same overline rather than
+                giving it a pill of its own, which is right: it is a fact about
+                the line it extends — this vereda, this cycle, not yet sent —
+                and a second badge beside the state badge would read as a second
+                claim about the tree. */}
+            {pending.hasPending ? (
+              <AppText variant="overline" style={styles.pending}>
+                {` · ${texts.myTrees.pendingBadge}`}
+              </AppText>
+            ) : null}
           </AppText>
 
           <AppText variant="caption" style={dueStyles[tree.trackingStatus]}>
@@ -163,6 +180,19 @@ const styles = StyleSheet.create({
   },
   update: {
     marginTop: spacing[1],
+  },
+  /**
+   * The one tinted fragment of the overline, and the canvas tints it
+   * `earthBrown` `#8B572A` — 5.78:1 on the page and 6.01:1 on the white card,
+   * where this eleven point line owes 4.5:1. It is already the ink the app
+   * gives the yellow "owed" state in the badge and in the header count, so a
+   * guardian meets the same colour meaning the same thing in three places.
+   *
+   * Never the only channel: the words say it outright, which is what survives
+   * both a colour blindness and a screen reader.
+   */
+  pending: {
+    color: colors.earthBrown,
   },
 });
 

@@ -22,6 +22,7 @@
     "test:merge": "node scripts/check-species-merge.mjs",
     "test:trees": "node scripts/check-tree-registration.mjs",
     "test:reminders": "node scripts/check-reminders.mjs",
+    "test:offline": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-offline-queue.mjs",
     "test:contrast": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-contrast.mjs",
     "tokens": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/generate-design-tokens.mjs",
     "typecheck": "pnpm -r typecheck",

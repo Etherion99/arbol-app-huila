@@ -58,6 +58,85 @@ export const texts = {
     legalLink: 'Política de privacidad y términos',
   },
 
+  /**
+   * The offline write queue: the strip that announces it and the list that
+   * shows what is in it.
+   *
+   * The vocabulary is deliberately narrow. A guardian reading these has already
+   * done the work — walked to the tree, filled in the form, taken the
+   * photograph — and every line here answers one question: is it safe. So
+   * nothing is called an error unless it is one, "en cola" is stated as a
+   * normal condition rather than a warning, and the two sentences that do
+   * report a failure both name what can still be done about it.
+   */
+  sync: {
+    /** The section header of the canvas, above what is still on the phone. */
+    pendingTitle: 'Pendientes de enviar',
+    /** And the one above the trees the server already has. */
+    syncedTitle: 'Sincronizados',
+
+    plantingTitle: (species: string) => `Siembra · ${species}`,
+    logEntryTitle: (cycle: number, tree: string) => `Bitácora ciclo ${cycle} · ${tree}`,
+
+    /**
+     * The line under the title. Two of them, because the canvas agrees the
+     * participle with the noun: una siembra se guarda, una bitácora se guarda,
+     * but the words it prints are «guardado» for the first and «guardada» for
+     * the second.
+     */
+    savedPlanting: (when: string, kilobytes: number) => `guardado ${when} · foto ${kilobytes} KB`,
+    savedLogEntry: (when: string, kilobytes: number) => `guardada ${when} · foto ${kilobytes} KB`,
+
+    /** The pill on the right of the card, one per state the job can be in. */
+    statusQueued: 'En cola',
+    statusSending: 'Enviando…',
+    statusRetrying: 'Reintentando',
+    /** Behind an older entry of the same tree. A queue working, not a queue stuck. */
+    statusWaiting: 'En espera',
+    statusBlocked: 'No se pudo enviar',
+
+    /**
+     * Why a job stopped, when it stopped for good. Only two are worth
+     * distinguishing: a photograph that is gone cannot be recovered by anyone,
+     * and everything else is a refusal the coordinator can look into.
+     */
+    blockedPhotoMissing:
+      'La fotografía ya no está en este teléfono, así que este registro no se puede enviar.',
+    blockedRejected:
+      'El servidor no aceptó este registro. Puedes reintentarlo o descartarlo y volver a tomarlo.',
+
+    retryNow: 'Reintentar ahora',
+    discard: 'Descartar',
+    discardTitle: '¿Descartar este registro?',
+    discardBody:
+      'Se borrará de este teléfono junto con su fotografía y no se enviará. Tendrás que volver al árbol para registrarlo otra vez.',
+    discardConfirm: 'Sí, descartar',
+
+    /**
+     * Said once the phone is carrying a lot. It is information and never a
+     * refusal: nobody standing in front of a tree is stopped from registering
+     * it because of how much is already waiting.
+     */
+    advisory: (count: number) =>
+      `Este teléfono guarda ${count} registros sin enviar. Busca señal pronto para que no ocupen más espacio.`,
+
+    /** The strip, in the three things it can be reporting. */
+    bannerSending: (pending: number) =>
+      pending === 1 ? 'Enviando 1 registro…' : `Enviando ${pending} registros…`,
+    bannerFailed: (failed: number) =>
+      failed === 1 ? 'No pudimos enviar 1 registro.' : `No pudimos enviar ${failed} registros.`,
+    bannerView: 'Ver',
+    bannerDismiss: 'Ocultar el aviso',
+
+    /** Said instead of a due date when the work is still on the phone. */
+    queuedTitle: 'Guardado en este teléfono',
+    queuedPlantingBody:
+      'Tu árbol quedó guardado con su fotografía. Se enviará solo en cuanto vuelva la señal; no tienes que hacer nada más.',
+    queuedLogEntryBody:
+      'Tu bitácora quedó guardada con su fotografía. Se enviará sola en cuanto vuelva la señal; no tienes que hacer nada más.',
+    queuedSeePending: 'Ver lo que falta por enviar',
+  },
+
   config: {
     title: 'Falta configurar la aplicación',
     body: 'La app no encuentra los datos del servidor. Copia el archivo .env.example a .env y completa estas variables:',
@@ -556,9 +635,13 @@ export const texts = {
     deadSavedTitle: 'Reporte enviado',
     deadSavedBody:
       'El árbol quedó marcado como muerto en el mapa y dejarán de llegar recordatorios. Su bitácora se conserva completa.',
-    duplicateTitle: 'Ese ciclo ya estaba guardado',
-    duplicateBody:
-      'La entrada había llegado al servidor en un intento anterior. Terminamos de subir la fotografía y no se duplicó nada.',
+    // There used to be a pair of lines here for «ese ciclo ya estaba
+    // guardado», shown when a save collided with an entry an earlier attempt
+    // had already written. The guardian never meets that case now: the
+    // collision happens inside the sync queue, hours later and with nobody
+    // watching, and the queue reads it as a receipt rather than as something to
+    // report. Nothing was lost with them — they described a retry the guardian
+    // used to have to perform by hand.
   },
 
   /** Taking, compressing and sending a photograph. */
@@ -592,13 +675,11 @@ export const texts = {
     prepareFailedTitle: 'No pudimos preparar la fotografía',
     prepareFailedBody: 'Vuelve a tomarla. Los datos que ya escribiste se conservan.',
 
-    uploadFailedTitle: 'No pudimos subir la fotografía',
-    uploadFailedBody:
-      'El registro ya quedó guardado en el servidor y la fotografía sigue en este teléfono, así que no se ha perdido nada. Revisa tu conexión y reintenta el envío.',
-    uploadRetry: 'Reintentar el envío',
-    uploading: 'Subiendo la fotografía…',
-    uploadOffline: 'Sin conexión. Reintenta el envío cuando vuelva la señal.',
-    uploadPending: 'Foto pendiente de enviar',
+    // The six lines about a failed upload lived here while the wizard sent the
+    // photograph itself and had to ask the guardian to try again. It does not
+    // any more: the upload belongs to the sync queue, which retries on its own
+    // and reports what it is doing on the pending card and in the connection
+    // strip. Their replacements are the `sync` block at the top of this file.
   },
 
   /** The "Mis árboles" tab. */
@@ -612,6 +693,18 @@ export const texts = {
     summarySeparator: ' · ',
     summaryAllUpToDate: 'todos al día',
     summaryPending: (pending: number) => `${pending} por actualizar`,
+    /**
+     * Said in place of the count of overdue trees when there is no signal. The
+     * list on screen is the last one the phone managed to fetch, and a number
+     * of trees "por actualizar" computed from it could be hours out of date.
+     */
+    summaryOffline: 'vistos sin conexión',
+    /**
+     * Appended to the vereda and cycle line of a tree whose newest entry is
+     * still on this phone. Uppercase because it joins an overline that already
+     * is, and in words rather than in colour so it survives being read aloud.
+     */
+    pendingBadge: 'Pendiente de enviar',
     tabAll: (count: number) => `Todos (${count})`,
     tabPending: (count: number) => `Pendientes (${count})`,
     cardLabel: (species: string, state: string) => `Árbol de ${species}, ${state}`,

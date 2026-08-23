@@ -13,11 +13,12 @@ import { todayInColombia } from '@/lib/dates';
  * never gets registered. So every change is written to disk, and it survives the
  * app being killed.
  *
- * This is deliberately not the offline queue of Phase 8. Nothing here retries in
- * the background or sends anything on its own: it is one draft, saved, that the
- * guardian comes back to and submits by hand. The full queue, with several
- * pending writes and automatic drain, is that phase's job and is not started
- * here.
+ * This is not the offline write queue and does not overlap with it. The two
+ * cover opposite halves of the same walk: a draft is a form that has not been
+ * submitted, held so the guardian can come back to it, and it is thrown away
+ * the instant they press the button. From that moment the work is a job in the
+ * sync queue, which owns the retries and the sending. Nothing here ever talks
+ * to the server.
  */
 
 const DRAFT_FILE = 'planting-draft.json';
@@ -48,12 +49,6 @@ const draftSchema = z.object({
   heightCm: z.string(),
   visibleBranches: z.number().int().min(0),
   photo: preparedPhotoSchema.nullable(),
-  /**
-   * Set once the row is in the database but its photograph is not yet in the
-   * bucket. It is what turns a failed upload into a retry instead of a second
-   * tree: the registration already happened, and only the object is missing.
-   */
-  registration: z.object({ treeId: z.string(), code: z.string(), cycle: z.number() }).nullable(),
 });
 
 export type PlantingDraft = z.output<typeof draftSchema>;
@@ -71,7 +66,6 @@ export function emptyDraft(): PlantingDraft {
     heightCm: '',
     visibleBranches: 1,
     photo: null,
-    registration: null,
   };
 }
 
