@@ -68,9 +68,16 @@ pnpm db:stop
 pnpm typecheck
 pnpm lint
 pnpm format:check
+pnpm test:offline           # cola de sincronización offline; no necesita nada levantado
 pnpm test:species           # requiere el stack local levantado
 pnpm test:rls               # requiere el stack local levantado
 ```
+
+`test:offline` recorre la cola de escritura sin conexión con un reloj virtual: siembra en
+modo avión, cierre y reapertura de la app, vuelta de la señal, un ciclo que el servidor ya
+tenía, y varias entradas del mismo árbol esperando turno. Ejecuta el código real de
+`apps/mobile/src/features/sync/`, no una copia, y es reproducible: la misma secuencia da
+siempre la misma salida.
 
 ## Configuración de la aplicación
 
