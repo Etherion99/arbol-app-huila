@@ -135,7 +135,7 @@ function MissingConfigurationScreen() {
       <AppText variant="title">{texts.config.title}</AppText>
       <AppText variant="bodyMuted">{texts.config.body}</AppText>
       {missingEnvVars.map((name) => (
-        <AppText key={name} variant="label" style={styles.configVar}>
+        <AppText key={name} variant="data" style={styles.configVar}>
           {name}
         </AppText>
       ))}
@@ -183,7 +183,13 @@ const styles = StyleSheet.create({
     padding: spacing[6],
     backgroundColor: colors.surfacePage,
   },
+  /**
+   * `danger` at 4.54:1 on the page, and the mono face because these are
+   * variable names. It used to be `warning` `#FFD700`, which measures 1.35:1
+   * there -- the list of what is missing was the one line on the screen that
+   * could not be read.
+   */
   configVar: {
-    color: colors.warning,
+    color: colors.danger,
   },
 });
