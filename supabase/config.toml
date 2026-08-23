@@ -397,8 +397,23 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
-# [edge_runtime.secrets]
-# secret_key = "env(SECRET_VALUE)"
+[edge_runtime.secrets]
+# Where the reminder sweep sends its pushes. This file configures the local
+# stack only -- the hosted project takes its secrets from the dashboard -- so
+# pointing it at a stub is not a test-only hack, it is the correct setting for
+# a machine that must never make a real phone buzz. `pnpm test:reminders`
+# listens here and answers with the tickets Expo would have returned.
+#
+# The port sits just outside the published Supabase range because the stub runs
+# on the host rather than in a container; `host.docker.internal` is how the edge
+# runtime reaches back out to it.
+EXPO_PUSH_API_URL = "http://host.docker.internal:55328/--/api/v2/push/send"
+
+[functions.reminder-sweep]
+# The sweep is called by pg_cron carrying the service role key, and the function
+# refuses anything else. Left verified so a malformed token never reaches the
+# handler at all.
+verify_jwt = true
 
 [analytics]
 enabled = true

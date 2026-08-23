@@ -50,6 +50,54 @@ export const REMINDER_FOLLOW_UP_DAYS = [7, 21] as const;
 /** Days after the due date on which the tree is flagged as overdue. */
 export const DAYS_UNTIL_OVERDUE = 30;
 
+/**
+ * Time zone every reminder is reckoned in.
+ *
+ * The database has its own copy of this inside `next_reminder_after()`, which
+ * is the single place the cadence and the zone are written down on that side.
+ * This constant exists because the sweep has to be *scheduled* as well as
+ * computed, and `pg_cron` takes a plain UTC expression with no zone of its own:
+ * something has to know that 08:00 in Colombia is 13:00 in UTC.
+ *
+ * The two copies must agree exactly, and `pnpm test:reminders` compares them
+ * against the live schedule -- the same arrangement `normalizeSpecies()` and
+ * `normalize_species()` already live under, for the same reason: a silent
+ * drift here would move every reminder an hour without anything raising.
+ */
+export const REMINDER_TIME_ZONE = 'America/Bogota';
+
+/**
+ * Hour of the Colombian morning the sweep runs at. Early enough that a
+ * guardian reads it before going out to the plot, late enough that it is not
+ * a phone buzzing in the dark.
+ */
+export const REMINDER_DISPATCH_HOUR = 8;
+
+/**
+ * How many days after the due date each step of the escalation goes out on.
+ *
+ * Derived from the two constants above rather than restated, so the ladder can
+ * never disagree with them. `public.reminder_offset_days()` is the database's
+ * copy and `pnpm test:reminders` compares the two.
+ */
+export const REMINDER_OFFSET_DAYS: Readonly<Record<ReminderKind, number>> = {
+  cycle: 0,
+  follow_up_7d: REMINDER_FOLLOW_UP_DAYS[0],
+  follow_up_21d: REMINDER_FOLLOW_UP_DAYS[1],
+  overdue: DAYS_UNTIL_OVERDUE,
+};
+
+/**
+ * Escalation steps in the order they fire. Reading the order off the offsets
+ * rather than writing it out again means adding a step is one edit.
+ */
+export const REMINDER_LADDER = (Object.keys(REMINDER_OFFSET_DAYS) as ReminderKind[]).sort(
+  (left, right) => REMINDER_OFFSET_DAYS[left] - REMINDER_OFFSET_DAYS[right],
+);
+
+/** The step of the escalation that copies the coordinator in. */
+export const REMINDER_KIND_WITH_COORDINATOR_COPY: ReminderKind = 'follow_up_21d';
+
 /** Bucket holding every growth log photograph. */
 export const GROWTH_LOG_BUCKET = 'growth-log-photos';
 
@@ -255,6 +303,58 @@ export type Reminder = {
   openedAt: IsoDateTime | null;
   resolvedAt: IsoDateTime | null;
   createdAt: IsoDateTime;
+};
+
+/**
+ * Row of `public.notification_preferences`: whether a guardian wants to be
+ * reached at all, and about what.
+ *
+ * It is a table of its own rather than two columns on `users` because the
+ * select privilege on `users` is granted column by column to `anon` as well as
+ * to `authenticated`, and a preference is nobody's business but its owner's.
+ * Adding the columns there would mean either handing them to `anon` or
+ * splitting that grant into two audiences, and every column added afterwards
+ * would have to remember which side it belonged on. Here the answer is a row
+ * check, and the table starts out unreachable by `anon` exactly like `devices`
+ * and `reminders`.
+ *
+ * It is keyed by guardian rather than by installation because turning
+ * reminders off means "stop asking me", not "stop asking me on the tablet".
+ * Whether a given installation can still be reached is `Device.isActive`,
+ * which is a delivery fact rather than a choice.
+ */
+export type NotificationPreferences = {
+  userId: Uuid;
+  wantsGrowthLogReminders: boolean;
+  wantsCoordinatorNotices: boolean;
+  createdAt: IsoDateTime;
+  updatedAt: IsoDateTime;
+};
+
+/**
+ * What a guardian is assumed to want before they have ever opened the settings
+ * screen. Absent row and this object mean the same thing, which is what lets
+ * the preference exist without a backfill over everybody who signed up first.
+ */
+export const DEFAULT_NOTIFICATION_PREFERENCES = {
+  wantsGrowthLogReminders: true,
+  wantsCoordinatorNotices: true,
+} as const;
+
+/**
+ * A row of `reminder_feed()`: one reminder the guardian was actually sent,
+ * with enough of its tree to name it.
+ */
+export type ReminderFeedItem = {
+  reminderId: Uuid;
+  treeId: Uuid;
+  speciesName: string;
+  code: string;
+  kind: ReminderKind;
+  cycle: number;
+  sentAt: IsoDateTime;
+  openedAt: IsoDateTime | null;
+  resolvedAt: IsoDateTime | null;
 };
 
 /**
