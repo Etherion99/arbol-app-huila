@@ -410,10 +410,18 @@ grant execute on function public.mark_reminder_opened(uuid, integer) to authenti
 
 -- Asks the Edge Function to run the sweep.
 --
--- The URL and the key are read from database settings rather than written
--- here: a versioned migration must not carry a service role key, and the same
--- migration has to apply against the local stack and the hosted project, which
--- do not share a hostname. `supabase/README.md` says how they are set.
+-- ## Why the endpoint and the key come out of Vault
+--
+-- Neither can be written here. A versioned migration must not carry a service
+-- role key, and the same file has to apply against the local stack and the
+-- hosted project, which do not share a hostname.
+--
+-- Vault rather than a database setting: `alter database ... set` on a custom
+-- parameter needs superuser, which `postgres` is not on Supabase -- locally or
+-- hosted -- so that route simply does not exist here. Vault does, it is the
+-- mechanism Supabase documents for exactly this, and it keeps the key
+-- encrypted at rest instead of readable in `pg_db_role_setting`.
+-- `supabase/README.md` says how the two secrets are created.
 --
 -- Returns the pg_net request id so a missed run can be traced back through
 -- `net._http_response`.
@@ -424,19 +432,23 @@ security definer
 set search_path = ''
 as $$
 declare
-  endpoint text := nullif(current_setting('app.reminder_sweep_url', true), '');
-  service_key text := nullif(current_setting('app.reminder_sweep_key', true), '');
+  endpoint text := nullif(
+    (select secret.decrypted_secret from vault.decrypted_secrets secret
+      where secret.name = 'reminder_sweep_url'), '');
+  service_key text := nullif(
+    (select secret.decrypted_secret from vault.decrypted_secrets secret
+      where secret.name = 'reminder_sweep_key'), '');
   request_id bigint;
 begin
   if endpoint is null or service_key is null then
     -- A warning rather than an exception. The sweep having nowhere to call is
     -- a deployment gap, and raising would leave a failed pg_cron entry every
     -- morning that says nothing more than this line does.
-    raise warning 'reminder sweep not dispatched: app.reminder_sweep_url or app.reminder_sweep_key is unset';
+    raise warning 'reminder sweep not dispatched: the reminder_sweep_url or reminder_sweep_key secret is missing from Vault';
     return null;
   end if;
 
-  select extensions.net.http_post(
+  select net.http_post(
     url := endpoint,
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
@@ -451,7 +463,7 @@ end;
 $$;
 
 comment on function public.run_reminder_sweep() is
-  'Calls the reminder-sweep Edge Function over pg_net. Reads its endpoint and key from database settings so no key lives in a migration.';
+  'Calls the reminder-sweep Edge Function over pg_net. Reads its endpoint and key from Vault so no key lives in a migration.';
 
 revoke execute on function public.run_reminder_sweep() from public, anon, authenticated;
 grant execute on function public.run_reminder_sweep() to service_role;
