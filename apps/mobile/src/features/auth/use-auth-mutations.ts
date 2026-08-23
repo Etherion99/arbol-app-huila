@@ -9,6 +9,8 @@ import type {
 } from '@/features/auth/auth-schemas';
 import { OfflineError } from '@/features/auth/auth-errors';
 import { markSignOutRequested } from '@/features/auth/session-provider';
+import { clearLocalReminders } from '@/features/notifications/local-reminders';
+import { retirePushToken } from '@/features/notifications/push-tokens';
 import { supabase } from '@/lib/supabase/client';
 
 /**
@@ -93,6 +95,18 @@ export function useSignOut() {
       // Tells the session listener this departure was asked for, so it does
       // not report it as an expired session on the sign in screen.
       markSignOutRequested();
+
+      // Before the session goes, because both of these need it: retiring the
+      // token is a write that only its owner may make, and the local reminders
+      // are about trees that stop being this guardian's the moment they leave.
+      //
+      // Awaited rather than fired and forgotten, and it still cannot block the
+      // exit: `retirePushToken` swallows its own failure by design, so a
+      // guardian in a vereda with no bars gets out of the phone either way. The
+      // row is reclaimed by whoever registers next on this device, and the
+      // sweep deactivates it on its own the first time Expo says it is gone.
+      await retirePushToken();
+      await clearLocalReminders();
 
       // `local` on purpose: revoking every session server side would need a
       // round trip that fails without signal, and a guardian who wants out of

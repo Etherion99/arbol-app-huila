@@ -72,6 +72,22 @@ module.exports = () => {
       ],
       'expo-secure-store',
       [
+        'expo-notifications',
+        {
+          // The reminder is a photograph of a tree, so the tint that colours
+          // the small icon and the notification light comes from the tokens
+          // like every other colour in the application.
+          color: colors.accent,
+          // No custom icon and no sound. Android falls back to the app icon,
+          // which is correct, and there is no asset to put in its place: the
+          // 2026 branding guide exists only as a photograph of a printed page,
+          // so the monochrome notification mark it would need does not exist
+          // yet. A reminder at eight in the morning has no business making a
+          // noise either.
+          enableBackgroundRemoteNotifications: false,
+        },
+      ],
+      [
         'expo-camera',
         {
           // The growth log is a photographic record, so the camera is the one

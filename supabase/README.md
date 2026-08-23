@@ -24,10 +24,15 @@ pnpm db:diff     # genera una migración a partir de cambios hechos a mano
 Verificaciones que dependen del stack local:
 
 ```bash
-pnpm test:species   # la clave normalizada de SQL coincide con la de packages/core
-pnpm test:rls       # las políticas RLS, ejercitadas con dos guardianes y un coordinador
-pnpm test:merge     # la fusión de especies y su reversión, de extremo a extremo
+pnpm test:species     # la clave normalizada de SQL coincide con la de packages/core
+pnpm test:rls         # las políticas RLS, ejercitadas con dos guardianes y un coordinador
+pnpm test:merge       # la fusión de especies y su reversión, de extremo a extremo
+pnpm test:reminders   # el motor de recordatorios completo, con las fechas forzadas
 ```
+
+`pnpm test:reminders` **hace su propio `db:reset`** antes de empezar. Fuerza fechas de
+vencimiento y desactiva dispositivos, así que partir siempre del seed es lo que lo hace
+reproducible. Tarda alrededor de un minuto.
 
 `pnpm test:rls` archiva un árbol como parte de la prueba. Ejecuta `pnpm db:reset`
 después si necesitas los datos de prueba intactos.
@@ -51,7 +56,7 @@ no rompe nada.
 
 - `migrations/` — migraciones SQL versionadas, una por bloque temático.
 - `seed.sql` — datos de prueba: La Plata con 10 veredas, 200 árboles y su bitácora.
-- `functions/` — Edge Functions en Deno. Llegan con el motor de notificaciones.
+- `functions/` — Edge Functions en Deno. Hoy solo `reminder-sweep`.
 
 ### Migraciones
 
@@ -65,6 +70,7 @@ no rompe nada.
 | `…_storage.sql` | El bucket de fotografías y sus políticas |
 | `…_access_functions.sql` | `trees_in_viewport()` y las vistas de estadística |
 | `…_tree_card.sql` | `tree_card()` y `short_display_name()`, lo que muestra la ficha flotante del mapa |
+| `…_reminder_engine.sql` | `notification_preferences`, `register_device()`, `due_reminders()`, `reminder_feed()` y el cron diario |
 
 ## Datos de prueba
 
@@ -83,6 +89,125 @@ El seed crea un coordinador y seis guardianes. **Todos entran con la contraseña
 
 Las fechas del seed son relativas a `now()`, así que un reset siempre produce árboles al
 día, por vencer y vencidos, sin importar cuándo se ejecute.
+
+## Motor de recordatorios
+
+Tres piezas y una sola fuente de verdad para las fechas.
+
+```
+pg_cron  0 13 * * *  ──▶  run_reminder_sweep()  ──pg_net──▶  reminder-sweep (Deno)
+                                                                    │
+                                    due_reminders() ◀───────────────┤
+                                    devices        ◀───────────────┤
+                                    Expo Push API  ◀───────────────┤
+                                    reminders      ◀───────────────┘
+```
+
+**La cadencia y la zona horaria viven solo en `next_reminder_after()`.** Es la función
+inmutable que genera `trees.next_reminder_at`, y todo lo demás lee esa columna en vez de
+volver a escribir «2 meses» o «America/Bogota». La única excepción declarada es la hora del
+cron: `pg_cron` programa en UTC y no acepta zona, así que las 08:00 de Colombia se escriben
+como `0 13 * * *`. El nombre de la zona **no** se repite ahí; `packages/core` guarda
+`REMINDER_TIME_ZONE` y `REMINDER_DISPATCH_HOUR`, y `pnpm test:reminders` comprueba que el
+cron programado coincide con esa hora en esa zona. Es el mismo arreglo que ya sostiene
+`normalize_species()` frente a `normalizeSpecies()`.
+
+**La idempotencia es el índice único de `reminders` sobre `(tree_id, cycle, kind)`**, no un
+mecanismo aparte. `due_reminders()` descarta lo que ya tiene fila, y la función inserta con
+`resolution=ignore-duplicates`. Dos ejecuciones seguidas del cron no duplican nada, y eso se
+demuestra en `pnpm test:reminders` en vez de argumentarse.
+
+**El orden es enviar y después registrar.** La tabla dice de sí misma que una fila existe
+solo porque se envió, y `sent_at` no admite nulos por eso. Un guardián al que no se pudo
+alcanzar —sin dispositivo, o con todos sus tokens muertos— no deja fila y vuelve a
+intentarse mañana. Reservar primero cerraría esa ventana y abriría otra peor, donde un
+envío fallido queda anotado como entregado y el guardián nunca se entera.
+
+### Escalonamiento
+
+| Día | `reminder_kind` | Qué pasa |
+|---|---|---|
+| 0 | `cycle` | El aviso bimestral. El mensaje lo fija el producto. |
+| +7 | `follow_up_7d` | Primera insistencia. |
+| +21 | `follow_up_21d` | Segunda insistencia **con copia al coordinador**. |
+| +30 | `overdue` | El árbol queda marcado como vencido. |
+
+Los desfases están en `public.reminder_offset_days()` y su espejo `REMINDER_OFFSET_DAYS` de
+`packages/core`, que a su vez se construye desde `REMINDER_FOLLOW_UP_DAYS` y
+`DAYS_UNTIL_OVERDUE`. `pnpm test:reminders` compara los cuatro peldaños.
+
+> **Sobre «día +30 marca el árbol como vencido».** La vista `tree_tracking` ya devuelve
+> `overdue` desde el día 0, que es cuando `next_reminder_at` queda atrás. El peldaño de +30
+> **no** vuelve a marcar nada: escribir un segundo estado de vencimiento sería una segunda
+> fuente de verdad sobre lo mismo, y el mapa, la lista y la leyenda dejarían de coincidir.
+> Lo que el peldaño añade es la fila `overdue` en `reminders` —el último aviso de la
+> escalada— y con ella el registro de que el ciclo se dio por perdido.
+
+La copia al coordinador **no** deja fila propia en `reminders`: la tabla está indexada por
+`(tree_id, cycle, kind)` y la fila del guardián ya ocupa ese hueco. No es una carencia, es lo
+que hace idempotente el peldaño entero — una vez existe esa fila, ni el aviso ni su copia
+vuelven a salir.
+
+### Preferencia por guardián
+
+`notification_preferences`, una fila por guardián, **no** dos columnas en `users`. El
+privilegio de lectura sobre `users` se concede columna por columna y también a `anon`
+—así es como el correo queda fuera de alcance—, de modo que meter ahí una preferencia
+obligaría a elegir entre entregársela a `anon` o partir ese grant en dos audiencias, y a
+partir de entonces cada columna nueva tendría que recordar de qué lado cae. Una tabla propia
+nace inalcanzable para `anon`, igual que `devices` y `reminders`, y su política es una
+comprobación de fila.
+
+Tampoco va en `devices`: apagar los recordatorios significa «dejen de escribirme», no
+«dejen de escribirme en la tableta». Si un dispositivo concreto puede recibir o no es
+`devices.is_active`, que es un hecho de entrega y no una decisión.
+
+**La fila ausente es una respuesta.** Significa los valores por omisión, y el barrido la lee
+así con un `coalesce`, de modo que nadie tuvo que rellenarse hacia atrás.
+
+### Un teléfono que cambia de manos
+
+`register_device()` es `security definer` por un solo caso: el token pertenece a la
+instalación, no a la cuenta. Cuando un segundo guardián entra en el mismo teléfono, Expo
+entrega la misma cadena, la fila ya existe a nombre de otro, y `devices_own_all` no deja ni
+actualizarla ni insertar por encima. El conflicto **mueve** la fila en vez de rechazarla, así
+que el dueño anterior deja de recibir en ese aparato en el mismo instante — y sigue
+recibiendo en cualquier otro que hubiera registrado, porque esos son filas suyas.
+
+### Configuración del despacho
+
+La URL y la clave salen de **Vault**, no del archivo de migración: una migración versionada
+no puede llevar una clave de servicio, y el stack local y el proyecto en la nube no comparten
+nombre de host. Vault y no un ajuste de base de datos porque `alter database … set` sobre un
+parámetro propio exige superusuario, y `postgres` no lo es en Supabase — ni local ni en la
+nube.
+
+```sql
+select vault.create_secret(
+  'https://<ref>.supabase.co/functions/v1/reminder-sweep',
+  'reminder_sweep_url',
+  'Endpoint of the reminder sweep Edge Function');
+
+select vault.create_secret(
+  '<service role key>',
+  'reminder_sweep_key',
+  'Service role key the reminder sweep carries');
+```
+
+Sin esos dos secretos el cron no falla ruidosamente: `run_reminder_sweep()` emite un
+`warning` y devuelve `null`, porque una entrada de cron en rojo cada mañana no diría nada
+que ese aviso no diga. En local los crea `pnpm test:reminders` leyendo `supabase status`,
+que es también la razón por la que la clave no está en ningún archivo del repositorio.
+
+### Los envíos de prueba nunca salen de la máquina
+
+`[edge_runtime.secrets]` de `config.toml` apunta `EXPO_PUSH_API_URL` a
+`host.docker.internal:55328`. Ese archivo configura **solo el stack local** —el proyecto en
+la nube toma sus secretos del panel—, así que apuntarlo a un stub no es un atajo de pruebas:
+es el ajuste correcto para un equipo que no debe hacer sonar el teléfono de nadie.
+`pnpm test:reminders` levanta ese stub y responde con los tickets que Expo habría devuelto,
+que es la única forma de comprobar la agrupación y el retiro de tokens muertos sin tener un
+teléfono delante.
 
 ## Convención de nombres en Storage
 

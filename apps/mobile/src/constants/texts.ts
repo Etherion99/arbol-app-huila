@@ -239,20 +239,63 @@ export const texts = {
   /** The notification settings, reached from the row of the same name in the profile. */
   notificationSettings: {
     title: 'Notificaciones',
-    /**
-     * Not in the canvas, which draws the screen as if it worked. Nothing is
-     * sent and nothing is stored yet, and a switch that silently forgets what
-     * the guardian chose has to say so before it is touched.
-     */
-    inactiveNotice:
-      'El envío de notificaciones todavía no está activo. Por ahora estos interruptores no cambian nada y lo que elijas no se guarda al salir.',
-    comingSoon: 'Disponible próximamente',
+
     remindersLabel: 'Recordatorios de bitácora',
     remindersDescription: 'Un aviso cuando a un árbol tuyo le toque su foto bimestral',
     coordinatorLabel: 'Avisos del coordinador',
     coordinatorDescription: 'Archivados, reasignaciones y mensajes del PRAE',
     pendingFootnote:
       'Aunque desactives los avisos, tus árboles seguirán apareciendo como pendientes en la app.',
+
+    /** Android names the channel in its own settings, so it is copy too. */
+    channelName: 'Recordatorios de bitácora',
+    channelDescription: 'Avisos cuando a uno de tus árboles le toca su foto bimestral',
+
+    /**
+     * What the screen says about this phone, which is a different question from
+     * what the guardian wants. The preference travels with the account; being
+     * reachable is a property of the installation, and a guardian with the
+     * switch on and the system permission denied has to be told which of the
+     * two is stopping the notification.
+     */
+    deviceReadyTitle: 'Este teléfono recibirá los avisos',
+    deviceReadyBody: 'Ya está registrado. Los recordatorios llegan aquí.',
+    deviceAskTitle: 'Falta permitir las notificaciones',
+    deviceAskBody:
+      'Tu teléfono todavía no tiene permiso para mostrarlas. Puedes darlo ahora sin salir de esta pantalla.',
+    deviceAskAction: 'Permitir notificaciones',
+    deviceDeniedTitle: 'Las notificaciones están bloqueadas',
+    deviceDeniedBody:
+      'Bloqueaste las notificaciones para ÁrbolApp. Puedes volver a permitirlas desde los ajustes del teléfono. Mientras tanto, la app te avisa igual desde el propio teléfono cuando llegue la fecha.',
+    deviceUnavailableTitle: 'Esta versión no puede recibir avisos',
+    deviceUnavailableBody:
+      'Esta compilación todavía no tiene configurado el envío de notificaciones. La app te avisa desde el propio teléfono cuando llegue la fecha de cada árbol.',
+
+    savingError: 'No pudimos guardar tu preferencia. Revisa tu conexión e inténtalo de nuevo.',
+    loadError: 'No pudimos cargar tus preferencias.',
+  },
+
+  /**
+   * The notifications themselves: what the phone writes when it is the one
+   * sending, and what the app says when a tap could not be honoured.
+   *
+   * The ones the server sends live in `supabase/functions/reminder-sweep`,
+   * because that is where they are written and nothing in the app can read
+   * them. The two files keep the same voice deliberately: a guardian must not
+   * be able to tell whether the reminder came from the server or from their own
+   * phone.
+   */
+  notifications: {
+    localTitle: (species: string) => `Tu ${species} espera su foto`,
+    localBody:
+      '¡Es hora de ver cuánto ha crecido tu árbol! Sube una nueva fotografía para actualizar la bitácora de crecimiento de tu frutal.',
+
+    treeGoneTitle: 'Ese árbol ya no está en tu lista',
+    treeGoneBody:
+      'Puede que la coordinación lo haya archivado o reasignado después de enviarte el aviso. Escribe a la coordinación del PRAE si crees que fue un error.',
+    routingFailedTitle: 'No pudimos abrir la bitácora',
+    routingFailedBody:
+      'Revisa tu conexión e inténtalo desde «Mis árboles». La fotografía que ibas a subir no se pierde.',
   },
 
   map: {
@@ -439,13 +482,16 @@ export const texts = {
     successNotifyAccept: 'Activar recordatorios',
     successNotifyDecline: 'Ahora no',
     /**
-     * Not in the canvas, which draws the request as if pressing it armed
-     * something. Nothing is armed: there is no permission to ask for and no
-     * sender behind it, so the answer says so instead of pretending. The second
-     * sentence is the same promise the notification settings already make.
+     * The three answers the system dialog can produce, said in the guardian's
+     * terms rather than the platform's. Each names what will happen next, so
+     * nobody leaves this screen unsure whether anything was armed.
      */
-    successNotifyPending:
-      'El envío de notificaciones todavía no está activo, así que este aviso no queda programado. Tu árbol seguirá apareciendo como pendiente en la app cuando le toque la foto.',
+    successNotifyGranted:
+      'Listo. Te avisaremos cuando le toque la foto a este árbol y a los que siembres después.',
+    successNotifyBlocked:
+      'Tu teléfono tiene bloqueadas las notificaciones de ÁrbolApp. Puedes permitirlas desde los ajustes del teléfono; mientras tanto, la app te avisa desde el propio teléfono cuando llegue la fecha.',
+    successNotifyUnavailable:
+      'Esta versión todavía no puede recibir avisos del servidor. La app te avisará desde el propio teléfono cuando llegue la fecha.',
     successNotifyDeclined:
       'Sin problema. Tu árbol aparecerá como pendiente en la app cuando le toque la foto.',
     successNotifySettings: 'Ajustes de notificaciones',
@@ -602,15 +648,43 @@ export const texts = {
     title: 'Actividad',
 
     /**
-     * Push delivery is not built yet: nothing in the app registers a device or
-     * sends anything. The box says so rather than offering a switch that would
-     * quietly do nothing, and points at the profile, which is where the
-     * notification settings live.
+     * Shown only when this installation really cannot be reached -- the
+     * permission was never asked for, or it was refused. It used to be
+     * permanent, because nothing sent anything; now it reads the registration,
+     * so a guardian who is receiving reminders is not told they are off.
      */
     notificationsOffTitle: 'Notificaciones desactivadas',
     notificationsOffBody:
       'Las notificaciones están desactivadas. Actívalas para no perder el ciclo de tus árboles.',
     notificationsOffAction: 'Activar',
+
+    remindersSection: 'Recordatorios enviados',
+    emptyReminders: 'Todavía no te hemos enviado ningún recordatorio.',
+
+    /**
+     * Which rung of the escalation a row was.
+     *
+     * Named as company rather than as a count of failures: the guardian is
+     * reading a list of times the app wrote to them, not a record of times they
+     * did not answer.
+     */
+    reminderKind: {
+      cycle: 'Aviso del ciclo',
+      follow_up_7d: 'Segundo aviso',
+      follow_up_21d: 'Tercer aviso',
+      overdue: 'Aviso de ciclo vencido',
+    },
+
+    /** The sentence a reminder row makes: which tree, which cycle. */
+    reminderRow: (species: string, cycle: number) => `${species} · ciclo ${cycle}`,
+    /**
+     * What became of it. "Resuelto" wins over "abierto" when both are true:
+     * the photograph arriving is the whole point, and it is what the guardian
+     * wants to see confirmed.
+     */
+    reminderResolved: 'Resuelto · ya subiste la foto',
+    reminderOpened: 'Lo abriste, falta la foto',
+    reminderUnopened: 'Enviado',
 
     pendingSection: 'Pendientes',
     previousSection: 'Anteriores',

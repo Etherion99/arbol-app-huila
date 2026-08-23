@@ -412,6 +412,7 @@ Lo que decide si la app sobrevive al uso real en veredas con mala señal.
 |---|---|---|
 | API key de Google Maps | Fase 3 escrita sin ella; hace falta para la validación visual | Pendiente de entrega |
 | Android SDK y un dispositivo o emulador | Validación visual de las Fases 3 a 5 | No instalados en el equipo de desarrollo |
+| Proyecto de EAS | La Fase 5 la necesita para emitir el token de Expo Push; sin ella solo funciona el respaldo local | Pendiente de crear |
 | Cuenta Apple Developer | Fase 9 | En trámite |
 | Titularidad de cuentas | Fase 9 | Pendiente de definir |
 | Textos legales | Fase 9 | Pendiente de redactar |

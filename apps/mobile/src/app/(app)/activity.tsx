@@ -13,13 +13,16 @@ import { MAX_CONTENT_WIDTH, colors, radii, spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
 import {
   PendingActivityRow,
+  ReminderActivityRow,
   ResolvedActivityRow,
 } from '@/features/activity/components/activity-row';
 import {
   useActivityFeed,
   type PendingActivity,
+  type ReminderActivity,
   type ResolvedActivity,
 } from '@/features/activity/use-activity-feed';
+import { usePushRegistration } from '@/features/notifications/use-push-registration';
 import { useIsOnline } from '@/hooks/use-is-online';
 
 /**
@@ -32,6 +35,7 @@ import { useIsOnline } from '@/hooks/use-is-online';
 type ActivityListItem =
   | { kind: 'pending'; pending: PendingActivity }
   | { kind: 'resolved'; resolved: ResolvedActivity }
+  | { kind: 'reminder'; reminder: ReminderActivity }
   | { kind: 'empty'; message: string };
 
 /**
@@ -43,20 +47,31 @@ type ActivityListItem =
  * which is what makes a missed cycle visible as a pattern rather than as one
  * card among seven.
  *
- * ## The notification box is telling the truth
+ * ## The notification box now reads the phone
  *
- * Nothing in the app registers a push token or sends a notification yet -- the
- * delivery engine is a later piece of work, and `expo-notifications` is not
- * even a dependency. So the box is not reporting a permission it read from the
- * system; notifications really are off, for everybody, and it says so. Its
- * action goes to the notification settings screen, where the switches live,
- * rather than flipping a switch that would silently do nothing.
+ * It used to be permanent, because nothing registered a token or sent
+ * anything. It reports the real registration of this installation: it appears
+ * when the permission was never asked for or was refused, and it is gone for a
+ * guardian who is actually receiving reminders. Its action still goes to the
+ * settings screen rather than raising the system dialog from here, because that
+ * dialog can only be shown once and the screen it belongs on is the one that
+ * explains what it is for.
+ *
+ * ## Three sections rather than the canvas's two
+ *
+ * The canvas draws PENDIENTES and ANTERIORES, and it was drawn when no
+ * reminder had ever been sent. RECORDATORIOS is the third, and it holds the
+ * one thing neither of the others can say: what the app actually sent, and
+ * whether it landed. It is registered as a deliberate divergence in
+ * FIDELIDAD-UI rather than folded into ANTERIORES, where a reminder would read
+ * as an accomplishment beside the photographs that are.
  */
 export default function ActivityScreen() {
   const router = useRouter();
   const { session } = useSession();
   const isOnline = useIsOnline();
   const feed = useActivityFeed();
+  const push = usePushRegistration();
 
   // Both sections are derived straight from the feed during render. Mirroring
   // them into state would repaint the whole list on every refetch.
@@ -81,8 +96,24 @@ export default function ActivityScreen() {
               )
             : [{ kind: 'empty' as const, message: texts.activity.emptyPrevious }],
       },
+      {
+        title: texts.activity.remindersSection,
+        data: feed.isRemindersPending
+          ? [{ kind: 'empty' as const, message: texts.common.loading }]
+          : feed.sentReminders.length > 0
+            ? feed.sentReminders.map(
+                (reminder): ActivityListItem => ({ kind: 'reminder' as const, reminder }),
+              )
+            : [{ kind: 'empty' as const, message: texts.activity.emptyReminders }],
+      },
     ],
-    [feed.pending, feed.resolved, feed.isHistoryPending],
+    [
+      feed.pending,
+      feed.resolved,
+      feed.sentReminders,
+      feed.isHistoryPending,
+      feed.isRemindersPending,
+    ],
   );
 
   if (session === null) {
@@ -107,13 +138,15 @@ export default function ActivityScreen() {
         <AppText variant="display">{texts.activity.title}</AppText>
       </View>
 
-      <Notice
-        tone="warning"
-        title={texts.activity.notificationsOffTitle}
-        message={texts.activity.notificationsOffBody}
-        onRetry={() => router.push('/settings/notifications')}
-        retryLabel={texts.activity.notificationsOffAction}
-      />
+      {push.state !== null && push.state !== 'registered' ? (
+        <Notice
+          tone="warning"
+          title={texts.activity.notificationsOffTitle}
+          message={texts.activity.notificationsOffBody}
+          onRetry={() => router.push('/settings/notifications')}
+          retryLabel={texts.activity.notificationsOffAction}
+        />
+      ) : null}
 
       {feed.error !== null ? (
         <Notice
@@ -185,6 +218,20 @@ export default function ActivityScreen() {
               return <ResolvedActivityRow item={item.resolved} />;
             }
 
+            if (item.kind === 'reminder') {
+              return (
+                <ReminderActivityRow
+                  item={item.reminder}
+                  onOpen={() =>
+                    router.push({
+                      pathname: '/log/[treeId]',
+                      params: { treeId: item.reminder.treeId },
+                    })
+                  }
+                />
+              );
+            }
+
             return (
               <AppText variant="bodyMuted" style={styles.sectionEmpty}>
                 {item.message}
@@ -203,6 +250,9 @@ function keyOf(item: ActivityListItem): string {
   }
   if (item.kind === 'resolved') {
     return `resolved-${item.resolved.entryId}`;
+  }
+  if (item.kind === 'reminder') {
+    return `reminder-${item.reminder.reminderId}`;
   }
   return `empty-${item.message}`;
 }

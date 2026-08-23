@@ -23,6 +23,7 @@ import { AuthLinkProvider } from '@/features/auth/auth-link-provider';
 import { SessionExpiredDialog } from '@/features/auth/components/session-expired-dialog';
 import { SessionProvider, useSession } from '@/features/auth/session-provider';
 import { loadOnboardingState, useOnboardingState } from '@/features/onboarding/onboarding-store';
+import { configureNotificationHandler } from '@/features/notifications/push-tokens';
 import { loadPlantingDraft } from '@/features/planting/planting-draft';
 import { isEnvComplete, missingEnvVars } from '@/lib/env';
 import { queryClient } from '@/lib/query-client';
@@ -32,6 +33,11 @@ import { queryClient } from '@/lib/query-client';
 void SplashScreen.preventAutoHideAsync();
 
 void loadOnboardingState();
+
+// Set at module scope, not in an effect: a notification can arrive before the
+// first component mounts -- the app may have been started by one -- and a
+// handler installed afterwards would miss it.
+configureNotificationHandler();
 
 // Read once, at start up, so the wizard knows on its first frame whether there
 // is a half filled form to offer back rather than flickering into the question.
