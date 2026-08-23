@@ -10,10 +10,15 @@ import { Icon } from '@/components/ui/icon';
 import { Notice } from '@/components/ui/notice';
 import { texts } from '@/constants/texts';
 import { MAX_CONTENT_WIDTH, colors, effects, spacing } from '@/constants/theme';
+import { usePushRegistration } from '@/features/notifications/use-push-registration';
 import { useNextPhotoDate, type NextPhotoDate } from '@/features/planting/use-next-photo-date';
 
-/** Whether the guardian has answered the reminder question, and how. */
-type NotifyAnswer = 'accepted' | 'declined';
+/**
+ * What became of the question. `declined` is the guardian's own answer; the
+ * other three are the system's, and they are kept apart because only one of
+ * them means a reminder will arrive.
+ */
+type NotifyAnswer = 'granted' | 'blocked' | 'unavailable' | 'declined';
 
 export type PlantingSuccessProps = {
   registration: TreeRegistration;
@@ -39,20 +44,22 @@ export type PlantingSuccessProps = {
  * screen offered survive, and «Sembrar otro» — which the copy had but nothing
  * ever rendered — joins them.
  *
- * ## The request cannot grant anything, and says so
+ * ## This is where the permission is asked for
  *
- * `expo-notifications` is not a dependency of this app. There is no permission
- * dialog to raise, no push token to register, and nothing sending on the other
- * end: the schema has `devices` and `reminders` and no code writes to either.
- * Adding the dependency to make the button feel real would build a permission
- * prompt on top of a sender that does not exist, which is a worse lie than the
- * button being honest.
+ * Here, and on the notification settings screen, and nowhere else. Never during
+ * onboarding. The platform shows the dialog once -- a refusal stands until
+ * somebody walks into the system settings, which nobody does -- so the single
+ * question has to be spent on somebody who already knows what they are being
+ * offered. A guardian looking at the tree they just planted, and at the date
+ * its next photograph is due, is exactly that person. A guardian on screen two
+ * of an intro is not.
  *
- * So the question is asked as the canvas asks it, and the answer opens the
- * outcome instead of a system dialog: accepting says plainly that sending is
- * not live yet and offers the notification settings, declining acknowledges it.
- * Either way the tree still shows as pending in the app when its photograph
- * falls due, which is the part that does work today.
+ * The answer is the system's, so the outcome is drawn from what it actually
+ * said rather than from the button that was pressed: granted, blocked, or a
+ * build with no push project behind it. The last one is real -- this repository
+ * has no EAS project yet -- and it is named instead of being shown as a
+ * success, because the local reminder is what covers that guardian and they
+ * should know which of the two is watching their tree.
  *
  * The exits appear with the answer rather than beside the question, so the
  * panel never stacks four actions at once and the canvas's own two are what a
@@ -66,7 +73,19 @@ export function PlantingSuccess({
 }: PlantingSuccessProps) {
   const router = useRouter();
   const nextPhoto = useNextPhotoDate(registration.treeId);
+  const push = usePushRegistration();
   const [answer, setAnswer] = useState<NotifyAnswer | null>(null);
+
+  const ask = async () => {
+    const result = await push.enable.mutateAsync();
+    setAnswer(
+      result.state === 'registered'
+        ? 'granted'
+        : result.reason === 'permission-denied'
+          ? 'blocked'
+          : 'unavailable',
+    );
+  };
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
@@ -117,7 +136,8 @@ export function PlantingSuccess({
 
               <Button
                 label={texts.planting.successNotifyAccept}
-                onPress={() => setAnswer('accepted')}
+                isLoading={push.enable.isPending}
+                onPress={() => void ask()}
               />
               {/* Ghost rather than the canvas's muted grey. `textMuted`
                   #757575 reads 4.61:1 on this white panel but only 4.43:1 on
@@ -132,16 +152,24 @@ export function PlantingSuccess({
             </>
           ) : (
             <>
-              {answer === 'accepted' ? (
+              {answer === 'granted' ? (
+                <Notice tone="success" message={texts.planting.successNotifyGranted} />
+              ) : answer === 'declined' ? (
+                <AppText variant="caption">{texts.planting.successNotifyDeclined}</AppText>
+              ) : (
+                // Blocked, or a build the server cannot push to. Both offer the
+                // settings screen, which is the only place either can be
+                // followed up, and neither is dressed up as having worked.
                 <Notice
-                  tone="info"
-                  title={texts.notificationSettings.comingSoon}
-                  message={texts.planting.successNotifyPending}
+                  tone="warning"
+                  message={
+                    answer === 'blocked'
+                      ? texts.planting.successNotifyBlocked
+                      : texts.planting.successNotifyUnavailable
+                  }
                   onRetry={() => router.push('/settings/notifications')}
                   retryLabel={texts.planting.successNotifySettings}
                 />
-              ) : (
-                <AppText variant="caption">{texts.planting.successNotifyDeclined}</AppText>
               )}
 
               <View style={styles.exits}>
