@@ -1,5 +1,28 @@
 # Plan de trabajo — fidelidad de la interfaz
 
+> ## 📌 DOCUMENTO DE REFERENCIA — vigente solo en parte
+>
+> **Se conserva porque su protocolo sigue en vigor, no porque su plan lo esté.**
+>
+> - ⛔ **Las fases U0–U6 son historia.** Planificaban contra `Pantallas v1.dc.html`, que dejó
+>   de ser fuente de verdad el 21 de agosto de 2026. Las sustituyó por completo el plan de
+>   fases R1–R7 de [plan-rediseño.md](plan-rediseño.md), completado el 22 de agosto de 2026.
+>   **Ninguna cifra de «Punto de partida» ni de «Resumen» describe el código de hoy**: la
+>   medición vigente es [FIDELIDAD-UI.md](FIDELIDAD-UI.md).
+> - ✅ **El protocolo de solicitudes de ajuste al diseño en tres niveles sigue vigente**, y
+>   este documento es su sede normativa. Ver «Cómo se pide un ajuste al diseño»: nivel 1 se
+>   aplica y se documenta, nivel 2 se redacta como petición, nivel 3 se pregunta al usuario.
+> - ✅ **El registro de peticiones PD-01 … PD-09 sigue vigente** y se sigue citando desde
+>   `FIDELIDAD-UI.md` y desde los comentarios del código. Las peticiones nuevas se numeran
+>   aquí, a continuación de PD-09.
+> - ⚠️ **La sección «Contraste sobre el tema claro» de este documento quedó anulada.** Se
+>   escribió antes de medir. Las cifras vigentes salen de `pnpm test:contrast` y están
+>   transcritas en `FIDELIDAD-UI.md`.
+>
+> Se decidió dejar el protocolo aquí en vez de trasladarlo a `plan-rediseño.md` porque el
+> registro PD-XX vive en este archivo, y separar un protocolo de sus precedentes lo vacía.
+
+
 > Versión 1 · 21 de agosto de 2026 · rama `ui-fidelidad`, desde `develop` @ `83dda86`
 > Medición de partida: [FIDELIDAD-UI.md](FIDELIDAD-UI.md)
 > Plan de producto: [plan.md](plan.md) — este documento **no lo sustituye**. Aquel construye

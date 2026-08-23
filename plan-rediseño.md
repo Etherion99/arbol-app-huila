@@ -1,5 +1,31 @@
 # Plan de rediseño — ÁrbolApp Huila v2
 
+> ## ✅ COMPLETADO — 22 de agosto de 2026
+>
+> Las siete fases R1–R7 aterrizaron en `develop`. **Las 44 pantallas del lienzo v2 tienen
+> código** y la capa de tokens coincide al 100 % con el sistema de diseño.
+>
+> La medición de cierre está en [FIDELIDAD-UI.md](FIDELIDAD-UI.md): fidelidad global
+> **≈ 82 / 100**, con la tabla de contraste emitida por `pnpm test:contrast`.
+>
+> **Lo que quedó fuera, y por qué:**
+>
+> | Qué | Por qué | Quién lo desbloquea |
+> |---|---|---|
+> | El logotipo de A1 | La guía de branding 2026 existe solo como fotografía de una página impresa. No hay vector ni marca exportada. | Diseño |
+> | Las fotografías de campo de A2 | Contenido del PRAE. El marco las espera. | El PRAE |
+> | La sección de pendientes de F2 | Necesita la cola de sincronización offline, que es trabajo de datos y no de pantalla. | [plan.md](plan.md) |
+> | Persistencia de B4b | `expo-notifications` no es dependencia del proyecto. | [plan.md](plan.md) |
+> | Los tres medallones de A6, A9b y A10b | El kit portado no trae sobre ni enlace roto. PD-08. | Diseño |
+> | Las pestañas de A7 | Repartir el articulado es una decisión de contenido legal sobre un borrador. | Producto |
+> | La banda de encabezado de E1 y la firma de E3 | Maquetación acotada que la ola 6.2 no alcanzó. | Trabajo pendiente |
+> | **Ver la aplicación móvil renderizada** | Ni Android SDK, ni claves de Maps, ni Mac. Ver la ola 7.2. | El usuario |
+>
+> Este documento se conserva como registro de cómo se organizó el rediseño. **Ya no dirige
+> trabajo.** El protocolo de peticiones al diseño y el registro PD-XX siguen vigentes en
+> [PLAN-FIDELIDAD-UI.md](PLAN-FIDELIDAD-UI.md).
+
+
 > 21 de agosto de 2026 · rama base `develop`, que avanza mientras se escribe esto
 > Lienzo vigente: **`Pantallas v2.dc.html`** — proyecto `b4f2c6e6-b7c0-4ed3-ad11-bc0528be9e56`
 > Lienzo anterior: `Pantallas v1.dc.html`, conservado como histórico. **Ya no es fuente de verdad.**
