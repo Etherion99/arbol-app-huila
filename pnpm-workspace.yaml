@@ -13,4 +13,8 @@ nodeLinker: hoisted
 savePrefix: ''
 # unrs-resolver compila el resolvedor nativo que usa ESLint; sin su build, el lint falla.
 allowBuilds:
+  # Solo sube mapas de origen durante una compilación de EAS. En este equipo no
+  # se compila nativo, y su script de instalación descarga un binario por
+  # plataforma, así que no se ejecuta.
+  '@sentry/cli': false
   unrs-resolver: true

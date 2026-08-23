@@ -33,3 +33,22 @@ export const env = {
   supabaseUrl: supabaseUrl ?? UNCONFIGURED_URL,
   supabaseAnonKey: supabaseAnonKey ?? 'unconfigured',
 } as const;
+
+/**
+ * Where crashes are reported, when there is somewhere to report them.
+ *
+ * Deliberately not in `missingEnvVars`: the app runs perfectly well without it
+ * and a guardian must never be shown a configuration screen because nobody has
+ * created a Sentry project yet. Absent means reporting is off, and
+ * `lib/reporting.ts` says so rather than pretending to be watching.
+ */
+const sentryDsnValue = process.env.EXPO_PUBLIC_SENTRY_DSN;
+
+export const sentryDsn: string | null =
+  sentryDsnValue !== undefined &&
+  sentryDsnValue.trim() !== '' &&
+  // The placeholder in `.env.example` is a word, not a DSN. Treating it as one
+  // would start a reporter that posts every crash into a 404.
+  sentryDsnValue.trim() !== 'PENDIENTE'
+    ? sentryDsnValue
+    : null;

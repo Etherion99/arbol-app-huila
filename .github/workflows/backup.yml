@@ -1,0 +1,122 @@
+# Respaldo diario de la base de datos y de las fotografías.
+#
+# Corre en GitHub y no dentro de Supabase, y esa es la única decisión de este
+# archivo que importa: un respaldo que vive en la misma cuenta que respalda no
+# es un respaldo. Si el proyecto se borra por error, si la tarjeta caduca, si
+# alguien pierde el acceso, lo que queda es lo que está en otro sitio.
+#
+# ## Estado
+#
+# **Este flujo no se ha ejecutado nunca.** El proyecto en la nube todavía no
+# existe, así que no hay `SUPABASE_DB_URL` que apuntar ni bucket que copiar. El
+# archivo está escrito ahora porque el día que se cree el proyecto el respaldo
+# tiene que empezar el mismo día, no tres meses después; hasta entonces
+# `if: vars.BACKUP_ENABLED == 'true'` lo mantiene apagado y visible en lugar de
+# ausente.
+#
+# ## Qué hace falta para encenderlo
+#
+#   1. Crear el proyecto de Supabase y guardar `SUPABASE_DB_URL` y
+#      `SUPABASE_PROJECT_REF` como secretos del repositorio.
+#   2. Crear un bucket fuera de Supabase —S3, Backblaze B2, cualquiera con API
+#      compatible— y guardar sus tres credenciales.
+#   3. Poner la variable de repositorio `BACKUP_ENABLED` en `true`.
+#
+# ## Qué NO hace
+#
+# No borra nada, ni siquiera respaldos viejos: la retención se configura en el
+# bucket, que es donde una regla de ciclo de vida no puede equivocarse de
+# objeto. Un flujo que borra es un flujo que un día borra lo que no debía.
+
+name: Respaldo diario
+
+on:
+  schedule:
+    # 03:00 en Colombia, que son las 08:00 UTC. La hora se escribe en UTC
+    # porque cron no acepta zona, exactamente como el barrido de recordatorios
+    # de `pg_cron`, y por el mismo motivo queda anotada aquí.
+    - cron: '0 8 * * *'
+  # Para poder probarlo el día que se encienda sin esperar a la madrugada.
+  workflow_dispatch:
+
+# Dos respaldos simultáneos escribirían el mismo objeto del día. El segundo
+# espera al primero en vez de pisarlo.
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  respaldo:
+    name: Base de datos y fotografías
+    runs-on: ubuntu-latest
+    if: vars.BACKUP_ENABLED == 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Fecha del respaldo
+        id: stamp
+        # En hora de Colombia, para que el respaldo de la noche del 12 se llame
+        # como el 12 y no como el 13, que es lo que diría UTC.
+        run: echo "day=$(TZ=America/Bogota date +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Volcado de la base de datos
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir -p backup
+          # `--data-only` no: el esquema viaja también, porque restaurar datos
+          # sobre un esquema que nadie guardó exige tener el repositorio a mano
+          # y en el orden correcto de migraciones.
+          pnpm exec supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/database.sql
+          pnpm exec supabase db dump --db-url "$SUPABASE_DB_URL" --data-only -f backup/data.sql
+          gzip backup/database.sql backup/data.sql
+
+      - name: Copia de las fotografías
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+          SUPABASE_S3_URL: ${{ secrets.SUPABASE_S3_URL }}
+          SUPABASE_S3_ACCESS_KEY_ID: ${{ secrets.SUPABASE_S3_ACCESS_KEY_ID }}
+          SUPABASE_S3_SECRET_ACCESS_KEY: ${{ secrets.SUPABASE_S3_SECRET_ACCESS_KEY }}
+          BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          DAY: ${{ steps.stamp.outputs.day }}
+        run: |
+          # `sync` y no `cp`: una fotografía subida en 2026 no cambia nunca, así
+          # que copiar el gigabyte entero cada noche gastaría transferencia para
+          # reescribir lo mismo. Lo que sí se copia siempre es el volcado, que
+          # sí cambia.
+          aws s3 sync \
+            --endpoint-url "$SUPABASE_S3_URL" \
+            --source-region local \
+            "s3://growth-log-photos" "s3://$BUCKET/photos" \
+            --only-show-errors
+          aws s3 cp backup/ "s3://$BUCKET/database/$DAY/" --recursive --only-show-errors
+
+      - name: Anotar la ejecución
+        # Lo que hace visible un respaldo que dejó de correr. `backup_health()`
+        # lo lee y el panel lo muestra: sin esta fila, un flujo roto se
+        # descubre el día que hace falta restaurar.
+        if: always()
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          OUTCOME: ${{ job.status }}
+        run: |
+          DB_BYTES=$(du -cb backup 2>/dev/null | tail -1 | cut -f1 || echo 0)
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "
+            insert into public.backup_runs (started_at, finished_at, database_bytes, error)
+            values (
+              now() - interval '5 minutes',
+              now(),
+              ${DB_BYTES},
+              $( [ "$OUTCOME" = "success" ] && echo "null" || echo "'${OUTCOME}'" )
+            );"
