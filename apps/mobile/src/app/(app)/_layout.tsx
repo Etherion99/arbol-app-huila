@@ -5,6 +5,7 @@ import { Icon, type IconName } from '@/components/ui/icon';
 import { texts } from '@/constants/texts';
 import { colors } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
+import { NotificationSync } from '@/features/notifications/components/notification-sync';
 
 function tabIcon(name: IconName) {
   return function TabIcon({ color, size }: { color: ColorValue; size: number }) {
@@ -33,56 +34,65 @@ export default function AppLayout() {
   const hasSession = session !== null;
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: hasSession
-          ? {
-              backgroundColor: colors.surfaceCard,
-              borderTopColor: colors.borderSubtle,
-            }
-          : { display: 'none' },
-      }}
-    >
-      <Tabs.Screen
-        name="map"
-        options={{
-          title: texts.map.tabLabel,
-          tabBarAccessibilityLabel: texts.map.tabLabel,
-          tabBarIcon: tabIcon('map'),
+    <>
+      {/* Beside the tabs rather than inside a screen: a tapped notification has
+          to be honoured wherever the guardian happens to be, and the local
+          schedule is rebuilt on every opening regardless of which tab opened.
+          Only with a session -- without one there are no trees to remind about
+          and no account to register a token against. */}
+      {hasSession ? <NotificationSync /> : null}
+
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: colors.accent,
+          tabBarInactiveTintColor: colors.textSecondary,
+          tabBarStyle: hasSession
+            ? {
+                backgroundColor: colors.surfaceCard,
+                borderTopColor: colors.borderSubtle,
+              }
+            : { display: 'none' },
         }}
-      />
-
-      <Tabs.Protected guard={hasSession}>
+      >
         <Tabs.Screen
-          name="trees"
+          name="map"
           options={{
-            title: texts.myTrees.tabLabel,
-            tabBarAccessibilityLabel: texts.myTrees.title,
-            tabBarIcon: tabIcon('sprout'),
+            title: texts.map.tabLabel,
+            tabBarAccessibilityLabel: texts.map.tabLabel,
+            tabBarIcon: tabIcon('map'),
           }}
         />
 
-        <Tabs.Screen
-          name="activity"
-          options={{
-            title: texts.activity.tabLabel,
-            tabBarAccessibilityLabel: texts.activity.title,
-            tabBarIcon: tabIcon('clock'),
-          }}
-        />
+        <Tabs.Protected guard={hasSession}>
+          <Tabs.Screen
+            name="trees"
+            options={{
+              title: texts.myTrees.tabLabel,
+              tabBarAccessibilityLabel: texts.myTrees.title,
+              tabBarIcon: tabIcon('sprout'),
+            }}
+          />
 
-        <Tabs.Screen
-          name="profile"
-          options={{
-            title: texts.map.profileTabLabel,
-            tabBarAccessibilityLabel: texts.profile.title,
-            tabBarIcon: tabIcon('user'),
-          }}
-        />
-      </Tabs.Protected>
-    </Tabs>
+          <Tabs.Screen
+            name="activity"
+            options={{
+              title: texts.activity.tabLabel,
+              tabBarAccessibilityLabel: texts.activity.title,
+              tabBarIcon: tabIcon('clock'),
+            }}
+          />
+
+          <Tabs.Screen
+            name="profile"
+            options={{
+              title: texts.map.profileTabLabel,
+              tabBarAccessibilityLabel: texts.profile.title,
+              tabBarIcon: tabIcon('user'),
+            }}
+          />
+        </Tabs.Protected>
+      </Tabs>
+    </>
   );
 }
