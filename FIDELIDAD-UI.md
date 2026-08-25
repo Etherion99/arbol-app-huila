@@ -84,7 +84,7 @@ Mide fidelidad **visual y de composición**, no si la funcionalidad es correcta.
 
 | ID | Pantalla | Código | Score | Qué falta para la fidelidad completa |
 |---|---|---|---|---|
-| **A1** | Splash | 🟡 `app.config.js` · `scripts/generate-splash-icon.mjs` | **70** | El fondo y el esquema claro salen de los tokens, y **`splash-icon.png` ya no es el logo de Expo**: `pnpm splash` compone el logotipo «ÁrbolApp Huila» rasterizando la misma Montserrat 800 que registra `expo-font`, en `accent` y `accent2`, y `imageWidth` sube de 76 a 240 porque una palabra no se lee al tamaño de un ícono. Faltan las **dos líneas de debajo** —«Sembrando vida en La Plata» y la micro-etiqueta de filiación—: hornearlas en el bitmap las escalaría con el logotipo, así que piden una pantalla de carga real, que es trabajo de la Fase 9 junto al ícono de la app. |
+| **A1** | Splash | 🟡 `app.config.js` · `scripts/generate-brand-assets.mjs` | **pendiente de volver a medir** | El fondo y el esquema claro salen de los tokens, y **`splash-icon.png` ya es la marca real**: `pnpm brand` recorta el logotipo completo —el árbol sobre el pin sobre el mapa, con «ÁrbolApp Huila» debajo— de `assets/brand/logo-lockup.png`, e `imageWidth` sube a 260 porque un logotipo apaisado no se lee al ancho de un ícono. Faltan las **dos líneas de debajo** —«Sembrando vida en La Plata» y la micro-etiqueta de filiación—: hornearlas en el bitmap las escalaría con el logotipo, así que piden una pantalla de carga real. La medición de 70 es anterior al logotipo y no se ha repetido. |
 | **A2.1** | Onboarding 1/3 | ✅ `onboarding/index.tsx` | **82** | Composición portada entera: bloque superior al 55 %, velo inferior, pie en `overline` sobre tinta inversa, tres puntos con el activo en `glowAccent`, primario + enlace fantasma. **Falta la fotografía real de campo** — contenido del PRAE. El marco la espera. |
 | **A2.2** | Onboarding 2/3 | ✅ `onboarding/prae.tsx` | **82** | Igual que A2.1. Falta la fotografía. |
 | **A2.3** | Onboarding 3/3 | ✅ `onboarding/guardian.tsx` | **82** | El bloque **sí está dibujado**: rejilla de mapa en SVG y los cinco pines con sus estados, incluido el seleccionado con halo. Cambia «Siguiente» por «Empezar», como el lienzo. |
@@ -745,7 +745,7 @@ pnpm format:check
 pnpm test:contrast   # de aquí sale la tabla de contraste, literalmente
 pnpm test:integrity  # las marcas de registro y la cola de revisión, contra el stack local
 pnpm test:map        # el mapa con 1.000 árboles simulados
-pnpm splash          # regenera el logotipo del splash desde Montserrat
+pnpm brand           # recorta los iconos y el splash desde assets/brand/logo-lockup.png
 
 pnpm --filter @arbolapp/web build
 cd apps/mobile

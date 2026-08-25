@@ -83,12 +83,25 @@ siempre la misma salida.
 
 | Parámetro | Valor |
 |---|---|
-| Package name / Bundle ID | `co.edu.iesansebastian.arbolapp` |
+| Package name / Bundle ID | `com.juventudenlinea.arbolapphuila` |
 | Esquema de enlaces profundos | `arbolapp://` |
 | Región de Supabase | East US (North Virginia) |
 
 El identificador puede cambiarse libremente **hasta la primera publicación** en tiendas.
 Después queda fijo de forma permanente.
+
+## Marca
+
+El logotipo vive en `assets/brand/logo-lockup.png`: la marca —un árbol frutal sobre un pin
+sobre un mapa abierto— con «ÁrbolApp Huila» debajo. Todo lo demás se recorta de ahí:
+
+```bash
+pnpm brand                  # iconos de las dos apps, capas adaptativas, splash y notificación
+```
+
+Los resultados se versionan, porque Metro y Next los empaquetan y no pueden depender de que
+alguien haya ejecutado el script. Para cambiar el logotipo se reemplaza el maestro y se
+vuelve a ejecutar; no se edita ningún PNG a mano.
 
 ## Estado
 

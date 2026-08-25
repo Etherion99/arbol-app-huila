@@ -475,7 +475,7 @@ no hace falta tocar el repositorio, salvo el `projectId` del punto 2.
    `projectId` por su cuenta**: solo escribe en `app.json`. Hay que copiarlo a mano a
    `extra.eas.projectId`.
 3. **Una clave de Google Maps para Android**, restringida al package name
-   `co.edu.iesansebastian.arbolapp`. Va como variable de entorno de EAS, **no en `.env`**:
+   `com.juventudenlinea.arbolapphuila`. Va como variable de entorno de EAS, **no en `.env`**:
    `.env` no se sube a la build.
 4. **Un teléfono Android físico** donde instalar el APK.
 
@@ -524,7 +524,7 @@ desarrollo es una variante de depuración, así que admite tráfico HTTP en clar
 - **iOS.** Hace falta un Mac para compilar en local, o una cuenta de Apple Developer para que
   EAS firme y distribuya a un dispositivo registrado. **Es una decisión y un gasto del
   usuario**, no algo que el repositorio pueda resolver.
-- **Clave de Maps para iOS**, restringida al bundle ID `co.edu.iesansebastian.arbolapp`. Sin
+- **Clave de Maps para iOS**, restringida al bundle ID `com.juventudenlinea.arbolapphuila`. Sin
   ella la app cae a Apple Maps.
 - **Un proyecto de Supabase en la nube**, que evitaría la gimnasia de la IP local y dejaría
   probar desde cualquier red.

@@ -10,7 +10,7 @@
 
 | Parámetro | Valor |
 |---|---|
-| Package name / Bundle ID | `co.edu.iesansebastian.arbolapp` |
+| Package name / Bundle ID | `com.juventudenlinea.arbolapphuila` |
 | Dominio propio | Omitido por ahora — subdominios de Vercel |
 | Correo transaccional | Servicio incluido de Supabase (con su límite de envíos) |
 | Titularidad de cuentas | **Pendiente de definir** |
@@ -27,14 +27,45 @@
 |---|---|---|---|---|---|
 | **0** | Fundaciones | 3 días | | ✅ completada | ✅ tokens adoptados |
 | **1** | Modelo de datos y backend | 1 sem | | ✅ completada | ➖ no aplica |
-| **2** | Autenticación y perfil | 4 días | | ✅ completada | 🔧 **corregir** — consume los tokens, falta reconciliar maquetación con el lienzo |
-| **3** | Mapa interactivo | 1,5 sem | **A** | ✅ completada — 👁️ validación visual diferida | ✅ **requerido** — `ui_kits/mobile/MapScreen` |
-| **4** | Registro de árbol y bitácora | 1,5 sem | **B** | pendiente | ✅ **requerido** — `TreeDetailScreen`, `TreeListScreen` |
-| **5** | Notificaciones bimestrales | 1 sem | | pendiente | 🔸 parcial — pantalla de actividad y ajustes |
-| **6** | Panel de administración | 1,5 sem | **C** | pendiente | ✅ **requerido** — `ui_kits/web/AdminScreens` |
-| **7** | Mapa público web | 4 días | | pendiente | ✅ **requerido** — `ui_kits/web/PublicMap` |
-| **8** | Endurecimiento | 1 sem | | pendiente | 🔸 parcial — estados vacíos, de error y accesibilidad |
-| **9** | Publicación | 1 sem + revisión | **D** | pendiente | ✅ **requerido** — ícono, splash y capturas de tienda |
+| **2** | Autenticación y perfil | 4 días | | ✅ completada | ✅ medida contra el lienzo v2 — A3 y A5 en 92 |
+| **3** | Mapa interactivo | 1,5 sem | **A** | ✅ completada | ✅ A8 y B1 en 88 |
+| **4** | Registro de árbol y bitácora | 1,5 sem | **B** | ✅ completada | ✅ serie C en 72–88 |
+| **5** | Notificaciones bimestrales | 1 sem | | ✅ completada | ✅ B3 en 90, B4b en 88 |
+| **6** | Panel de administración | 1,5 sem | **C** | ✅ completada | ✅ serie D en 82–86 |
+| **7** | Mapa público web | 4 días | | 🟡 construida con huecos | 🔧 E1 en 62, E3 en 68 — falta la banda de encabezado y el panel de filtros abre vacío |
+| **8** | Endurecimiento | 1 sem | | ⬅ **siguiente** | 🔧 F2 en 45 — depende de la cola offline, que no está construida |
+| **9** | Publicación | 1 sem + revisión | **D** | pendiente | ✅ **requerido** — el icono y el splash ya salen de la marca real; falta la pantalla de carga con las dos líneas |
+
+**Estado a 23 de agosto de 2026.** Los hitos A, B y C están alcanzados. Falta el D.
+
+### Lo que bloquea el cierre
+
+Reevaluado el 23 de agosto de 2026 sobre `develop`, tras integrar el endurecimiento.
+
+**Resueltos en la Fase 8:** la cola de sincronización offline existe (`features/sync/`, F2
+sube de 45 a 88 y B2 a 90), el marcado anti-fraude y su cola de revisión están construidos,
+`pnpm test:contrast` ya recorre los pares que el código pinta, hay reporte de errores,
+alerta de cuota y flujo de respaldo escrito, y el logotipo del splash sustituye al de Expo
+(A1 sube de 35 a 70).
+
+| # | Bloqueante | Por qué sigue abierto | Dueño |
+|---|---|---|---|
+| **1** | **Nada del móvil se ha visto en un dispositivo** | Falta el SDK de Android y la key de Maps en el equipo. Todos los scores siguen siendo juicios sobre código | jornada de validación |
+| **2** | **Los cuadros por segundo del paneo no se midieron** | Lo medido es el trabajo del viewport, que no es lo mismo. La cifra necesita un teléfono | jornada de validación |
+| **3** | **Ningún lector de pantalla** | TalkBack necesita el dispositivo que no hay; NVDA sobre el panel es posible y no se ejecutó | jornada de validación |
+| **4** | **El respaldo nunca se ha ejecutado** | El proyecto de Supabase en la nube no existe todavía. El flujo está escrito, no probado | cuenta Supabase |
+| **5** | **El panel «Filtros» de E1 abre vacío** | Sin controles: dice que las especies se cargarán y no carga nada. E1 puntúa 62 por esto | maquetación web |
+| **6** | **La filiación de D1 va en magenta a 11 px** | `#E93CAC` mide 3.54:1 y `CLAUDE.md` reserva el magenta para filiación, no para interfaz | maquetación web |
+| **7** | **Las tarjetas de D2 se estiran al viewport** | ~300 px de vacío a 1440×1000, por `flex-1 justify-center` | maquetación web |
+| **8** | **`RECORD_AUDIO` sobrevive en el manifiesto** | Pese a `recordAudioAndroidPermission: false`. Sin comprobar en prebuild | higiene |
+| **9** | Comentario huérfano del tema oscuro en `app.config.js` | Habla de un motivo de puntos de luz que ya no existe | limpieza |
+| **10** | **El primario no pasa AA para texto pequeño** | `#008D46` mide 4.12:1 sobre la página | escalar al diseño |
+| **11** | **Faltan tres medallones de encabezado** | A6, A9b y A10b; el kit de íconos no los trae | escalar al diseño |
+
+**Aparcados hasta decidir publicación:** textos legales definitivos, cuenta Apple Developer,
+pantalla de carga real con las dos líneas del splash, ícono de la app, capturas y fichas de
+tienda.
+
 
 ### Lo que se diseñó antes de que existiera el sistema de diseño
 
@@ -159,7 +190,7 @@ Dejar el terreno listo para que todo lo demás avance sin fricción.
 
 - Monorepo con `apps/mobile`, `apps/web`, `packages/core`, `supabase/`.
 - Expo **SDK 57** (React Native 0.86, React 19.2) con TypeScript, Expo Router y `expo-dev-client`; **Next.js 16.3** con Tailwind 4 y shadcn/ui. Los generadores traen versiones más nuevas que las previstas al redactar este plan; se adoptan tal cual.
-- `app.json` con `co.edu.iesansebastian.arbolapp` para Android e iOS.
+- `app.json` con `com.juventudenlinea.arbolapphuila` para Android e iOS.
 - Proyecto Supabase en región *East US*; variables de entorno con placeholders, incluida la key de Maps.
 - Paleta provisional en `packages/core`: verde esmeralda `#2ECC71` (activo), ámbar `#F1C40F` (por actualizar), gris `#7F8C8D` (archivado), fondo oscuro para el mapa. Definida como tokens, para que el rediseño sea cambiar un solo archivo.
 - ESLint, Prettier y GitHub Actions con typecheck y lint en cada push.
@@ -424,14 +455,14 @@ lo que da margen amplio para resolverlas mientras se construye.
 
 ## Sobre el package name
 
-`co.edu.iesansebastian.arbolapp` **se puede cambiar libremente hasta la primera
+`com.juventudenlinea.arbolapphuila` **se puede cambiar libremente hasta la primera
 publicación** en cualquiera de las dos tiendas. Después queda fijo de forma permanente:
 cambiarlo obliga a crear una ficha nueva y los usuarios instalados no reciben la
 actualización. Si se cambia antes de publicar, hay que ajustar `app.json`, regenerar
 credenciales en EAS, volver a registrar la app en Firebase Cloud Messaging y actualizar
 las restricciones de la API key de Google Maps — media hora de trabajo, sin consecuencias.
 
-No hace falta ser dueño del dominio `iesansebastian.edu.co` para usarlo: las tiendas no
+No hace falta ser dueño del dominio `juventudenlinea.com` para usarlo: las tiendas no
 verifican la propiedad del dominio, es solo una convención de nombres.
 
 ## Qué queda fuera de este plan

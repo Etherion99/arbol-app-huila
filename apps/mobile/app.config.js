@@ -32,14 +32,20 @@ module.exports = () => {
     scheme: 'arbolapp',
     userInterfaceStyle: 'light',
     ios: {
-      icon: './assets/expo.icon',
-      bundleIdentifier: 'co.edu.iesansebastian.arbolapp',
+      // The same square as the top level `icon`. iOS refuses an application
+      // icon with transparency, and `pnpm brand` writes this one opaque.
+      icon: './assets/images/icon.png',
+      bundleIdentifier: 'com.juventudenlinea.arbolapphuila',
       supportsTablet: true,
     },
     android: {
-      package: 'co.edu.iesansebastian.arbolapp',
+      package: 'com.juventudenlinea.arbolapphuila',
       adaptiveIcon: {
-        backgroundColor: colors.surfacePage,
+        // White rather than the page colour: the mark separates the folds of
+        // its map with white lines, which on the faintly green page read as a
+        // tint instead of as paper. `android-icon-background.png` is filled
+        // with this same token, so the two layers cannot drift apart.
+        backgroundColor: colors.surfaceRaised,
         foregroundImage: './assets/images/android-icon-foreground.png',
         backgroundImage: './assets/images/android-icon-background.png',
         monochromeImage: './assets/images/android-icon-monochrome.png',
@@ -53,31 +59,24 @@ module.exports = () => {
     plugins: [
       'expo-router',
       [
-        // The splash the canvas draws is typeset, not drawn: the wordmark is
-        // Montserrat, with a subtitle under it and the affiliation microlabel
-        // below that. This plugin renders a background colour and one bitmap
-        // and nothing else, so the composition cannot be reproduced *here*.
+        // This plugin renders a background colour and one bitmap and nothing
+        // else, so the bitmap is the whole lockup -- the mark with «ÁrbolApp
+        // Huila» set under it -- rather than the mark alone. `pnpm brand` cuts
+        // it from `assets/brand/logo-lockup.png`.
         //
-        // What it can take is a bitmap, and `pnpm splash` typesets one:
-        // `scripts/generate-splash-icon.mjs` renders «ÁrbolApp Huila» from the
-        // same Montserrat the app registers with `expo-font`, in the same two
-        // accent tokens, and writes `splash-icon.png`. It replaced the Expo
-        // template logo the repository had carried since it was created.
-        //
-        // The two lines under the wordmark -- «Sembrando vida en La Plata» and
-        // the affiliation microlabel -- are still not there, and cannot be: a
-        // subtitle baked into the bitmap would scale with the wordmark and read
-        // at whatever size the plugin chose. They belong to a real splash
-        // screen component, which is Phase 9's work alongside the app icon.
+        // The two lines the canvas puts under the wordmark -- «Sembrando vida
+        // en La Plata» and the affiliation microlabel -- are not here, and
+        // cannot be: a subtitle baked into the bitmap would scale with the
+        // lockup and read at whatever size the plugin chose. They belong to a
+        // real splash screen component.
         'expo-splash-screen',
         {
           backgroundColor: colors.surfacePage,
           image: './assets/images/splash-icon.png',
-          // A wordmark, not an icon. 76 was right for a square mark and would
-          // render two words of Montserrat at about nine points; the canvas
-          // sets the wordmark at 38 on a 390 point screen, which is a block
-          // roughly this wide.
-          imageWidth: 240,
+          // A lockup, not an icon: about four units wide for every three tall.
+          // 260 puts it at two thirds of a 390 point screen, which is where the
+          // canvas sets it.
+          imageWidth: 260,
         },
       ],
       'expo-secure-store',
@@ -88,12 +87,13 @@ module.exports = () => {
           // the small icon and the notification light comes from the tokens
           // like every other colour in the application.
           color: colors.accent,
-          // No custom icon and no sound. Android falls back to the app icon,
-          // which is correct, and there is no asset to put in its place: the
-          // 2026 branding guide exists only as a photograph of a printed page,
-          // so the monochrome notification mark it would need does not exist
-          // yet. A reminder at eight in the morning has no business making a
-          // noise either.
+          // The tray keeps only the alpha channel and paints it with the tint
+          // above, so handing it the colour icon would put a white blob in the
+          // status bar. This is the silhouette of the mark, which `pnpm brand`
+          // cuts from the same master.
+          icon: './assets/images/notification-icon.png',
+          // No sound: a reminder at eight in the morning has no business making
+          // a noise.
           enableBackgroundRemoteNotifications: false,
         },
       ],
